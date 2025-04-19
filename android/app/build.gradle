@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.arthrduarte.expoappboilerplate'
+    namespace 'com.arthrduarte.farelo'
     defaultConfig {
-        applicationId 'com.arthrduarte.expoappboilerplate'
+        applicationId 'com.arthrduarte.farelo'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,4 +1,4 @@
-package com.arthrduarte.expoappboilerplate
+package com.arthrduarte.farelo
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

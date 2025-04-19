@@ -1,4 +1,4 @@
-package com.arthrduarte.expoappboilerplate
+package com.arthrduarte.farelo
 
 import android.app.Application
 import android.content.res.Configuration

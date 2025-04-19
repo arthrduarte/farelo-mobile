@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-app-boilerplate",
-    "slug": "expo-app-boilerplate",
+    "name": "Farelo",
+    "slug": "farelo",
     "version": "1.0.0",
     "orientation": "portrait",
     "owner": "arthrduarte",
@@ -11,7 +11,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.arthrduarte.expoappboilerplate",
+      "bundleIdentifier": "com.arthrduarte.farelo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arthrduarte.expoappboilerplate"
+      "package": "com.arthrduarte.farelo"
     },
     "web": {
       "bundler": "metro",
