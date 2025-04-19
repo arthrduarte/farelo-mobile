@@ -4,13 +4,14 @@
     "slug": "expo-app-boilerplate",
     "version": "1.0.0",
     "orientation": "portrait",
+    "owner": "arthrduarte",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cqjack.expoappboilerplate",
+      "bundleIdentifier": "com.arthrduarte.expoappboilerplate",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -20,7 +21,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.cqjack.expoappboilerplate"
+      "package": "com.arthrduarte.expoappboilerplate"
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +38,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true
@@ -47,7 +49,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "e55fcdea-13e2-4c3b-a4c3-59c174184eb5"
+        "projectId": "9c4f6df7-8ae1-4fa9-8892-78f00eaf700d"
       }
     }
   }

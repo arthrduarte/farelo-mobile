@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.cqjack.expoappboilerplate'
+    namespace 'com.arthrduarte.expoappboilerplate'
     defaultConfig {
-        applicationId 'com.cqjack.expoappboilerplate'
+        applicationId 'com.arthrduarte.expoappboilerplate'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

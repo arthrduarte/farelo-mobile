@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>myapp</string>
-          <string>com.cqjack.expoappboilerplate</string>
+          <string>com.arthrduarte.expoappboilerplate</string>
         </array>
       </dict>
       <dict>

@@ -1,4 +1,4 @@
-package com.cqjack.expoappboilerplate
+package com.arthrduarte.expoappboilerplate
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
