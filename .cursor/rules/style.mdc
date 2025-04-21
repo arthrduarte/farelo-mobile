@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+For titles use font size 20.
+
+BROWN - Main color: #793206
+BEIGE - Secondary color: #EDE4D2
+
+To use BROWN with low opacity, use #79320633
