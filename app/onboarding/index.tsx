@@ -52,7 +52,7 @@ export default function OnboardingCarousel() {
     if (currentIndex < slides.length - 1) {
       scrollRef.current?.scrollTo({ x: width * (currentIndex + 1), animated: true })
     } else {
-      router.push('/onboarding/problem')
+      router.push('/onboarding/register')
     }
   }
 
