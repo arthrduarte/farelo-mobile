@@ -15,7 +15,7 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemedText } from '@/components/ThemedText'
 
 const { width, height } = Dimensions.get('window')
-const IMAGE_HEIGHT = height * 0.4
+const IMAGE_HEIGHT = height * 0.35
 
 const slides = [
   {
@@ -44,8 +44,8 @@ export default function OnboardingCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   const onMomentumScrollEnd = (e: any) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / width)
-    setCurrentIndex(index)
+    const idx = Math.round(e.nativeEvent.contentOffset.x / width)
+    setCurrentIndex(idx)
   }
 
   const handleNext = () => {
@@ -60,86 +60,90 @@ export default function OnboardingCarousel() {
     <View style={styles.container}>
       <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={onMomentumScrollEnd}
-        >
-          {slides.map((slide, idx) => (
-            <View key={slide.key} style={[styles.slide, { width }]}>
-              <View style={[styles.imageContainer, { height: IMAGE_HEIGHT }]}>
-                <Image source={slide.image} style={styles.image} resizeMode="cover" />
-              </View>
-              <View style={[styles.bottomContainer, { height: height - IMAGE_HEIGHT }]}>
-                <View>
+        {/* SWIPEABLE AREA: only image + text */}
+        <View style={styles.carouselWrapper}>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={onMomentumScrollEnd}
+          >
+            {slides.map((slide) => (
+              <View key={slide.key} style={[styles.slide, { width }]}>
+                <View style={[styles.imageContainer, { height: IMAGE_HEIGHT }]}>
+                  <Image source={slide.image} style={styles.image} resizeMode="cover" />
+                </View>
+                <View style={styles.textContainer}>
                   <ThemedText type="title" style={styles.title}>
                     {slide.title}
                   </ThemedText>
                   <ThemedText style={styles.subtitle}>{slide.subtitle}</ThemedText>
                 </View>
-
-                <View style={styles.footer}>
-                  <View style={styles.dotsContainer}>
-                    {slides.map((_, dotIdx) => (
-                      <View
-                        key={dotIdx}
-                        style={[
-                          styles.dot,
-                          dotIdx === currentIndex && styles.activeDot,
-                        ]}
-                      />
-                    ))}
-                  </View>
-
-                  <TouchableOpacity style={styles.button} onPress={handleNext}>
-                    <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-                      {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
-                    </ThemedText>
-                  </TouchableOpacity>
-                </View>
               </View>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* STATIC FOOTER: dots + Next button */}
+        <View style={styles.footer}>
+          <View style={styles.dotsContainer}>
+            {slides.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  i === currentIndex && styles.activeDot,
+                ]}
+              />
+            ))}
+          </View>
+          <TouchableOpacity style={styles.button} onPress={handleNext}>
+            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
+              {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: '#793206' },
+
+  // make this flex:1 so it grows above the static footer
+  carouselWrapper: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
   },
   slide: {
     flex: 1,
+    alignItems: 'center',
   },
   imageContainer: {
-    backgroundColor: '#7A3700', // fallback while image loads
+    width,
+    backgroundColor: '#793206', // brown placeholder
   },
   image: {
     width: '100%',
     height: '100%',
   },
-  bottomContainer: {
+  textContainer: {
+    flex: 1,
     backgroundColor: '#ede4d2',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    width,
     paddingHorizontal: 24,
     paddingTop: 32,
-    paddingBottom: 16,
-    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     textAlign: 'center',
-    color: '#793206',
     marginBottom: 12,
+    color: '#793206',
   },
   subtitle: {
     fontSize: 16,
@@ -148,12 +152,15 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     lineHeight: 22,
   },
+
   footer: {
+    paddingVertical: 16,
     alignItems: 'center',
+    backgroundColor: '#ede4d2',
   },
   dotsContainer: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   dot: {
     width: 8,
@@ -167,7 +174,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#793206',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     width: width * 0.8,
     alignItems: 'center',
