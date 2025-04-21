@@ -8,23 +8,41 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Alert,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
+import { supabase } from '@/services/supabase'
+import { SUPERWALL_TRIGGERS } from '@/config/superwall'
+import { useSuperwall } from '@/hooks/useSuperwall';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const { width } = Dimensions.get('window')
 
-export default function RegisterScreen() {
+export default function Logincreen() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { showPaywall } = useSuperwall();
+  const { setIsOnboarded } = useOnboarding();
 
-  const handleLogin = () => {
-    // TODO: hook up your registration logic
-    router.push('/(tabs)') 
+  async function signInWithEmail() {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
+    if (error) Alert.alert(error.message)
+
+    setLoading(false)
+    await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
+    setIsOnboarded(true);
+
+    await router.replace('/(tabs)/explore')
   }
 
   return (
@@ -54,7 +72,7 @@ export default function RegisterScreen() {
             onChangeText={setPassword}
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <TouchableOpacity style={styles.button} onPress={signInWithEmail}>
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>
               Login
             </ThemedText>

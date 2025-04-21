@@ -8,12 +8,17 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Alert,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
+import { supabase } from '@/services/supabase'
+import { SUPERWALL_TRIGGERS } from '@/config/superwall'
+import { useSuperwall } from '@/hooks/useSuperwall';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const { width } = Dimensions.get('window')
 
@@ -23,10 +28,32 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { showPaywall } = useSuperwall();
+  const { setIsOnboarded } = useOnboarding();
 
-  const handleRegister = () => {
-    // TODO: hook up your registration logic
-    router.push('/(tabs)') 
+  async function signUpWithEmail() {
+    setLoading(true)
+    const { error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: {
+          first_name: fullName.split(' ')[0],
+          last_name: fullName.split(' ')[1],
+        },
+      },
+    })
+    if (error) {
+      console.log('Error signing up:', error)
+      Alert.alert(error.message)
+    }
+
+    setLoading(false)
+    await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
+    setIsOnboarded(true);
+
+    await router.replace('/(tabs)/explore')
   }
 
   return (
@@ -75,7 +102,7 @@ export default function RegisterScreen() {
             onChangeText={setConfirmPassword}
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleRegister}>
+          <TouchableOpacity style={styles.button} onPress={signUpWithEmail}>
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>
               Register
             </ThemedText>
