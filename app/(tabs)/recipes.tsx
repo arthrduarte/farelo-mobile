@@ -1,49 +1,44 @@
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Recipe } from '@/types/db';
 
-// Temporary type and data for development
-type Recipe = {
-  id: string;
-  image: string;
-  title: string;
-  tags: string[];
-  time: string;
-  servings: number;
-}
-
-const mockRecipes: Recipe[] = [
+const mockRecipes: Partial<Recipe>[] = [
   {
     id: '1',
-    image: 'https://via.placeholder.com/150',
     title: 'Brown Sugar Oat Muffins',
+    ai_image_url: 'https://via.placeholder.com/150',
+    time: 10,
+    servings: 12,
     tags: ['breakfast', 'quick', 'sweet'],
-    time: '10 mins',
-    servings: 12
+    user_image_url: '',
   },
   {
     id: '2',
-    image: 'https://via.placeholder.com/150',
-    title: 'Brown Sugar Oat Muffins',
-    tags: ['breakfast', 'quick', 'sweet'],
-    time: '10 mins',
-    servings: 12
+    title: 'Chocolate Chip Cookies',
+    ai_image_url: 'https://via.placeholder.com/150',
+    time: 25,
+    servings: 24,
+    tags: ['dessert', 'sweet', 'classic'],
+    user_image_url: '',
   },
   {
     id: '3',
-    image: 'https://via.placeholder.com/150',
-    title: 'Brown Sugar Oat Muffins',
-    tags: ['breakfast', 'quick', 'sweet'],
-    time: '10 mins',
-    servings: 12
+    title: 'Banana Bread',
+    ai_image_url: 'https://via.placeholder.com/150',
+    time: 60,
+    servings: 8,
+    tags: ['breakfast', 'sweet', 'bread'],
+    user_image_url: '',
   },
   {
     id: '4',
-    image: 'https://via.placeholder.com/150',
-    title: 'Brown Sugar Oat Muffins',
+    title: 'Pancakes',
+    ai_image_url: 'https://via.placeholder.com/150',
+    time: 20,
+    servings: 4,
     tags: ['breakfast', 'quick', 'sweet'],
-    time: '10 mins',
-    servings: 12
+    user_image_url: '',
   }
 ];
 
@@ -71,13 +66,13 @@ export default function RecipesScreen() {
         {mockRecipes.map((recipe) => (
           <View key={recipe.id} style={styles.recipeCard}>
             <Image 
-              source={{ uri: recipe.image }} 
+              source={{ uri: recipe.ai_image_url }} 
               style={styles.recipeImage}
             />
             <View style={styles.recipeInfo}>
               <Text style={styles.recipeTitle}>{recipe.title}</Text>
               <View style={styles.tagContainer}>
-                {recipe.tags.map((tag, index) => (
+                {recipe.tags?.map((tag, index) => (
                   <View key={index} style={styles.tag}>
                     <Text style={styles.tagText}>{tag}</Text>
                   </View>
@@ -88,7 +83,7 @@ export default function RecipesScreen() {
                   <View style={styles.timeIcon}>
                     <MaterialIcons name="schedule" size={16} color="#603808" />
                   </View>
-                  <Text style={styles.metaText}>{recipe.time}</Text>
+                  <Text style={styles.metaText}>{recipe.time} mins</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <View style={styles.servingsIcon}>
