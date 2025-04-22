@@ -8,7 +8,7 @@ import { Platform } from 'react-native';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { superwallService } from '@/services/superwall';
+import { superwallService } from '@/lib/superwall';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 
