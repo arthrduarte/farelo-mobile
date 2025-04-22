@@ -15,6 +15,7 @@ const MAPPING = {
   'chevron.left.forwardslash.chevron.right': { component: MaterialIcons, name: 'code' },
   'chevron.right': { component: MaterialIcons, name: 'chevron-right' },
   'cookie': { component: FontAwesome6, name: 'cookie-bite' }, // 🍪 ✅ NEW ICON
+  'person.fill': { component: MaterialIcons, name: 'person' },
 
 } as const;
 
