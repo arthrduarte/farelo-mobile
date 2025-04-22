@@ -23,6 +23,10 @@
       },
       "package": "com.arthrduarte.farelo"
     },
+    "androidNavigationBar": {
+      "backgroundColor": "#EDE4D2",
+      "barStyle": "dark-content"
+    },
     "web": {
       "bundler": "metro",
       "output": "static",

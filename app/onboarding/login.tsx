@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
-import { supabase } from '@/services/supabase'
+import { supabase } from '@/lib/supabase'
 import { SUPERWALL_TRIGGERS } from '@/config/superwall'
 import { useSuperwall } from '@/hooks/useSuperwall';
 import { useOnboarding } from '@/contexts/OnboardingContext';
