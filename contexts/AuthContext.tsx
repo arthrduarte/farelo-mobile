@@ -13,6 +13,7 @@ import {
 } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { Profile } from '../types/db'
+import { useOnboarding } from './OnboardingContext'
 
 type AuthContextType = {
   user: User | null
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const { setIsOnboarded } = useOnboarding()
 
   // 1) on mount: grab current session (Auto–rehydrated by Supabase/AsyncStorage)
   useEffect(() => {
@@ -78,13 +80,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       setLoading(false)
-    }
+      setProfile(null)
+      setIsOnboarded(false)
+  }
 
     const fetchProfile = async (userId: string) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single()
 
       if (error) {
