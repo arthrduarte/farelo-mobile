@@ -1,48 +1,82 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, ActivityIndicator, FlatList } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Recipe } from '@/types/db';
-
-const mockRecipes: Partial<Recipe>[] = [
-  {
-    id: '1',
-    title: 'Brown Sugar Oat Muffins',
-    ai_image_url: 'https://via.placeholder.com/150',
-    time: 10,
-    servings: 12,
-    tags: ['breakfast', 'quick', 'sweet'],
-    user_image_url: '',
-  },
-  {
-    id: '2',
-    title: 'Chocolate Chip Cookies',
-    ai_image_url: 'https://via.placeholder.com/150',
-    time: 25,
-    servings: 24,
-    tags: ['dessert', 'sweet', 'classic'],
-    user_image_url: '',
-  },
-  {
-    id: '3',
-    title: 'Banana Bread',
-    ai_image_url: 'https://via.placeholder.com/150',
-    time: 60,
-    servings: 8,
-    tags: ['breakfast', 'sweet', 'bread'],
-    user_image_url: '',
-  },
-  {
-    id: '4',
-    title: 'Pancakes',
-    ai_image_url: 'https://via.placeholder.com/150',
-    time: 20,
-    servings: 4,
-    tags: ['breakfast', 'quick', 'sweet'],
-    user_image_url: '',
-  }
-];
+import { useState, useEffect } from 'react';
+import RecipeCard from '@/components/RecipeCard';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RecipesScreen() {
+  const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { profile } = useAuth();
+
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+  const fetchRecipes = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('id, title, ai_image_url, time, servings, tags, user_image_url')
+        .order('created_at', { ascending: false })
+        .eq('profile_id', profile?.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setRecipes(data || []);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+      setError('Failed to load recipes. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#793206" />
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchRecipes}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (recipes.length === 0) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={styles.emptyText}>No recipes found</Text>
+        </View>
+      );
+    }
+
+    return (
+      <FlatList style={styles.recipeList} showsVerticalScrollIndicator={false} data={recipes} renderItem={({ item }) => (
+        <RecipeCard key={item.id} recipe={item} />
+      )}
+      />
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header Buttons */}
@@ -61,41 +95,7 @@ export default function RecipesScreen() {
         </View>
       </View>
 
-      {/* Recipe List */}
-      <ScrollView style={styles.recipeList} showsVerticalScrollIndicator={false}>
-        {mockRecipes.map((recipe) => (
-          <View key={recipe.id} style={styles.recipeCard}>
-            <Image 
-              source={{ uri: recipe.ai_image_url }} 
-              style={styles.recipeImage}
-            />
-            <View style={styles.recipeInfo}>
-              <Text style={styles.recipeTitle}>{recipe.title}</Text>
-              <View style={styles.tagContainer}>
-                {recipe.tags?.map((tag, index) => (
-                  <View key={index} style={styles.tag}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-              <View style={styles.metaInfo}>
-                <View style={styles.metaItem}>
-                  <View style={styles.timeIcon}>
-                    <MaterialIcons name="schedule" size={16} color="#603808" />
-                  </View>
-                  <Text style={styles.metaText}>{recipe.time} mins</Text>
-                </View>
-                <View style={styles.metaItem}>
-                  <View style={styles.servingsIcon}>
-                    <MaterialIcons name="people" size={16} color="#603808" />
-                  </View>
-                  <Text style={styles.metaText}>{recipe.servings} servings</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+      {renderContent()}
     </SafeAreaView>
   );
 }
@@ -148,67 +148,30 @@ const styles = StyleSheet.create({
   recipeList: {
     flex: 1,
   },
-  recipeCard: {
-    flexDirection: 'row',
-    backgroundColor: '#79320633',
-    borderRadius: 12,
-    marginBottom: 24,
-    overflow: 'hidden',
-  },
-  recipeImage: {
-    width: 100,
-    height: 100,
-  },
-  recipeInfo: {
+  centerContainer: {
     flex: 1,
-    padding: 12,
-    gap: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  recipeTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+  errorText: {
     color: '#793206',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 16,
   },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  emptyText: {
+    color: '#793206',
+    fontSize: 16,
+    textAlign: 'center',
   },
-  tag: {
+  retryButton: {
     backgroundColor: '#793206',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
+    padding: 12,
+    borderRadius: 8,
   },
-  tagText: {
+  retryButtonText: {
     color: 'white',
-    fontSize: 14,
-  },
-  metaInfo: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  timeIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  servingsIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  metaText: {
-    color: '#793206',
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
