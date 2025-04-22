@@ -5,7 +5,7 @@ import { AntDesign, Feather } from '@expo/vector-icons';
 import { Log, Profile, Recipe } from '@/types/db';
 
 type EnhancedLog = Log & {
-  profile: Pick<Profile, 'first_name' | 'last_name' | 'username'>;
+  profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
   recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
 };
 
@@ -38,7 +38,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
     <View style={styles.container}>
       <View style={styles.header}>
         <Image 
-          source={{ uri: 'https://github.com/arthurzop.png' }}
+          source={{ uri: log.profile.image }}
           style={styles.avatar}
         />
         <View style={styles.headerText}>

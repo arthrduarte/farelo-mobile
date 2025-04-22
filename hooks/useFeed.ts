@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Log, Profile, Recipe } from '../types/db'
 
 type EnhancedLog = Log & {
-    profile: Pick<Profile, 'first_name' | 'last_name' | 'username'>;
+    profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
     recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
 }
 
@@ -64,7 +64,8 @@ export function useFeed(profile_id: string, pageSize: number = 20) {
                     profile:profiles(
                         first_name,
                         last_name,
-                        username
+                        username,
+                        image
                     ),
                     recipe:recipes(
                         title,
