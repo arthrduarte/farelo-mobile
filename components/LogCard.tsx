@@ -2,10 +2,15 @@ import React from 'react';
 import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather } from '@expo/vector-icons';
-import { Log } from '@/types/db';
+import { Log, Profile, Recipe } from '@/types/db';
+
+type EnhancedLog = Log & {
+  profile: Pick<Profile, 'first_name' | 'last_name' | 'username'>;
+  recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
+};
 
 type LogCardProps = {
-  log: Log;
+  log: EnhancedLog;
   onLike?: () => void;
   onComment?: () => void;
   onAdd?: () => void;
@@ -23,6 +28,12 @@ const formatTimeAgo = (date: string) => {
 };
 
 export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd }) => {
+  if (!log.profile || !log.recipe) {
+    return null;
+  }
+
+  const fullName = `${log.profile.first_name} ${log.profile.last_name}`;
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -31,20 +42,20 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
           style={styles.avatar}
         />
         <View style={styles.headerText}>
-          <ThemedText type="defaultSemiBold">Arthur Duarte</ThemedText>
+          <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
           <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
         </View>
       </View>
 
-      <ThemedText type="title" style={styles.title}>Chocolate Chip Cookies</ThemedText>
+      <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
       <ThemedText style={styles.description}>{log.description}</ThemedText>
 
       <View style={styles.cookingInfo}>
         <View style={styles.infoItem}>
-          <ThemedText>25 mins</ThemedText>
+          <ThemedText>{log.recipe.time} mins</ThemedText>
         </View>
         <View style={styles.infoItem}>
-          <ThemedText>36 servings</ThemedText>
+          <ThemedText>{log.recipe.servings} servings</ThemedText>
         </View>
       </View>
 

@@ -1,12 +1,17 @@
 import { useEffect, useState, useCallback } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
-import { Log, Follow } from '../types/db'
+import { Log, Profile, Recipe } from '../types/db'
+
+type EnhancedLog = Log & {
+    profile: Pick<Profile, 'first_name' | 'last_name' | 'username'>;
+    recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
+}
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
 
 export function useFeed(profile_id: string, pageSize: number = 20) {
-    const [feed, setFeed] = useState<Log[]>([])
+    const [feed, setFeed] = useState<EnhancedLog[]>([])
     const [loading, setLoading] = useState(true)
 
     // 1️⃣ load cached logs on mount
@@ -27,7 +32,7 @@ export function useFeed(profile_id: string, pageSize: number = 20) {
         return () => { active = false }
     }, [profile_id])
 
-    // 2️⃣ the actual “fetch followings’ logs” routine
+    // 2️⃣ the actual "fetch followings' logs" routine
     const fetchFeed = useCallback(async () => {
         console.log("Fetching feed")
         if (!profile_id) return
@@ -50,11 +55,23 @@ export function useFeed(profile_id: string, pageSize: number = 20) {
                 return
             }
 
-            // 2b) fetch their logs
+            // 2b) fetch their logs with profile and recipe information
             console.log("Fetching their logs")
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
-                .select('*')
+                .select(`
+                    *,
+                    profile:profiles(
+                        first_name,
+                        last_name,
+                        username
+                    ),
+                    recipe:recipes(
+                        title,
+                        time,
+                        servings
+                    )
+                `)
                 .in('profile_id', followingIds)
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
@@ -63,7 +80,7 @@ export function useFeed(profile_id: string, pageSize: number = 20) {
             if (logErr) throw logErr
             if (logs) {
                 console.log("Setting feed:", logs)
-                setFeed(logs)
+                setFeed(logs as EnhancedLog[])
                 await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(logs))
             }
         } catch (err) {
@@ -73,7 +90,7 @@ export function useFeed(profile_id: string, pageSize: number = 20) {
         }
     }, [profile_id, pageSize])
 
-    // 3️⃣ run fetch after we’ve loaded cache
+    // 3️⃣ run fetch after we've loaded cache
     useEffect(() => {
         if (profile_id) {
             fetchFeed()
