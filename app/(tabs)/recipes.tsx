@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import RecipeCard from '@/components/RecipeCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { ThemedView } from '@/components/ThemedView';
 
 export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
@@ -78,7 +79,7 @@ export default function RecipesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ThemedView style={styles.container}>
       {/* Header Buttons */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.addButton}>
@@ -96,7 +97,7 @@ export default function RecipesScreen() {
       </View>
 
       {renderContent()}
-    </SafeAreaView>
+    </ThemedView>
   );
 }
 
@@ -104,11 +105,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#EDE4D2',
   },
   header: {
     gap: 16,
-    marginBottom: 16,
+    marginVertical: 16,
   },
   addButton: {
     backgroundColor: '#793206',
