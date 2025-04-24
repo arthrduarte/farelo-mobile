@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'rea
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import { IconSymbol } from './ui/IconSymbol';
+import { useState } from 'react';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -9,6 +10,18 @@ interface RecipeDetailsProps {
 }
 
 export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
+  const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>(
+    new Array(recipe.ingredients?.length || 0).fill(false)
+  );
+
+  const toggleIngredient = (index: number) => {
+    setCheckedIngredients(prev => {
+      const newChecked = [...prev];
+      newChecked[index] = !newChecked[index];
+      return newChecked;
+    });
+  };
+
   return (
     <View style={styles.container}>
       {/* Back Button */}
@@ -45,10 +58,19 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ingredients</Text>
           {recipe.ingredients?.map((ingredient, index) => (
-            <View key={index} style={styles.ingredient}>
-              <IconSymbol name="checkbox-inactive" size={24} color="#793206" />
-              <Text style={styles.ingredientText}>• {ingredient}</Text>
-            </View>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.ingredient}
+              onPress={() => toggleIngredient(index)}
+            >
+              <IconSymbol 
+                style={styles.checkbox} 
+                name={checkedIngredients[index] ? "checkbox-active" : "checkbox-inactive"} 
+                size={24} 
+                color="#793206" 
+              />
+              <Text style={styles.ingredientText}>{ingredient}</Text>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -168,12 +190,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   ingredientText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#793206',
     marginBottom: 8,
+  },
+  checkbox: {
+    height: 32,
   },
   instruction: {
     fontSize: 16,
