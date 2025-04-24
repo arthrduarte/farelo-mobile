@@ -12,29 +12,10 @@ export default function RecipeScreen() {
   const [loading, setLoading] = useState(true);
   
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     fetchRecipe();
   }, [id]);
-
-  useEffect(() => {
-    if (recipe) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [recipe]);
 
   const fetchRecipe = async () => {
     try {
@@ -58,7 +39,7 @@ export default function RecipeScreen() {
   return (
     <ThemedView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+        {/* <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}> */}
           {/* Header */}
           <Text style={styles.title}>{recipe.title}</Text>
 
@@ -128,7 +109,7 @@ export default function RecipeScreen() {
               <Text key={index} style={styles.instruction}>{index + 1}. {instruction}</Text>
             ))}
           </View>
-        </Animated.View>
+        {/* </Animated.View> */}
       </ScrollView>
     </ThemedView>
   );

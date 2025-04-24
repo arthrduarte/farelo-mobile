@@ -12,7 +12,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
 
   const handlePress = () => {
     router.push({
-      pathname: "/recipe/[id]",
+      pathname: "/(tabs)/recipe/[id]",
       params: { id: recipe.id ?? '' }
     });
   };
