@@ -13,9 +13,20 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
   const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>(
     new Array(recipe.ingredients?.length || 0).fill(false)
   );
+  const [checkedInstructions, setCheckedInstructions] = useState<boolean[]>(
+    new Array(recipe.instructions?.length || 0).fill(false)
+  );
 
   const toggleIngredient = (index: number) => {
     setCheckedIngredients(prev => {
+      const newChecked = [...prev];
+      newChecked[index] = !newChecked[index];
+      return newChecked;
+    });
+  };
+
+  const toggleInstruction = (index: number) => {
+    setCheckedInstructions(prev => {
       const newChecked = [...prev];
       newChecked[index] = !newChecked[index];
       return newChecked;
@@ -56,7 +67,10 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
 
         {/* Ingredients */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ingredients</Text>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Ingredients</Text>
+          </View>
           {recipe.ingredients?.map((ingredient, index) => (
             <TouchableOpacity 
               activeOpacity={1}
@@ -87,9 +101,38 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
 
         {/* Instructions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Instructions</Text>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Instructions</Text>
+          </View>
           {recipe.instructions?.map((instruction, index) => (
-            <Text key={index} style={styles.instruction}>{index + 1}. {instruction}</Text>
+            <TouchableOpacity 
+              key={index}
+              activeOpacity={1}
+              style={[
+                styles.instruction,
+                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+                checkedInstructions[index] && styles.ingredientChecked
+              ]}
+            >
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                activeOpacity={0.5}
+                onPress={() => toggleInstruction(index)}
+              >
+                <IconSymbol 
+                  {...checkedInstructions[index] 
+                    ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} 
+                    : {name: "checkbox-inactive", color: "#793206"}
+                  }
+                  size={24} 
+                />
+              </TouchableOpacity>
+              <Text style={[
+                styles.instructionText,
+                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+              ]}>{index + 1}. {instruction}</Text>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
@@ -191,11 +234,16 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#793206',
-    marginBottom: 12,
   },
   ingredient: {
     flexDirection: 'row',
@@ -239,8 +287,16 @@ const styles = StyleSheet.create({
     color: '#793206',
   },
   instruction: {
-    fontSize: 16,
-    color: '#793206',
-    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  instructionText: {
+    fontSize: 18,
+    flex: 1,
+    marginBottom: 0,
   },
 }); 
