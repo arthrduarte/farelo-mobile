@@ -8,13 +8,17 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import RecipeDetails from '@/components/RecipeDetails';
+import StartRecipe from '@/components/StartRecipe';
 
 export default function RecipesScreen() {
-  const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const { profile } = useAuth();
+
+  const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [startedRecipe, setStartedRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
     fetchRecipes();
@@ -45,11 +49,21 @@ export default function RecipesScreen() {
   };
 
   const renderContent = () => {
+    if (startedRecipe) {
+      return (
+        <StartRecipe 
+          recipe={startedRecipe} 
+          onBack={() => setStartedRecipe(null)} 
+        />
+      );
+    }
+
     if (selectedRecipe) {
       return (
         <RecipeDetails 
           recipe={selectedRecipe} 
           onBack={() => setSelectedRecipe(null)} 
+          onStartRecipe={() => setStartedRecipe(selectedRecipe)} 
         />
       );
     }

@@ -5,10 +5,9 @@ import { Recipe } from '@/types/db';
 interface RecipeDetailsProps {
   recipe: Recipe;
   onBack: () => void;
-  onStartRecipe: () => void;
 }
 
-export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeDetailsProps) {
+export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
   return (
     <View style={styles.container}>
       {/* Back Button */}
@@ -35,41 +34,11 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeD
           </View>
         </View>
 
-        {/* Start Recipe Button */}
-        <TouchableOpacity style={styles.startRecipeButton} onPress={onStartRecipe}>
-          <Text style={styles.startRecipeText}>Start Recipe</Text>
-        </TouchableOpacity>
-
         {/* Recipe Image */}
         <Image 
           source={{ uri: recipe.ai_image_url }} 
           style={styles.recipeImage}
         />
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
-            <MaterialIcons name="refresh" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Remix</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <MaterialIcons name="edit" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <MaterialIcons name="delete" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Tags */}
-        <View style={styles.tagContainer}>
-          {recipe.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
 
         {/* Ingredients */}
         <View style={styles.section}>
