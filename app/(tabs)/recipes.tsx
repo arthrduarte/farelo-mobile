@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import RecipeDetails from '@/components/RecipeDetails';
 import StartRecipe from '@/components/StartRecipe';
+import FinishRecipe from '@/components/FinishRecipe';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
@@ -50,6 +51,16 @@ export default function RecipesScreen() {
   };
 
   const renderContent = () => {
+    if (finishedRecipe) {
+      return (
+        <FinishRecipe 
+          recipe={finishedRecipe} 
+          onBack={() => setFinishedRecipe(null)} 
+          onDiscard={() => setFinishedRecipe(null)}
+          onLog={() => setFinishedRecipe(null)}
+        />
+      );
+    } 
     if (startedRecipe) {
       return (
         <StartRecipe 
