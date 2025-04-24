@@ -66,8 +66,10 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
           style={styles.recipeImage}
         />
 
+        <View style={styles.divider}/>
+
         {/* Ingredients */}
-        <View style={styles.section}>
+        <View>
           <View style={styles.sectionHeader}>
             <IconSymbol name="book" color="#793206" size={24} />
             <Text style={styles.sectionTitle}>Ingredients</Text>
@@ -100,8 +102,10 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
           ))}
         </View>
 
+        <View style={styles.divider}/>
+
         {/* Instructions */}
-        <View style={styles.section}>
+        <View>
           <View style={styles.sectionHeader}>
             <IconSymbol name="book" color="#793206" size={24} />
             <Text style={styles.sectionTitle}>Instructions</Text>
@@ -136,6 +140,9 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
             </TouchableOpacity>
           ))}
         </View>
+
+        <View style={styles.divider}/>
+
         <TouchableOpacity style={styles.finishButton} onPress={onFinish}>
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
@@ -147,6 +154,11 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  divider: {
+    borderBottomColor: '#79320633',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 16,
   },
   backButton: {
     marginBottom: 16,
@@ -189,54 +201,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#793206',
   },
-  startRecipeButton: {
-    backgroundColor: '#793206',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  startRecipeText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   recipeImage: {
     width: '100%',
     height: 200,
     borderRadius: 12,
     marginBottom: 16,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  actionButton: {
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#793206',
-    marginTop: 4,
-  },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
-  tag: {
-    backgroundColor: '#793206',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  tagText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  section: {
-    marginBottom: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
