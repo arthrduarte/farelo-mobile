@@ -19,6 +19,7 @@ export default function RecipesScreen() {
   
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [startedRecipe, setStartedRecipe] = useState<Recipe | null>(null);
+  const [finishedRecipe, setFinishedRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
     fetchRecipes();
@@ -54,6 +55,7 @@ export default function RecipesScreen() {
         <StartRecipe 
           recipe={startedRecipe} 
           onBack={() => setStartedRecipe(null)} 
+          onFinish={() => setFinishedRecipe(startedRecipe)}
         />
       );
     }

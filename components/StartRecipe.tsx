@@ -7,9 +7,10 @@ import { useState } from 'react';
 interface RecipeDetailsProps {
   recipe: Recipe;
   onBack: () => void;
+  onFinish: () => void;
 }
 
-export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
+export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetailsProps) {
   const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>(
     new Array(recipe.ingredients?.length || 0).fill(false)
   );
@@ -135,6 +136,9 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
             </TouchableOpacity>
           ))}
         </View>
+        <TouchableOpacity style={styles.finishButton} onPress={onFinish}>
+          <Text style={styles.finishButtonText}>Finish</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -232,7 +236,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -298,5 +302,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     flex: 1,
     marginBottom: 0,
+  },
+  finishButton: {
+    backgroundColor: '#793206',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  finishButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 
