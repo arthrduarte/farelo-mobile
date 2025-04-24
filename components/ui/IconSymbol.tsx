@@ -16,7 +16,8 @@ const MAPPING = {
   'chevron.right': { component: MaterialIcons, name: 'chevron-right' },
   'cookie': { component: FontAwesome6, name: 'cookie-bite' }, // 🍪 ✅ NEW ICON
   'person.fill': { component: MaterialIcons, name: 'person' },
-
+  'checkbox-active': { component: MaterialIcons, name: 'check-box' },
+  'checkbox-inactive': { component: MaterialIcons, name: 'check-box-outline-blank' },
 } as const;
 
 export type IconSymbolName = keyof typeof MAPPING;

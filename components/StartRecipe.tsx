@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
+import { IconSymbol } from './ui/IconSymbol';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -44,7 +45,10 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ingredients</Text>
           {recipe.ingredients?.map((ingredient, index) => (
-            <Text key={index} style={styles.ingredient}>• {ingredient}</Text>
+            <View key={index} style={styles.ingredient}>
+              <IconSymbol name="checkbox-inactive" size={24} color="#793206" />
+              <Text style={styles.ingredientText}>• {ingredient}</Text>
+            </View>
           ))}
         </View>
 
@@ -161,6 +165,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ingredient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  ingredientText: {
     fontSize: 16,
     color: '#793206',
     marginBottom: 8,
