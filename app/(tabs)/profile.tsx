@@ -15,8 +15,7 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ProfileHeader profile={profile} />
-      <Text>Own Logs</Text>
+      <ProfileHeader profile={profile} logs={ownLogs} />
       {ownLogs.map((log) => (
         <LogCard key={log.id} log={log} />
       ))}
@@ -27,7 +26,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   header: {
     flexDirection: 'row',

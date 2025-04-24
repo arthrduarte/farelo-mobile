@@ -1,10 +1,11 @@
 import { View, StyleSheet, Text, Image } from 'react-native';
-import { Profile } from '@/types/db';
+import { Profile, Log } from '@/types/db';
 
 interface ProfileHeaderProps {
   profile: Partial<Profile>
+  logs: Log[]
 }
-export default function ProfileHeader({ profile }: ProfileHeaderProps) {
+export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
   return (
       <View style={styles.header}>
         <View>
@@ -15,15 +16,15 @@ export default function ProfileHeader({ profile }: ProfileHeaderProps) {
             <View style={styles.stats}>
                 <View>
                     <Text>Meals</Text>
-                    <Text>10</Text>
+                    <Text style={styles.statValue}>{logs.length}</Text>
                 </View>
                 <View>
-                    <Text>Meals</Text>
-                    <Text>10</Text>
+                    <Text>Followers</Text>
+                    <Text style={styles.statValue}>10</Text>
                 </View>
                 <View>
-                    <Text>Meals</Text>
-                    <Text>10</Text>
+                    <Text>Following</Text>
+                    <Text style={styles.statValue}>10</Text>
                 </View>
             </View>
         </View>
@@ -34,7 +35,9 @@ export default function ProfileHeader({ profile }: ProfileHeaderProps) {
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-        
+    padding: 16,
+    alignItems: 'center',
+    gap: 16,
   },
   avatar: {
     width: 100,
@@ -47,9 +50,14 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#793206',
   },
   stats: {
     flexDirection: 'row',
     gap: 24
+  },
+  statValue: {
+    fontWeight: 'bold',
+    color: '#793206',
   },
 });
