@@ -5,6 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
+import RecipeSkeletonLoader from '@/components/RecipeSkeletonLoader';
 
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams();
@@ -15,6 +16,8 @@ export default function RecipeScreen() {
   // Animation values
 
   useEffect(() => {
+    setLoading(true);
+    setRecipe(null);
     fetchRecipe();
   }, [id]);
 
@@ -39,8 +42,6 @@ export default function RecipeScreen() {
     }
   };
 
-  if (!recipe) return null;
-
   return (
     <ThemedView style={styles.container}>
       {/* Back Button */}
@@ -49,77 +50,81 @@ export default function RecipeScreen() {
       </TouchableOpacity>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}> */}
-          {/* Header */}
-          <Text style={styles.title}>{recipe.title}</Text>
+        {loading ? (
+          <RecipeSkeletonLoader />
+        ) : recipe ? (
+          <>
+            {/* Header */}
+            <Text style={styles.title}>{recipe.title}</Text>
 
-          <View style={styles.metaInfo}>
-            <View style={styles.metaItem}>
-              <View style={styles.timeIcon}>
-                <MaterialIcons name="schedule" size={16} color="#603808" />
+            <View style={styles.metaInfo}>
+              <View style={styles.metaItem}>
+                <View style={styles.timeIcon}>
+                  <MaterialIcons name="schedule" size={16} color="#603808" />
+                </View>
+                <Text style={styles.metaText}>{recipe.time} mins</Text>
               </View>
-              <Text style={styles.metaText}>{recipe.time} mins</Text>
+              <View style={styles.metaItem}>
+                <View style={styles.servingsIcon}>
+                  <MaterialIcons name="people" size={16} color="#603808" />
+                </View>
+                <Text style={styles.metaText}>{recipe.servings} servings</Text>
+              </View>
             </View>
-            <View style={styles.metaItem}>
-              <View style={styles.servingsIcon}>
-                <MaterialIcons name="people" size={16} color="#603808" />
-              </View>
-              <Text style={styles.metaText}>{recipe.servings} servings</Text>
+
+            {/* Start Meal Button */}
+            <TouchableOpacity style={styles.startMealButton}>
+              <Text style={styles.startMealText}>Start Meal</Text>
+            </TouchableOpacity>
+
+            {/* Recipe Image */}
+            <Image 
+              source={{ uri: recipe.ai_image_url }} 
+              style={styles.recipeImage}
+            />
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity style={styles.actionButton}>
+                <MaterialIcons name="refresh" size={24} color="#793206" />
+                <Text style={styles.actionButtonText}>Remix</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton}>
+                <MaterialIcons name="edit" size={24} color="#793206" />
+                <Text style={styles.actionButtonText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton}>
+                <MaterialIcons name="delete" size={24} color="#793206" />
+                <Text style={styles.actionButtonText}>Delete</Text>
+              </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Start Meal Button */}
-          <TouchableOpacity style={styles.startMealButton}>
-            <Text style={styles.startMealText}>Start Meal</Text>
-          </TouchableOpacity>
+            {/* Tags */}
+            <View style={styles.tagContainer}>
+              {recipe.tags?.map((tag, index) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
 
-          {/* Recipe Image */}
-          <Image 
-            source={{ uri: recipe.ai_image_url }} 
-            style={styles.recipeImage}
-          />
+            {/* Ingredients */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Ingredients</Text>
+              {recipe.ingredients?.map((ingredient, index) => (
+                <Text key={index} style={styles.ingredient}>• {ingredient}</Text>
+              ))}
+            </View>
 
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton}>
-              <MaterialIcons name="refresh" size={24} color="#793206" />
-              <Text style={styles.actionButtonText}>Remix</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <MaterialIcons name="edit" size={24} color="#793206" />
-              <Text style={styles.actionButtonText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <MaterialIcons name="delete" size={24} color="#793206" />
-              <Text style={styles.actionButtonText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Tags */}
-          <View style={styles.tagContainer}>
-            {recipe.tags?.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Ingredients */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-            {recipe.ingredients?.map((ingredient, index) => (
-              <Text key={index} style={styles.ingredient}>• {ingredient}</Text>
-            ))}
-          </View>
-
-          {/* Instructions */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Instructions</Text>
-            {recipe.instructions?.map((instruction, index) => (
-              <Text key={index} style={styles.instruction}>{index + 1}. {instruction}</Text>
-            ))}
-          </View>
-        {/* </Animated.View> */}
+            {/* Instructions */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Instructions</Text>
+              {recipe.instructions?.map((instruction, index) => (
+                <Text key={index} style={styles.instruction}>{index + 1}. {instruction}</Text>
+              ))}
+            </View>
+          </>
+        ) : null}
       </ScrollView>
     </ThemedView>
   );
