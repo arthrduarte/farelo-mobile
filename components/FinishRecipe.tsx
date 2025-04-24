@@ -3,6 +3,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import { IconSymbol } from './ui/IconSymbol';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -12,9 +14,36 @@ interface RecipeDetailsProps {
 }
 
 export default function FinishRecipe({ recipe, onBack, onDiscard, onLog }: RecipeDetailsProps) {
+  const { profile } = useAuth();
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [newTag, setNewTag] = useState('');
+
+  const handleNewLog = async () => {
+    console.log('New log:', {
+        recipe,
+        description,
+        notes,
+        newTag,
+        recipeId: recipe.id,
+        profileId: profile?.id,
+    });
+
+    const { data, error } = await supabase
+      .from('logs')
+      .insert({
+        profile_id: profile?.id,
+        recipe_id: recipe.id,
+        description,
+        images: [recipe.ai_image_url],
+      });
+
+    if (error) {
+      console.error('Error creating log:', error);
+    } else {
+      console.log('Log created successfully:', data);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -94,12 +123,12 @@ export default function FinishRecipe({ recipe, onBack, onDiscard, onLog }: Recip
             onChangeText={setNotes}
           />
         </View>
-        
+
         <View style={styles.divider}/>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.logButton} onPress={onLog}>
+          <TouchableOpacity style={styles.logButton} onPress={handleNewLog}>
             <Text style={styles.logButtonText}>Log</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.discardButton} onPress={onDiscard}>
