@@ -2,9 +2,12 @@ import { View, StyleSheet, Text, Image } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import ProfileHeader from '@/components/ProfileHeader';
+import { useLogs } from '@/hooks/useLogs';
+import { LogCard } from '@/components/LogCard';
 
 export default function ProfileScreen() {
   const { profile } = useAuth();
+  const { ownLogs } = useLogs(profile?.id ?? '');
 
   if (!profile) {
     return <Text>No profile found</Text>;
@@ -13,6 +16,10 @@ export default function ProfileScreen() {
   return (
     <ThemedView style={styles.container}>
       <ProfileHeader profile={profile} />
+      <Text>Own Logs</Text>
+      {ownLogs.map((log) => (
+        <LogCard key={log.id} log={log} />
+      ))}
     </ThemedView>
   );
 }

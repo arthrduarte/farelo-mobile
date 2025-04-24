@@ -10,7 +10,7 @@ type EnhancedLog = Log & {
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
 
-export function useFeed(profile_id: string, pageSize: number = 20) {
+export function useLogs(profile_id: string, pageSize: number = 20) {
     const [feed, setFeed] = useState<EnhancedLog[]>([])
     const [loading, setLoading] = useState(true)
     const [ownLogs, setOwnLogs] = useState<EnhancedLog[]>([])

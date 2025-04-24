@@ -4,11 +4,11 @@ import { LogCard } from '@/components/LogCard';
 import { Log } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFeed } from '@/hooks/useFeed';
+import { useLogs } from '@/hooks/useLogs';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, loading, refresh } = useFeed(profile?.id ?? '');
+  const { feed, loading, refresh } = useLogs(profile?.id ?? '');
 
   const handleLike = (logId: string) => {
     // Handle like action
