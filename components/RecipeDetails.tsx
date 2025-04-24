@@ -34,9 +34,9 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
           </View>
         </View>
 
-        {/* Start Meal Button */}
-        <TouchableOpacity style={styles.startMealButton}>
-          <Text style={styles.startMealText}>Start Meal</Text>
+        {/* Start Recipe Button */}
+        <TouchableOpacity style={styles.startRecipeButton}>
+          <Text style={styles.startRecipeText}>Start Recipe</Text>
         </TouchableOpacity>
 
         {/* Recipe Image */}
@@ -135,14 +135,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#793206',
   },
-  startMealButton: {
+  startRecipeButton: {
     backgroundColor: '#793206',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 16,
   },
-  startMealText: {
+  startRecipeText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
