@@ -13,6 +13,7 @@ const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
 export function useFeed(profile_id: string, pageSize: number = 20) {
     const [feed, setFeed] = useState<EnhancedLog[]>([])
     const [loading, setLoading] = useState(true)
+    const [ownLogs, setOwnLogs] = useState<EnhancedLog[]>([])
 
     // 1️⃣ load cached logs on mount
     useEffect(() => {
@@ -91,12 +92,46 @@ export function useFeed(profile_id: string, pageSize: number = 20) {
         }
     }, [profile_id, pageSize])
 
+    const fetchOwnLogs = useCallback(async () => {
+        if (!profile_id) return
+        setLoading(true)
+        try {
+            const { data: logs, error: logErr } = await supabase
+                .from('logs')
+                .select(`
+                    *,
+                    profile:profiles(
+                        first_name,
+                        last_name,
+                        username,
+                        image
+                    ),
+                    recipe:recipes(
+                        title,
+                        time,
+                        servings
+                    )
+                `)
+                .eq('profile_id', profile_id)
+                .order('created_at', { ascending: false })
+                .limit(pageSize)
+            if (logErr) throw logErr
+            setOwnLogs(logs as EnhancedLog[])  
+        } catch (err) {
+            console.error('useFeed › fetchOwnLogs error', err)
+        } finally {
+            setLoading(false)
+        }
+    }, [profile_id, pageSize])
+    
+
     // 3️⃣ run fetch after we've loaded cache
     useEffect(() => {
         if (profile_id) {
             fetchFeed()
+            fetchOwnLogs()
         }
     }, [fetchFeed, profile_id])
 
-    return { feed, loading, refresh: fetchFeed }
+    return { feed, loading, refresh: fetchFeed, ownLogs }
 }
