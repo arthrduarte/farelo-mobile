@@ -1,43 +1,55 @@
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
+import { useRouter } from 'expo-router';
 
 interface RecipeCardProps {
   recipe: Partial<Recipe>;
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push({
+      pathname: "/recipe/[id]",
+      params: { id: recipe.id ?? '' }
+    });
+  };
+
   return (
-    <View style={styles.recipeCard}>
-      <Image 
-        source={{ uri: recipe.ai_image_url }} 
-        style={styles.recipeImage}
-      />
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeTitle}>{recipe.title}</Text>
-        <View style={styles.tagContainer}>
-          {recipe.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.metaInfo}>
-          <View style={styles.metaItem}>
-            <View style={styles.timeIcon}>
-              <MaterialIcons name="schedule" size={16} color="#603808" />
-            </View>
-            <Text style={styles.metaText}>{recipe.time} mins</Text>
+    <TouchableOpacity onPress={handlePress}>
+      <View style={styles.recipeCard}>
+        <Image 
+          source={{ uri: recipe.ai_image_url }} 
+          style={styles.recipeImage}
+        />
+        <View style={styles.recipeInfo}>
+          <Text style={styles.recipeTitle}>{recipe.title}</Text>
+          <View style={styles.tagContainer}>
+            {recipe.tags?.map((tag, index) => (
+              <View key={index} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
           </View>
-          <View style={styles.metaItem}>
-            <View style={styles.servingsIcon}>
-              <MaterialIcons name="people" size={16} color="#603808" />
+          <View style={styles.metaInfo}>
+            <View style={styles.metaItem}>
+              <View style={styles.timeIcon}>
+                <MaterialIcons name="schedule" size={16} color="#603808" />
+              </View>
+              <Text style={styles.metaText}>{recipe.time} mins</Text>
             </View>
-            <Text style={styles.metaText}>{recipe.servings} servings</Text>
+            <View style={styles.metaItem}>
+              <View style={styles.servingsIcon}>
+                <MaterialIcons name="people" size={16} color="#603808" />
+              </View>
+              <Text style={styles.metaText}>{recipe.servings} servings</Text>
+            </View>
           </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
