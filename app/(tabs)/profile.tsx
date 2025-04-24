@@ -1,22 +1,18 @@
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, ActivityIndicator, FlatList } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Recipe } from '@/types/db';
-import { useState, useEffect } from 'react';
-import RecipeCard from '@/components/RecipeCard';
-import { supabase } from '@/lib/supabase';
+import { View, StyleSheet, Text, Image } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
+import ProfileHeader from '@/components/ProfileHeader';
 
 export default function ProfileScreen() {
-  const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { profile } = useAuth();
+
+  if (!profile) {
+    return <Text>No profile found</Text>;
+  }
 
   return (
     <ThemedView style={styles.container}>
-      <Text>Profile</Text>
+      <ProfileHeader profile={profile} />
     </ThemedView>
   );
 }
@@ -24,5 +20,25 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  info: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  stats: {
+    flexDirection: 'row',
+    gap: 24
   },
 });
