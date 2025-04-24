@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Animated } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/ThemedView';
 import { useState, useEffect, useRef } from 'react';
@@ -8,6 +8,7 @@ import { Recipe } from '@/types/db';
 
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -16,6 +17,10 @@ export default function RecipeScreen() {
   useEffect(() => {
     fetchRecipe();
   }, [id]);
+
+  const handleBack = () => {
+    router.replace('/(tabs)/recipes');
+  };
 
   const fetchRecipe = async () => {
     try {
@@ -38,6 +43,11 @@ export default function RecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <MaterialIcons name="arrow-back" size={24} color="#793206" />
+      </TouchableOpacity>
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}> */}
           {/* Header */}
@@ -119,6 +129,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  backButton: {
+    marginBottom: 16,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 24,

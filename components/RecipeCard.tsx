@@ -11,7 +11,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   const router = useRouter();
 
   const handlePress = () => {
-    router.push({
+    router.replace({
       pathname: "/(tabs)/recipe/[id]",
       params: { id: recipe.id ?? '' }
     });
