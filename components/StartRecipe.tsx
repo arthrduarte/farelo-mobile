@@ -60,16 +60,23 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
           {recipe.ingredients?.map((ingredient, index) => (
             <TouchableOpacity 
               key={index} 
-              style={styles.ingredient}
+              style={[
+                styles.ingredient,
+                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige
+              ]}
               onPress={() => toggleIngredient(index)}
             >
-              <IconSymbol 
-                style={styles.checkbox} 
-                name={checkedIngredients[index] ? "checkbox-active" : "checkbox-inactive"} 
-                size={24} 
-                color="#793206" 
-              />
-              <Text style={styles.ingredientText}>{ingredient}</Text>
+              <View style={styles.checkboxContainer}>
+                <IconSymbol 
+                  name={checkedIngredients[index] ? "checkbox-active" : "checkbox-inactive"} 
+                  size={24} 
+                  color="#793206" 
+                />
+              </View>
+              <Text style={[
+                styles.ingredientText,
+                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+              ]}>{ingredient}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -190,15 +197,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  ingredientBrown: {
+    backgroundColor: '#79320633',
+  },
+  ingredientBeige: {
+    backgroundColor: '#EDE4D2',
+  },
+  checkboxContainer: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ingredientText: {
     fontSize: 18,
-    color: '#793206',
-    marginBottom: 8,
+    flex: 1,
+    marginBottom: 0,
   },
-  checkbox: {
-    height: 32,
+  textOnBrown: {
+    color: '#793206',
+  },
+  textOnBeige: {
+    color: '#793206',
   },
   instruction: {
     fontSize: 16,
