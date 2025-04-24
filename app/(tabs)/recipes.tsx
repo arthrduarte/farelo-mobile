@@ -7,11 +7,13 @@ import RecipeCard from '@/components/RecipeCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
+import RecipeDetails from '@/components/RecipeDetails';
 
 export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function RecipesScreen() {
       
       const { data, error } = await supabase
         .from('recipes')
-        .select('id, title, ai_image_url, time, servings, tags, user_image_url')
+        .select('*')
         .order('created_at', { ascending: false })
         .eq('profile_id', profile?.id);
 
@@ -43,6 +45,15 @@ export default function RecipesScreen() {
   };
 
   const renderContent = () => {
+    if (selectedRecipe) {
+      return (
+        <RecipeDetails 
+          recipe={selectedRecipe} 
+          onBack={() => setSelectedRecipe(null)} 
+        />
+      );
+    }
+
     if (isLoading) {
       return (
         <View style={styles.centerContainer}>
@@ -71,31 +82,41 @@ export default function RecipesScreen() {
     }
 
     return (
-      <FlatList style={styles.recipeList} showsVerticalScrollIndicator={false} data={recipes} renderItem={({ item }) => (
-        <RecipeCard key={item.id} recipe={item} />
-      )}
-      />
+      <>
+        {/* Header Buttons */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.addButton}>
+            <Text style={styles.addButtonText}>Add new recipe</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputContainer}>
+              <Text style={styles.searchText}>Search</Text>
+            </View>
+            <TouchableOpacity style={styles.filterButton}>
+              <MaterialIcons name="filter-list" size={24} color="#603808" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <FlatList 
+          style={styles.recipeList} 
+          showsVerticalScrollIndicator={false} 
+          data={recipes} 
+          renderItem={({ item }) => (
+            <RecipeCard 
+              key={item.id} 
+              recipe={item} 
+              onPress={() => setSelectedRecipe(item as Recipe)} 
+            />
+          )}
+        />
+      </>
     );
   };
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header Buttons */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>Add new recipe</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Text style={styles.searchText}>Search</Text>
-          </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <MaterialIcons name="filter-list" size={24} color="#603808" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {renderContent()}
     </ThemedView>
   );
