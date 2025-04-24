@@ -59,20 +59,24 @@ export default function RecipeDetails({ recipe, onBack }: RecipeDetailsProps) {
           <Text style={styles.sectionTitle}>Ingredients</Text>
           {recipe.ingredients?.map((ingredient, index) => (
             <TouchableOpacity 
+              activeOpacity={1}
               key={index} 
               style={[
                 styles.ingredient,
-                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige
+                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+                checkedIngredients[index] && styles.ingredientChecked
               ]}
-              onPress={() => toggleIngredient(index)}
-            >
-              <View style={styles.checkboxContainer}>
+              >
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                activeOpacity={0.5}
+                onPress={() => toggleIngredient(index)}
+              >
                 <IconSymbol 
-                  name={checkedIngredients[index] ? "checkbox-active" : "checkbox-inactive"} 
+                  {...checkedIngredients[index] ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} : {name: "checkbox-inactive", color: "#793206"}}
                   size={24} 
-                  color="#793206" 
                 />
-              </View>
+              </TouchableOpacity>
               <Text style={[
                 styles.ingredientText,
                 index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
@@ -206,6 +210,16 @@ const styles = StyleSheet.create({
   },
   ingredientBeige: {
     backgroundColor: '#EDE4D2',
+  },
+  ingredientChecked: {
+    backgroundColor: '#329F5B',  // A nice material design green
+  },
+  activeCheckbox: {
+    shadowColor: '#1D5D36',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   checkboxContainer: {
     width: 32,
