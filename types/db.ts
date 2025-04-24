@@ -24,6 +24,7 @@ export type Profile = {
     email: string;
     username: string;
     created_at: string; // timestamptz
+    image: string;
 };
 
 export type Log = {

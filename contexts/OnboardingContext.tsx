@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useSegments } from 'expo-router';
+import { useAuth } from './AuthContext';
 
 type OnboardingContextType = {
   isOnboarded: boolean;
@@ -15,12 +16,17 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
   const segments = useSegments();
   const router = useRouter();
+  const { session, loading: authLoading } = useAuth();
 
   useEffect(() => {
     checkOnboardingStatus();
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (session === null) {
+      setIsOnboarded(false);
+    }
     if (isOnboarded === null) return;
 
     const inAuthGroup = segments[0] === 'onboarding';
