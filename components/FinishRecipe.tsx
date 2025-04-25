@@ -14,41 +14,75 @@ interface RecipeDetailsProps {
   setStartedRecipe: (recipe: Recipe | null) => void;
   setSelectedRecipe: (recipe: Recipe | null) => void;
   onBack: () => void;
+  onRefreshRecipes?: () => void;
 }
 
-export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setStartedRecipe, setSelectedRecipe }: RecipeDetailsProps) {
+export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setStartedRecipe, setSelectedRecipe, onRefreshRecipes }: RecipeDetailsProps) {
   const { profile } = useAuth();
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [newTag, setNewTag] = useState('');
+  const [tags, setTags] = useState<string[]>(recipe.tags || []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAddTag = () => {
+    if (newTag.trim()) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag('');
+    }
+  };
 
   const handleNewLog = async () => {
-    console.log('New log:', {
-        recipe,
-        description,
-        notes,
-        newTag,
-        recipeId: recipe.id,
-        profileId: profile?.id,
-    });
+    try {
+      setIsSubmitting(true);
 
-    const { data, error } = await supabase
-      .from('logs')
-      .insert({
-        profile_id: profile?.id,
-        recipe_id: recipe.id,
-        description,
-        images: [recipe.ai_image_url],
-      });
+      // Optimistically update the recipe in the parent component
+      const updatedRecipe = {
+        ...recipe,
+        notes: notes || recipe.notes,
+        tags: tags,
+      };
+      setSelectedRecipe(updatedRecipe);
 
-    if (error) throw Error(error.message);
-        
-    setFinishedRecipe(null);
-    setStartedRecipe(null);
-    setSelectedRecipe(null);
+      // Update recipe with notes and tags
+      const { error: recipeError } = await supabase
+        .from('recipes')
+        .update({
+          notes: notes || recipe.notes,
+          tags: tags,
+        })
+        .eq('id', recipe.id);
 
-    // Use replace to prevent going back to the form
-    router.replace('/(tabs)');
+      if (recipeError) throw Error(recipeError.message);
+
+      // Create new log
+      const { error: logError } = await supabase
+        .from('logs')
+        .insert({
+          profile_id: profile?.id,
+          recipe_id: recipe.id,
+          description,
+          images: [recipe.ai_image_url],
+        });
+
+      if (logError) throw Error(logError.message);
+
+      // Refresh recipes list
+      if (onRefreshRecipes) {
+        onRefreshRecipes();
+      }
+
+      setFinishedRecipe(null);
+      setStartedRecipe(null);
+      setSelectedRecipe(null);
+
+      // Use replace to prevent going back to the form
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Error saving log:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -77,7 +111,6 @@ export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSta
 
         <View style={styles.divider}/>
 
-
         {/* Images */}
         <View style={styles.imagesContainer}>
           {/* Recipe Image */}
@@ -98,7 +131,7 @@ export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSta
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Tags</Text>
           <View style={styles.tagsContainer}>
-            {recipe.tags?.map((tag, index) => (
+            {tags.map((tag, index) => (
               <View key={index} style={styles.tag}>
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
@@ -110,6 +143,8 @@ export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSta
                 placeholderTextColor="#79320680"
                 value={newTag}
                 onChangeText={setNewTag}
+                onSubmitEditing={handleAddTag}
+                returnKeyType="done"
               />
             </View>
           </View>
@@ -134,14 +169,23 @@ export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSta
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.logButton} onPress={handleNewLog}>
-            <Text style={styles.logButtonText}>Log</Text>
+          <TouchableOpacity 
+            style={[styles.logButton, isSubmitting && styles.disabledButton]} 
+            onPress={handleNewLog}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.logButtonText}>
+              {isSubmitting ? 'Saving...' : 'Log'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.discardButton} onPress={() => setFinishedRecipe(null)}>
+          <TouchableOpacity 
+            style={styles.discardButton} 
+            onPress={() => setFinishedRecipe(null)}
+            disabled={isSubmitting}
+          >
             <Text style={styles.discardButtonText}>Discard Meal</Text>
           </TouchableOpacity>
         </View>
-
       </ScrollView>
     </View>
   );
@@ -258,5 +302,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#79320633',
     borderBottomWidth: StyleSheet.hairlineWidth,
     marginBottom: 16,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 }); 

@@ -2,7 +2,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text, ActivityIndicator
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Recipe } from '@/types/db';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import RecipeCard from '@/components/RecipeCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,18 +17,15 @@ export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [startedRecipe, setStartedRecipe] = useState<Recipe | null>(null);
   const [finishedRecipe, setFinishedRecipe] = useState<Recipe | null>(null);
 
-  useEffect(() => {
-    fetchRecipes();
-  }, []);
-
-  const fetchRecipes = async () => {
+  const fetchRecipes = useCallback(async () => {
     try {
-      setIsLoading(true);
+      setIsRefreshing(true);
       setError(null);
       
       const { data, error } = await supabase
@@ -47,8 +44,13 @@ export default function RecipesScreen() {
       setError('Failed to load recipes. Please try again later.');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [profile?.id]);
+
+  useEffect(() => {
+    fetchRecipes();
+  }, [fetchRecipes]);
 
   const renderContent = () => {
     if (finishedRecipe) {
@@ -59,6 +61,7 @@ export default function RecipesScreen() {
           setFinishedRecipe={setFinishedRecipe}
           setSelectedRecipe={setSelectedRecipe}
           setStartedRecipe={setStartedRecipe}
+          onRefreshRecipes={fetchRecipes}
         />
       );
     } 
@@ -138,6 +141,8 @@ export default function RecipesScreen() {
               onPress={() => setSelectedRecipe(item as Recipe)} 
             />
           )}
+          refreshing={isRefreshing}
+          onRefresh={fetchRecipes}
         />
       </>
     );
