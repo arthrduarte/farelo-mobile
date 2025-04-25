@@ -5,15 +5,17 @@ import { IconSymbol } from './ui/IconSymbol';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { router } from 'expo-router';
+import { useLogs } from '@/hooks/useLogs';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
+  setFinishedRecipe: (recipe: Recipe | null) => void;
+  setSelectedRecipe: (recipe: Recipe | null) => void;
   onBack: () => void;
-  onDiscard: () => void;
-  onLog: () => void;
 }
 
-export default function FinishRecipe({ recipe, onBack, onDiscard, onLog }: RecipeDetailsProps) {
+export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSelectedRecipe }: RecipeDetailsProps) {
   const { profile } = useAuth();
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
@@ -38,11 +40,13 @@ export default function FinishRecipe({ recipe, onBack, onDiscard, onLog }: Recip
         images: [recipe.ai_image_url],
       });
 
-    if (error) {
-      console.error('Error creating log:', error);
-    } else {
-      console.log('Log created successfully:', data);
-    }
+    if (error) throw Error(error.message);
+        
+    setFinishedRecipe(null);
+    setSelectedRecipe(null);
+
+    // Use replace to prevent going back to the form
+    router.replace('/(tabs)');
   }
 
   return (
@@ -131,7 +135,7 @@ export default function FinishRecipe({ recipe, onBack, onDiscard, onLog }: Recip
           <TouchableOpacity style={styles.logButton} onPress={handleNewLog}>
             <Text style={styles.logButtonText}>Log</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.discardButton} onPress={onDiscard}>
+          <TouchableOpacity style={styles.discardButton} onPress={() => setFinishedRecipe(null)}>
             <Text style={styles.discardButtonText}>Discard Meal</Text>
           </TouchableOpacity>
         </View>

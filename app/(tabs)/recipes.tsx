@@ -56,8 +56,8 @@ export default function RecipesScreen() {
         <FinishRecipe 
           recipe={finishedRecipe} 
           onBack={() => setFinishedRecipe(null)} 
-          onDiscard={() => setFinishedRecipe(null)}
-          onLog={() => setFinishedRecipe(null)}
+          setFinishedRecipe={setFinishedRecipe}
+          setSelectedRecipe={setSelectedRecipe}
         />
       );
     } 
