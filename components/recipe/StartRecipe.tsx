@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
-import { IconSymbol } from './ui/IconSymbol';
+import { IconSymbol } from '../ui/IconSymbol';
 import { useState } from 'react';
 
 interface RecipeDetailsProps {

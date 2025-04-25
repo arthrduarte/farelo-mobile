@@ -1,17 +1,51 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
-import { IconSymbol } from './ui/IconSymbol';
+import { IconSymbol } from '../ui/IconSymbol';
+import { useState } from 'react';
+import DeleteModal from './DeleteModal';
+import RemixModal from './RemixModal';
+import { PulsingPlaceholder } from './ImagePlaceholder';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
   onBack: () => void;
   onStartRecipe: () => void;
+  setEditRecipe: (recipe: Recipe) => void;
+  onDelete: (recipe: Recipe) => void;
+  onRecipeUpdate: (recipe: Recipe) => void;
 }
 
-export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeDetailsProps) {
+export default function RecipeDetails({ 
+  recipe, 
+  onBack, 
+  onStartRecipe, 
+  setEditRecipe, 
+  onDelete,
+  onRecipeUpdate 
+}: RecipeDetailsProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRemixModal, setShowRemixModal] = useState(false);
+
   return (
     <View style={styles.container}>
+      <DeleteModal 
+        visible={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          onDelete(recipe);
+        }}
+        recipe={recipe}
+      />
+
+      <RemixModal
+        visible={showRemixModal}
+        onClose={() => setShowRemixModal(false)}
+        recipe={recipe}
+        onSuccess={onRecipeUpdate}
+      />
+
       {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
         <MaterialIcons name="arrow-back" size={24} color="#793206" />
@@ -42,22 +76,32 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeD
         </TouchableOpacity>
 
         {/* Recipe Image */}
-        <Image 
-          source={{ uri: recipe.ai_image_url }} 
-          style={styles.recipeImage}
-        />
+        {recipe.ai_image_url ? (
+          <Image 
+            source={{ uri: recipe.ai_image_url }} 
+            style={styles.recipeImage}
+          />
+        ) : (
+            <PulsingPlaceholder />
+        )}
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setShowRemixModal(true)}
+          >
             <MaterialIcons name="refresh" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Remix</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setEditRecipe(recipe)}>
             <MaterialIcons name="edit" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setShowDeleteConfirm(true)}
+          >
             <MaterialIcons name="delete" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Delete</Text>
           </TouchableOpacity>
