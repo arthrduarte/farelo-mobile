@@ -3,14 +3,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Recipe } from '@/types/db';
 import { useState, useEffect, useCallback } from 'react';
-import RecipeCard from '@/components/RecipeCard';
+import RecipeCard from '@/components/recipe/RecipeCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
-import RecipeDetails from '@/components/RecipeDetails';
-import StartRecipe from '@/components/StartRecipe';
+import RecipeDetails from '@/components/recipe/RecipeDetails';
+import StartRecipe from '@/components/recipe/StartRecipe';
 import FinishRecipe from '@/components/FinishRecipe';
-import EditRecipe from '@/components/EditRecipe';
+import EditRecipe from '@/components/recipe/EditRecipe';
 import { useNavigation } from 'expo-router';
 
 export default function RecipesScreen() {

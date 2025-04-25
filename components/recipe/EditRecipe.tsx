@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe as BaseRecipe } from '@/types/db';
-import { IconSymbol } from './ui/IconSymbol';
+import { IconSymbol } from '../ui/IconSymbol';
 import { useState } from 'react';
-import TagManager from './TagManager';
+import TagManager from './edit/TagManager';
 
 interface Recipe extends BaseRecipe {
   newTag?: string;
