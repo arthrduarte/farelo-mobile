@@ -4,6 +4,7 @@ import { Recipe as BaseRecipe } from '@/types/db';
 import { IconSymbol } from '../ui/IconSymbol';
 import { useState } from 'react';
 import TagManager from './edit/TagManager';
+import { PulsingPlaceholder } from './ImagePlaceholder';
 
 interface Recipe extends BaseRecipe {
   newTag?: string;
@@ -146,10 +147,14 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
         </View>
 
         {/* Recipe Image */}
-        <Image 
-          source={{ uri: recipe.ai_image_url }} 
-          style={styles.recipeImage}
-        />
+        {editedRecipe.ai_image_url ? (
+          <Image 
+            source={{ uri: editedRecipe.ai_image_url }} 
+            style={styles.recipeImage}
+          />
+        ) : (
+          <PulsingPlaceholder />
+        )}
 
         {/* Action Buttons */}
         <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>

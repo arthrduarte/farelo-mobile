@@ -5,6 +5,7 @@ import { IconSymbol } from '../ui/IconSymbol';
 import { useState } from 'react';
 import DeleteModal from './DeleteModal';
 import RemixModal from './RemixModal';
+import { PulsingPlaceholder } from './ImagePlaceholder';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -75,10 +76,14 @@ export default function RecipeDetails({
         </TouchableOpacity>
 
         {/* Recipe Image */}
-        <Image 
-          source={{ uri: recipe.ai_image_url }} 
-          style={styles.recipeImage}
-        />
+        {recipe.ai_image_url ? (
+          <Image 
+            source={{ uri: recipe.ai_image_url }} 
+            style={styles.recipeImage}
+          />
+        ) : (
+            <PulsingPlaceholder />
+        )}
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
