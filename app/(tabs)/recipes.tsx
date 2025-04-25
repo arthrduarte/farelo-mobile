@@ -11,9 +11,11 @@ import RecipeDetails from '@/components/RecipeDetails';
 import StartRecipe from '@/components/StartRecipe';
 import FinishRecipe from '@/components/FinishRecipe';
 import EditRecipe from '@/components/EditRecipe';
+import { useNavigation } from 'expo-router';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
+  const navigation = useNavigation();
 
   const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +27,17 @@ export default function RecipesScreen() {
   const [finishedRecipe, setFinishedRecipe] = useState<Recipe | null>(null);
 
   const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
+
+  useEffect(() => {
+    // Hide tab bar when EditRecipe is shown
+    navigation.setOptions({
+      tabBarStyle: {
+        display: editRecipe ? 'none' : 'flex',
+        backgroundColor: '#EDE4D2',
+        borderTopWidth: 0,
+      }
+    });
+  }, [editRecipe]);
 
   const fetchRecipes = useCallback(async () => {
     try {
