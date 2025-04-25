@@ -36,19 +36,13 @@ export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSta
     try {
       setIsSubmitting(true);
 
-      // Optimistically update the recipe in the parent component
-      const updatedRecipe = {
-        ...recipe,
-        notes: notes || recipe.notes,
-        tags: tags,
-      };
-      setSelectedRecipe(updatedRecipe);
+      const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes;
 
       // Update recipe with notes and tags
       const { error: recipeError } = await supabase
         .from('recipes')
         .update({
-          notes: notes || recipe.notes,
+          notes: updatedNotes,
           tags: tags,
         })
         .eq('id', recipe.id);
