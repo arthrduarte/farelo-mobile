@@ -98,13 +98,15 @@ export default function RecipesScreen() {
             recipe={editRecipe} 
             onBack={() => setEditRecipe(null)} 
             onUpdate={async (updatedRecipe) => {
-              const { error } = await supabase
+              const { data,error } = await supabase
                 .from('recipes')
                 .update(updatedRecipe)
-                .eq('id', updatedRecipe.id);
+                .eq('id', updatedRecipe.id)
+                .select();
               if (!error) {
                 fetchRecipes();
                 setEditRecipe(null);
+                setSelectedRecipe(data[0]);
               }
             }}
           />
