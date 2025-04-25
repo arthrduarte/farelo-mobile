@@ -4,6 +4,7 @@ import { Recipe } from '@/types/db';
 import { IconSymbol } from '../ui/IconSymbol';
 import { useState } from 'react';
 import DeleteModal from './DeleteModal';
+import RemixModal from './RemixModal';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -11,10 +12,19 @@ interface RecipeDetailsProps {
   onStartRecipe: () => void;
   setEditRecipe: (recipe: Recipe) => void;
   onDelete: (recipe: Recipe) => void;
+  onRecipeUpdate: (recipe: Recipe) => void;
 }
 
-export default function RecipeDetails({ recipe, onBack, onStartRecipe, setEditRecipe, onDelete }: RecipeDetailsProps) {
+export default function RecipeDetails({ 
+  recipe, 
+  onBack, 
+  onStartRecipe, 
+  setEditRecipe, 
+  onDelete,
+  onRecipeUpdate 
+}: RecipeDetailsProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRemixModal, setShowRemixModal] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -26,6 +36,13 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe, setEditRe
           onDelete(recipe);
         }}
         recipe={recipe}
+      />
+
+      <RemixModal
+        visible={showRemixModal}
+        onClose={() => setShowRemixModal(false)}
+        recipe={recipe}
+        onSuccess={onRecipeUpdate}
       />
 
       {/* Back Button */}
@@ -65,7 +82,10 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe, setEditRe
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setShowRemixModal(true)}
+          >
             <MaterialIcons name="refresh" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Remix</Text>
           </TouchableOpacity>

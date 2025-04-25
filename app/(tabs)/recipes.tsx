@@ -129,6 +129,10 @@ export default function RecipesScreen() {
               fetchRecipes();
             }
           }}
+          onRecipeUpdate={(updatedRecipe) => {
+            setSelectedRecipe(updatedRecipe);
+            fetchRecipes();
+          }}
         />
       );
     }
