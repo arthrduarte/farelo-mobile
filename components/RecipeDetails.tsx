@@ -7,9 +7,10 @@ interface RecipeDetailsProps {
   recipe: Recipe;
   onBack: () => void;
   onStartRecipe: () => void;
+  setEditRecipe: (recipe: Recipe) => void;
 }
 
-export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeDetailsProps) {
+export default function RecipeDetails({ recipe, onBack, onStartRecipe, setEditRecipe }: RecipeDetailsProps) {
   return (
     <View style={styles.container}>
       {/* Back Button */}
@@ -53,7 +54,7 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeD
             <MaterialIcons name="refresh" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Remix</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setEditRecipe(recipe)}>
             <MaterialIcons name="edit" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Edit</Text>
           </TouchableOpacity>

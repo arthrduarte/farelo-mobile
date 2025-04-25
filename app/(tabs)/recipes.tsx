@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/ThemedView';
 import RecipeDetails from '@/components/RecipeDetails';
 import StartRecipe from '@/components/StartRecipe';
 import FinishRecipe from '@/components/FinishRecipe';
+import EditRecipe from '@/components/EditRecipe';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
@@ -22,6 +23,8 @@ export default function RecipesScreen() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [startedRecipe, setStartedRecipe] = useState<Recipe | null>(null);
   const [finishedRecipe, setFinishedRecipe] = useState<Recipe | null>(null);
+
+  const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
 
   const fetchRecipes = useCallback(async () => {
     try {
@@ -76,11 +79,30 @@ export default function RecipesScreen() {
     }
 
     if (selectedRecipe) {
+      if(editRecipe){
+        return (
+          <EditRecipe
+            recipe={editRecipe} 
+            onBack={() => setEditRecipe(null)} 
+            onUpdate={async (updatedRecipe) => {
+              const { error } = await supabase
+                .from('recipes')
+                .update(updatedRecipe)
+                .eq('id', updatedRecipe.id);
+              if (!error) {
+                fetchRecipes();
+                setEditRecipe(null);
+              }
+            }}
+          />
+        );
+      }
       return (
         <RecipeDetails 
           recipe={selectedRecipe} 
           onBack={() => setSelectedRecipe(null)} 
           onStartRecipe={() => setStartedRecipe(selectedRecipe)} 
+          setEditRecipe={setEditRecipe}
         />
       );
     }
