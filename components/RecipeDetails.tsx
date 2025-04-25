@@ -121,6 +121,21 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeD
         </View>
 
         <View style={styles.divider}/>
+
+        {/* Notes */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Notes</Text>
+          </View>
+          <View style={styles.notesContainer}>
+            <Text style={[styles.notesText, styles.textOnBrown]}>
+              {recipe.notes || 'No notes added yet.'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider}/>
       </ScrollView>
     </View>
   );
@@ -268,5 +283,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     flex: 1,
     marginBottom: 0,
+  },
+  notesContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+  },
+  notesText: {
+    fontSize: 18,
+    lineHeight: 24,
   },
 }); 

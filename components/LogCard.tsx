@@ -48,7 +48,9 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
       </View>
 
       <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
-      <ThemedText style={styles.description}>{log.description}</ThemedText>
+      {log.description && (
+        <ThemedText style={styles.description}>{log.description}</ThemedText>
+      )}
 
       <View style={styles.cookingInfo}>
         <View style={styles.infoItem}>
