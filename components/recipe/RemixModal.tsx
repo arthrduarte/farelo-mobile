@@ -35,12 +35,22 @@ export default function RemixModal({ visible, onClose, recipe, onSuccess }: Remi
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log(errorData);
         throw new Error(errorData.error?.message || 'Failed to remix recipe');
       }
 
-      const newRecipe = await response.json();
-      onSuccess(newRecipe);
+      const newRecipe = await response.json(); // returns only the recipe id
+
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', newRecipe.recipeId)
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+
+      onSuccess(data);
       onClose();
       setInstructions('');
     } catch (err) {
