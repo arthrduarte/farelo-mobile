@@ -118,6 +118,17 @@ export default function RecipesScreen() {
           onBack={() => setSelectedRecipe(null)} 
           onStartRecipe={() => setStartedRecipe(selectedRecipe)} 
           setEditRecipe={setEditRecipe}
+          onDelete={async (recipeToDelete) => {
+            const { error } = await supabase
+              .from('recipes')
+              .delete()
+              .eq('id', recipeToDelete.id);
+            
+            if (!error) {
+              setSelectedRecipe(null);
+              fetchRecipes();
+            }
+          }}
         />
       );
     }

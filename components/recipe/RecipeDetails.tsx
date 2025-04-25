@@ -2,17 +2,32 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'rea
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import { IconSymbol } from '../ui/IconSymbol';
+import { useState } from 'react';
+import DeleteModal from './DeleteModal';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
   onBack: () => void;
   onStartRecipe: () => void;
   setEditRecipe: (recipe: Recipe) => void;
+  onDelete: (recipe: Recipe) => void;
 }
 
-export default function RecipeDetails({ recipe, onBack, onStartRecipe, setEditRecipe }: RecipeDetailsProps) {
+export default function RecipeDetails({ recipe, onBack, onStartRecipe, setEditRecipe, onDelete }: RecipeDetailsProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   return (
     <View style={styles.container}>
+      <DeleteModal 
+        visible={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          onDelete(recipe);
+        }}
+        recipe={recipe}
+      />
+
       {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
         <MaterialIcons name="arrow-back" size={24} color="#793206" />
@@ -58,7 +73,10 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe, setEditRe
             <MaterialIcons name="edit" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setShowDeleteConfirm(true)}
+          >
             <MaterialIcons name="delete" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Delete</Text>
           </TouchableOpacity>
