@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
+import { IconSymbol } from './ui/IconSymbol';
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -71,21 +72,70 @@ export default function RecipeDetails({ recipe, onBack, onStartRecipe }: RecipeD
           ))}
         </View>
 
+        <View style={styles.divider}/>
+
         {/* Ingredients */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ingredients</Text>
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Ingredients</Text>
+          </View>
           {recipe.ingredients?.map((ingredient, index) => (
-            <Text key={index} style={styles.ingredient}>• {ingredient}</Text>
+            <View 
+              key={index} 
+              style={[
+                styles.ingredient,
+                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+              ]}
+            >
+              <Text style={[
+                styles.ingredientText,
+                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+              ]}>• {ingredient}</Text>
+            </View>
           ))}
         </View>
 
+        <View style={styles.divider}/>
+
         {/* Instructions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Instructions</Text>
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Instructions</Text>
+          </View>
           {recipe.instructions?.map((instruction, index) => (
-            <Text key={index} style={styles.instruction}>{index + 1}. {instruction}</Text>
+            <View 
+              key={index}
+              style={[
+                styles.instruction,
+                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+              ]}
+            >
+              <Text style={[
+                styles.instructionText,
+                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+              ]}>{index + 1}. {instruction}</Text>
+            </View>
           ))}
         </View>
+
+        <View style={styles.divider}/>
+
+        {/* Notes */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Notes</Text>
+          </View>
+          <View style={styles.notesContainer}>
+            <Text style={[styles.notesText, styles.textOnBrown]}>
+              {recipe.notes || 'No notes added yet.'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider}/>
       </ScrollView>
     </View>
   );
@@ -182,23 +232,66 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
   },
-  section: {
-    marginBottom: 24,
+  divider: {
+    borderBottomColor: '#79320633',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#793206',
-    marginBottom: 12,
   },
   ingredient: {
-    fontSize: 16,
-    color: '#793206',
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  ingredientBrown: {
+    backgroundColor: '#79320633',
+  },
+  ingredientBeige: {
+    backgroundColor: '#EDE4D2',
+  },
+  ingredientText: {
+    fontSize: 18,
+    flex: 1,
+    marginBottom: 0,
+  },
+  textOnBrown: {
+    color: '#793206',
+  },
+  textOnBeige: {
+    color: '#793206',
   },
   instruction: {
-    fontSize: 16,
-    color: '#793206',
-    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  instructionText: {
+    fontSize: 18,
+    flex: 1,
+    marginBottom: 0,
+  },
+  notesContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+  },
+  notesText: {
+    fontSize: 18,
+    lineHeight: 24,
   },
 }); 

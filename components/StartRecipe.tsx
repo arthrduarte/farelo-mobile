@@ -66,6 +66,20 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
           style={styles.recipeImage}
         />
 
+        {/* Notes */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Notes</Text>
+          </View>
+          <View style={styles.notesContainer}>
+            <Text style={[styles.notesText, styles.textOnBrown]}>
+              {recipe.notes || 'No notes added yet.'}
+            </Text>
+          </View>
+        </View>
+
+
         <View style={styles.divider}/>
 
         {/* Ingredients */}
@@ -284,4 +298,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-}); 
+  notesContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+  },
+  notesText: {
+    fontSize: 18,
+    lineHeight: 24,
+  },
+});
