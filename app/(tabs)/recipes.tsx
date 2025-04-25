@@ -7,12 +7,20 @@ import RecipeCard from '@/components/RecipeCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
+import RecipeDetails from '@/components/RecipeDetails';
+import StartRecipe from '@/components/StartRecipe';
+import FinishRecipe from '@/components/FinishRecipe';
 
 export default function RecipesScreen() {
-  const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { profile } = useAuth();
+
+  const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [startedRecipe, setStartedRecipe] = useState<Recipe | null>(null);
+  const [finishedRecipe, setFinishedRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
     fetchRecipes();
@@ -25,7 +33,7 @@ export default function RecipesScreen() {
       
       const { data, error } = await supabase
         .from('recipes')
-        .select('id, title, ai_image_url, time, servings, tags, user_image_url')
+        .select('*')
         .order('created_at', { ascending: false })
         .eq('profile_id', profile?.id);
 
@@ -43,6 +51,37 @@ export default function RecipesScreen() {
   };
 
   const renderContent = () => {
+    if (finishedRecipe) {
+      return (
+        <FinishRecipe 
+          recipe={finishedRecipe} 
+          onBack={() => setFinishedRecipe(null)} 
+          setFinishedRecipe={setFinishedRecipe}
+          setSelectedRecipe={setSelectedRecipe}
+          setStartedRecipe={setStartedRecipe}
+        />
+      );
+    } 
+    if (startedRecipe) {
+      return (
+        <StartRecipe 
+          recipe={startedRecipe} 
+          onBack={() => setStartedRecipe(null)} 
+          onFinish={() => setFinishedRecipe(startedRecipe)}
+        />
+      );
+    }
+
+    if (selectedRecipe) {
+      return (
+        <RecipeDetails 
+          recipe={selectedRecipe} 
+          onBack={() => setSelectedRecipe(null)} 
+          onStartRecipe={() => setStartedRecipe(selectedRecipe)} 
+        />
+      );
+    }
+
     if (isLoading) {
       return (
         <View style={styles.centerContainer}>
@@ -71,31 +110,41 @@ export default function RecipesScreen() {
     }
 
     return (
-      <FlatList style={styles.recipeList} showsVerticalScrollIndicator={false} data={recipes} renderItem={({ item }) => (
-        <RecipeCard key={item.id} recipe={item} />
-      )}
-      />
+      <>
+        {/* Header Buttons */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.addButton}>
+            <Text style={styles.addButtonText}>Add new recipe</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputContainer}>
+              <Text style={styles.searchText}>Search</Text>
+            </View>
+            <TouchableOpacity style={styles.filterButton}>
+              <MaterialIcons name="filter-list" size={24} color="#603808" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <FlatList 
+          style={styles.recipeList} 
+          showsVerticalScrollIndicator={false} 
+          data={recipes} 
+          renderItem={({ item }) => (
+            <RecipeCard 
+              key={item.id} 
+              recipe={item} 
+              onPress={() => setSelectedRecipe(item as Recipe)} 
+            />
+          )}
+        />
+      </>
     );
   };
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header Buttons */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>Add new recipe</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Text style={styles.searchText}>Search</Text>
-          </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <MaterialIcons name="filter-list" size={24} color="#603808" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {renderContent()}
     </ThemedView>
   );

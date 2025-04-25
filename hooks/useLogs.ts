@@ -33,7 +33,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         return () => { active = false }
     }, [profile_id])
 
-    // 2️⃣ the actual "fetch followings' logs" routine
+    // 2️⃣ fetch both following and own logs
     const fetchFeed = useCallback(async () => {
         console.log("Fetching feed")
         if (!profile_id) return
@@ -48,16 +48,10 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             console.log("Follows:", follows)
 
             if (followErr) throw followErr
-            const followingIds = follows?.map((f) => f.following_id) ?? []
+            const followingIds = [...(follows?.map((f) => f.following_id) ?? []), profile_id]
 
-            if (followingIds.length === 0) {
-                setFeed([])
-                await AsyncStorage.setItem(CACHE_KEY(profile_id), '[]')
-                return
-            }
-
-            // 2b) fetch their logs with profile and recipe information
-            console.log("Fetching their logs")
+            // 2b) fetch logs with profile and recipe information
+            console.log("Fetching logs")
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
                 .select(`
@@ -116,14 +110,14 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
             if (logErr) throw logErr
-            setOwnLogs(logs as EnhancedLog[])  
+            setOwnLogs(logs as EnhancedLog[])
         } catch (err) {
             console.error('useFeed › fetchOwnLogs error', err)
         } finally {
             setLoading(false)
         }
     }, [profile_id, pageSize])
-    
+
 
     // 3️⃣ run fetch after we've loaded cache
     useEffect(() => {
