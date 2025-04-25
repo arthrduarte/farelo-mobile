@@ -21,7 +21,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arthrduarte.farelo"
+      "package": "com.arthrduarte.farelo",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "androidNavigationBar": {
       "backgroundColor": "#EDE4D2",
