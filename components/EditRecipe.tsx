@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe as BaseRecipe } from '@/types/db';
 import { IconSymbol } from './ui/IconSymbol';
 import { useState } from 'react';
+import TagManager from './TagManager';
 
 interface Recipe extends BaseRecipe {
   newTag?: string;
@@ -27,6 +28,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
   const [editedRecipe, setEditedRecipe] = useState<Recipe>(recipe);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isEditing, setIsEditing] = useState<{[key: string]: boolean}>({});
+  const [isTagManagerVisible, setIsTagManagerVisible] = useState(false);
 
   const validateField = (field: keyof Recipe, value: any): string | undefined => {
     switch (field) {
@@ -159,47 +161,25 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
           {editedRecipe.tags?.map((tag, index) => (
             <View key={index} style={styles.tag}>
               <Text style={styles.tagText}>{tag}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  const newTags = [...(editedRecipe.tags || [])];
-                  newTags.splice(index, 1);
-                  setEditedRecipe(prev => ({ ...prev, tags: newTags }));
-                }}
-                style={styles.removeTag}
-              >
-                <MaterialIcons name="close" size={16} color="white" />
-              </TouchableOpacity>
             </View>
           ))}
-          {isEditing.newTag ? (
-            <View style={styles.tag}>
-              <TextInput
-                style={[styles.tagText, styles.tagInput]}
-                value={editedRecipe.newTag || ''}
-                onChangeText={(text) => setEditedRecipe(prev => ({ ...prev, newTag: text }))}
-                onBlur={() => {
-                  if (editedRecipe.newTag && editedRecipe.newTag.length <= 12) {
-                    const newTags = [...(editedRecipe.tags || []), editedRecipe.newTag];
-                    setEditedRecipe(prev => ({ ...prev, tags: newTags, newTag: '' }));
-                  }
-                  stopEditing('newTag');
-                }}
-                maxLength={12}
-                autoFocus
-                placeholder="New tag..."
-                placeholderTextColor="rgba(255,255,255,0.7)"
-              />
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={[styles.tag, styles.addTag]}
-              onPress={() => startEditing('newTag')}
-            >
-              <MaterialIcons name="add" size={16} color="white" />
-              <Text style={styles.tagText}>Add Tag</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.manageTag}
+            onPress={() => setIsTagManagerVisible(true)}
+          >
+            <MaterialIcons name="settings" size={16} color="white" />
+            <Text style={styles.tagText}>Manage</Text>
+          </TouchableOpacity>
         </View>
+
+        <TagManager
+          visible={isTagManagerVisible}
+          onClose={() => setIsTagManagerVisible(false)}
+          tags={editedRecipe.tags || []}
+          onUpdateTags={(newTags) => {
+            setEditedRecipe(prev => ({ ...prev, tags: newTags }));
+          }}
+        />
 
         <View style={styles.divider}/>
 
@@ -577,5 +557,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  manageTag: {
+    flexDirection: 'row',
+    borderColor: '#793206',
+    backgroundColor: '#793206',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+    gap: 4,
   },
 }); 
