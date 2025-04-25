@@ -58,6 +58,7 @@ export default function RecipesScreen() {
           onBack={() => setFinishedRecipe(null)} 
           setFinishedRecipe={setFinishedRecipe}
           setSelectedRecipe={setSelectedRecipe}
+          setStartedRecipe={setStartedRecipe}
         />
       );
     } 

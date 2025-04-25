@@ -11,11 +11,12 @@ import { useLogs } from '@/hooks/useLogs';
 interface RecipeDetailsProps {
   recipe: Recipe;
   setFinishedRecipe: (recipe: Recipe | null) => void;
+  setStartedRecipe: (recipe: Recipe | null) => void;
   setSelectedRecipe: (recipe: Recipe | null) => void;
   onBack: () => void;
 }
 
-export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSelectedRecipe }: RecipeDetailsProps) {
+export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setStartedRecipe, setSelectedRecipe }: RecipeDetailsProps) {
   const { profile } = useAuth();
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
@@ -43,6 +44,7 @@ export default function FinishRecipe({ recipe, onBack, setFinishedRecipe, setSel
     if (error) throw Error(error.message);
         
     setFinishedRecipe(null);
+    setStartedRecipe(null);
     setSelectedRecipe(null);
 
     // Use replace to prevent going back to the form
