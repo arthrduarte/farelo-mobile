@@ -12,6 +12,7 @@ import StartRecipe from '@/components/recipe/StartRecipe';
 import FinishRecipe from '@/components/FinishRecipe';
 import EditRecipe from '@/components/recipe/EditRecipe';
 import { useNavigation } from 'expo-router';
+import { Link } from 'expo-router';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
@@ -168,9 +169,11 @@ export default function RecipesScreen() {
       <>
         {/* Header Buttons */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.addButtonText}>Add new recipe</Text>
-          </TouchableOpacity>
+          <Link href="/new-recipe" asChild>
+            <TouchableOpacity style={styles.addButton}>
+              <Text style={styles.addButtonText}>Add new recipe</Text>
+            </TouchableOpacity>
+          </Link>
           
           <View style={styles.searchContainer}>
             <View style={styles.searchInputContainer}>
