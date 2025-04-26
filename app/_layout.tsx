@@ -38,8 +38,8 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <OnboardingProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <OnboardingProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
@@ -54,8 +54,8 @@ export default function RootLayout() {
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>
-        </AuthProvider>
-      </OnboardingProvider>
+        </OnboardingProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

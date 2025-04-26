@@ -31,18 +31,38 @@ export default function Logincreen() {
   const { setIsOnboarded } = useOnboarding();
 
   async function signInWithEmail() {
-    setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    })
-    if (error) Alert.alert(error.message)
-
-    setLoading(false)
-    await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
-    setIsOnboarded(true);
-
-    await router.replace('/(tabs)/explore')
+    try {
+      setLoading(true)
+      console.log("[Login] Attempting to sign in:", { email })
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      })
+      
+      if (error) {
+        console.error("[Login] Sign in error:", error.message)
+        Alert.alert(error.message)
+        return
+      }
+      
+      console.log("[Login] Sign in successful")
+      await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
+      
+      // Authentication state will be handled by the context
+      // Note: setIsOnboarded may not be needed anymore since it's handled by the auth state
+      setIsOnboarded(true);
+      
+      // To avoid circular navigation, delay the redirection slightly
+      setTimeout(() => {
+        router.replace('/')
+      }, 100)
+    } catch (err) {
+      console.error("[Login] Unexpected error:", err)
+      Alert.alert("An unexpected error occurred")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

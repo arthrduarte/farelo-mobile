@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from './AuthContext';
@@ -14,48 +14,79 @@ const STORAGE_KEY = 'hasCompletedOnboarding';
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const segments = useSegments();
   const router = useRouter();
-  const { session, loading: authLoading } = useAuth();
+  const { loading: authLoading, onAuthStateChange } = useAuth();
 
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (session === null) {
-      setIsOnboarded(false);
-    }
-    if (isOnboarded === null) return;
-
-    const inAuthGroup = segments[0] === 'onboarding';
-
-    if (!isOnboarded && !inAuthGroup) {
-      router.replace('/onboarding');
-    } else if (isOnboarded && inAuthGroup) {
-      router.replace('/');
-    }
-  }, [isOnboarded, segments]);
-
-  const checkOnboardingStatus = async () => {
-    try {
-      const value = await AsyncStorage.getItem(STORAGE_KEY);
-      setIsOnboarded(value === 'true');
-    } catch (error) {
-      console.error('Error checking onboarding status:', error);
-      setIsOnboarded(false);
-    }
-  };
-
-  const handleSetIsOnboarded = async (value: boolean) => {
+  // Handle setting onboarded status safely
+  const handleSetIsOnboarded = useCallback(async (value: boolean) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, String(value));
       setIsOnboarded(value);
     } catch (error) {
-      console.error('Error setting onboarding status:', error);
+      console.error('[OnboardingContext] Error setting onboarding status:', error);
     }
-  };
+  }, []);
+
+  // Check onboarding status from storage on mount
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const value = await AsyncStorage.getItem(STORAGE_KEY);
+        setIsOnboarded(value === 'true');
+      } catch (error) {
+        console.error('[OnboardingContext] Error checking onboarding status:', error);
+        setIsOnboarded(false);
+      }
+    };
+    
+    checkOnboardingStatus();
+  }, []);
+
+  // Register auth state change listener - with cleanup
+  useEffect(() => {
+    
+    const unsubscribe = onAuthStateChange((isAuth) => {
+      setIsAuthenticated(isAuth);
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [onAuthStateChange]);
+
+  // Handle navigation based on auth and onboarding state
+  useEffect(() => {
+    // Skip navigation during loading states
+    if (authLoading || isOnboarded === null) {
+      return;
+    }
+    
+    const inOnboardingGroup = segments[0] === 'onboarding';
+        
+    // Authenticated users should be considered onboarded
+    if (isAuthenticated && !isOnboarded) {
+      handleSetIsOnboarded(true);
+      return; // Wait for state update before navigation
+    }
+    
+    // Navigate to proper screen
+    if (isAuthenticated) {
+      // Authenticated users always go to main app
+      if (inOnboardingGroup) {
+        router.replace('/');
+      }
+    } else {
+      // Non-authenticated users need onboarding
+      if (!isOnboarded && !inOnboardingGroup) {
+        router.replace('/onboarding');
+      } else if (isOnboarded && inOnboardingGroup) {
+        // They've completed onboarding before but aren't logged in 
+        // Let them stay in onboarding for login/register screens
+      }
+    }
+  }, [isOnboarded, isAuthenticated, segments, authLoading, router, handleSetIsOnboarded]);
 
   return (
     <OnboardingContext.Provider

@@ -33,27 +33,44 @@ export default function RegisterScreen() {
   const { setIsOnboarded } = useOnboarding();
 
   async function signUpWithEmail() {
-    setLoading(true)
-    const { error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: {
-          first_name: fullName.split(' ')[0],
-          last_name: fullName.split(' ')[1],
+    try {
+      setLoading(true)
+      console.log("[Register] Attempting to sign up:", { email })
+      
+      const { error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            first_name: fullName.split(' ')[0],
+            last_name: fullName.split(' ')[1],
+          },
         },
-      },
-    })
-    if (error) {
-      console.log('Error signing up:', error)
-      Alert.alert(error.message)
+      })
+      
+      if (error) {
+        console.error("[Register] Sign up error:", error.message)
+        Alert.alert(error.message)
+        return
+      }
+      
+      console.log("[Register] Sign up successful")
+      await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
+      
+      // Authentication state will be handled by the context
+      // Note: setIsOnboarded may not be needed anymore since it's handled by the auth state
+      setIsOnboarded(true);
+      
+      // To avoid circular navigation, delay the redirection slightly
+      setTimeout(() => {
+        router.replace('/')
+      }, 100)
+    } catch (err) {
+      console.error("[Register] Unexpected error:", err)
+      Alert.alert("An unexpected error occurred")
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
-    await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
-    setIsOnboarded(true);
-
-    await router.replace('/(tabs)/explore')
   }
 
   return (
