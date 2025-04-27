@@ -4,6 +4,8 @@ import React, {
   useEffect,
   useState,
   ReactNode,
+  useRef,
+  useCallback,
 } from 'react'
 import {
   Session,
@@ -13,7 +15,6 @@ import {
 } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { Profile } from '../types/db'
-import { useOnboarding } from './OnboardingContext'
 
 type AuthContextType = {
   user: User | null
@@ -22,6 +23,7 @@ type AuthContextType = {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  onAuthStateChange: (callback: (isAuthenticated: boolean) => void) => () => void
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -31,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => {},
   signOut: async () => {},
+  onAuthStateChange: () => () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -38,20 +41,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const { setIsOnboarded } = useOnboarding()
+  const callbacksRef = useRef<((isAuthenticated: boolean) => void)[]>([])
+
+  // Register callback for auth state changes - return cleanup function
+  const onAuthStateChange = useCallback((callback: (isAuthenticated: boolean) => void) => {
+    callbacksRef.current.push(callback)
+    
+    // Initial callback with current state if not loading
+    if (!loading) {
+      callback(!!session && !!profile)
+    }
+    
+    // Return cleanup function to remove this callback
+    return () => {
+      callbacksRef.current = callbacksRef.current.filter(cb => cb !== callback)
+    }
+  }, [session, profile, loading])
+  
+  // Function to notify all registered callbacks
+  const notifyCallbacks = useCallback((isAuthenticated: boolean) => {
+    callbacksRef.current.forEach(callback => callback(isAuthenticated))
+  }, [])
 
   // 1) on mount: grab current session (Auto–rehydrated by Supabase/AsyncStorage)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
-      setLoading(false)
-
+      
       if (session?.user) {
         fetchProfile(session.user.id)
+      } else {
+        notifyCallbacks(false)
+        setLoading(false)
       }
     })
-  }, [])
+  }, [notifyCallbacks])
+
+  // Notify callbacks when profile is set
+  useEffect(() => {
+    if (!loading) {
+      const isAuthenticated = !!session && !!profile
+      notifyCallbacks(isAuthenticated)
+    }
+  }, [session, profile, loading, notifyCallbacks])
 
   // 2) subscribe to any auth state change (signIn, signOut, token refresh)
   useEffect(() => {
@@ -61,30 +94,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null)
 
         if (session?.user) fetchProfile(session.user.id)
-        else setProfile(null)
+        else {
+          setProfile(null)
+          // Notify callbacks immediately for logout
+          notifyCallbacks(false)
+        }
     })
 
     return () => listener.subscription.unsubscribe()
-  }, [])
+  }, [notifyCallbacks])
 
   // 3) helpers
   const signIn = async (email: string, password: string) => {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
-    setLoading(false)
   }
   
   const signOut = async () => {
+    try {
       setLoading(true)
       const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      
+      if (error) {
+        console.error("[AuthContext] Error during signOut:", error)
+        throw error
+      }
+      
       setLoading(false)
       setProfile(null)
-      setIsOnboarded(false)
+      
+      notifyCallbacks(false)
+    } catch (err) {
+      console.error("[AuthContext] Unexpected error during signOut:", err)
+      setLoading(false)
+      throw err
+    }
   }
 
-    const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string) => {
+    try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -92,15 +141,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
-        console.error('Error fetching profile:', error)
+        console.error('[AuthContext] Error fetching profile:', error)
       } else {
         setProfile(data)
       }
+      setLoading(false)
+    } catch (err) {
+      console.error('[AuthContext] Unexpected error fetching profile:', err)
+      setLoading(false)
     }
+  }
     
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, loading, signIn, signOut }}
+      value={{ 
+        user, 
+        session, 
+        profile, 
+        loading, 
+        signIn, 
+        signOut,
+        onAuthStateChange 
+      }}
     >
       {children}
     </AuthContext.Provider>
