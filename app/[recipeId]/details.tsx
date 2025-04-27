@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
@@ -9,39 +9,15 @@ import DeleteModal from '@/components/recipe/DeleteModal';
 import RemixModal from '@/components/recipe/RemixModal';
 import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { data: recipe, isLoading, isError } = useRecipe(recipeId as string);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
-
-  useEffect(() => {
-    async function fetchRecipe() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const { data, error } = await supabase
-          .from('recipes')
-          .select('*')
-          .eq('id', recipeId)
-          .single();
-
-        if (error) throw error;
-        setRecipe(data);
-      } catch (err) {
-        console.error('Error fetching recipe:', err);
-        setError('Failed to load recipe details');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchRecipe();
-  }, [recipeId]);
 
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
@@ -51,6 +27,9 @@ export default function RecipeDetailsScreen() {
         .eq('id', recipeToDelete.id);
 
       if (error) throw error;
+      
+      // Invalidate both the list and detail queries
+      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.all });
       router.back();
     } catch (err) {
       console.error('Error deleting recipe:', err);
@@ -58,7 +37,8 @@ export default function RecipeDetailsScreen() {
   };
 
   const handleRecipeUpdate = (updatedRecipe: Recipe) => {
-    setRecipe(updatedRecipe);
+    // Update the recipe in the cache
+    queryClient.setQueryData(RECIPE_KEYS.detail(recipeId as string), updatedRecipe);
   };
 
   if (isLoading) {
@@ -69,10 +49,10 @@ export default function RecipeDetailsScreen() {
     );
   }
 
-  if (error || !recipe) {
+  if (isError || !recipe) {
     return (
       <ThemedView style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error || 'Recipe not found'}</Text>
+        <Text style={styles.errorText}>Recipe not found</Text>
         <TouchableOpacity style={styles.button} onPress={() => router.back()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>

@@ -1,50 +1,16 @@
 import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
-import { useState, useEffect, useCallback } from 'react';
 import RecipeCard from '@/components/recipe/RecipeCard';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import { Link } from 'expo-router';
+import { useRecipes } from '@/hooks/useRecipes';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
-
-  const [recipes, setRecipes] = useState<Partial<Recipe>[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { data: recipes, isLoading, isError, error, refetch } = useRecipes(profile?.id);
   
-  const fetchRecipes = useCallback(async () => {
-    try {
-      setIsRefreshing(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('recipes')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .eq('profile_id', profile?.id);
-
-      if (error) {
-        throw error;
-      }
-
-      setRecipes(data || []);
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-      setError('Failed to load recipes. Please try again later.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [profile?.id]);
-
-  useEffect(() => {
-    fetchRecipes();
-  }, [fetchRecipes]);
-
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -54,18 +20,18 @@ export default function RecipesScreen() {
       );
     }
 
-    if (error) {
+    if (isError) {
       return (
         <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchRecipes}>
+          <Text style={styles.errorText}>{error?.message || 'Failed to load recipes. Please try again later.'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
         </View>
       );
     }
 
-    if (recipes.length === 0) {
+    if (!recipes || recipes.length === 0) {
       return (
         <View style={styles.centerContainer}>
           <Text style={styles.emptyText}>No recipes found</Text>
@@ -103,8 +69,8 @@ export default function RecipesScreen() {
                 recipe={item} 
               />
           )}
-          refreshing={isRefreshing}
-          onRefresh={fetchRecipes}
+          refreshing={isLoading}
+          onRefresh={refetch}
         />
       </>
     );

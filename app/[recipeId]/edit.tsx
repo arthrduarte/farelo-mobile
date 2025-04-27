@@ -2,12 +2,14 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput,
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe as BaseRecipe } from '@/types/db';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import TagManager from '@/components/recipe/edit/TagManager';
 import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Recipe extends BaseRecipe {
   newTag?: string;
@@ -24,39 +26,17 @@ interface ValidationErrors {
 
 export default function EditRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editedRecipe, setEditedRecipe] = useState<Recipe | null>(null);
+  const queryClient = useQueryClient();
+  const { data: recipe, isLoading: isLoadingRecipe, isError } = useRecipe(recipeId as string);
+  const [editedRecipe, setEditedRecipe] = useState<Recipe | null>(recipe || null);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isEditing, setIsEditing] = useState<{[key: string]: boolean}>({});
   const [isTagManagerVisible, setIsTagManagerVisible] = useState(false);
 
-  useEffect(() => {
-    async function fetchRecipe() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const { data, error } = await supabase
-          .from('recipes')
-          .select('*')
-          .eq('id', recipeId)
-          .single();
-
-        if (error) throw error;
-        setRecipe(data);
-        setEditedRecipe(data);
-      } catch (err) {
-        console.error('Error fetching recipe:', err);
-        setError('Failed to load recipe details');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchRecipe();
-  }, [recipeId]);
+  // Update editedRecipe when recipe data is loaded
+  if (recipe && !editedRecipe) {
+    setEditedRecipe(recipe);
+  }
 
   const validateField = (field: keyof Recipe, value: any): string | undefined => {
     switch (field) {
@@ -95,10 +75,12 @@ export default function EditRecipeScreen() {
           .eq('id', recipeId);
 
         if (error) throw error;
+        
+        // Invalidate both the list and detail queries
+        queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.all });
         router.back();
       } catch (err) {
         console.error('Error updating recipe:', err);
-        setError('Failed to update recipe');
       }
     } else {
       setErrors(newErrors);
@@ -113,7 +95,7 @@ export default function EditRecipeScreen() {
     setIsEditing(prev => ({ ...prev, [field]: false }));
   };
 
-  if (isLoading) {
+  if (isLoadingRecipe) {
     return (
       <ThemedView style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#793206" />
@@ -121,10 +103,10 @@ export default function EditRecipeScreen() {
     );
   }
 
-  if (error || !editedRecipe) {
+  if (isError || !editedRecipe) {
     return (
       <ThemedView style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error || 'Recipe not found'}</Text>
+        <Text style={styles.errorText}>Recipe not found</Text>
         <TouchableOpacity style={styles.button} onPress={() => router.back()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
