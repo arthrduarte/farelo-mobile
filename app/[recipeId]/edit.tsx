@@ -7,9 +7,7 @@ import TagManager from '@/components/recipe/edit/TagManager';
 import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, router } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
-import { useQueryClient } from '@tanstack/react-query';
+import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Recipe extends BaseRecipe {
@@ -27,9 +25,9 @@ interface ValidationErrors {
 
 export default function EditRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
-  const queryClient = useQueryClient();
   const { profile } = useAuth();
   const { data: recipe, isLoading: isLoadingRecipe, isError } = useRecipe(recipeId as string, profile?.id);
+  const updateRecipeMutation = useUpdateRecipe();
   const [editedRecipe, setEditedRecipe] = useState<Recipe | null>(recipe || null);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isEditing, setIsEditing] = useState<{[key: string]: boolean}>({});
@@ -71,15 +69,7 @@ export default function EditRecipeScreen() {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        const { error } = await supabase
-          .from('recipes')
-          .update(editedRecipe)
-          .eq('id', recipeId);
-
-        if (error) throw error;
-        
-        // Invalidate both the list and detail queries
-        queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.all });
+        await updateRecipeMutation.mutateAsync(editedRecipe);
         router.back();
       } catch (err) {
         console.error('Error updating recipe:', err);

@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -9,38 +8,33 @@ import DeleteModal from '@/components/recipe/DeleteModal';
 import RemixModal from '@/components/recipe/RemixModal';
 import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
-import { useQueryClient } from '@tanstack/react-query';
+import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
-  const queryClient = useQueryClient();
   const { profile } = useAuth();
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
+  const deleteRecipeMutation = useDeleteRecipe();
+  const updateRecipeMutation = useUpdateRecipe();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
 
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
-      const { error } = await supabase
-        .from('recipes')
-        .delete()
-        .eq('id', recipeToDelete.id);
-
-      if (error) throw error;
-      
-      // Invalidate both the list and detail queries
-      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.all });
+      await deleteRecipeMutation.mutateAsync(recipeToDelete);
       router.back();
     } catch (err) {
       console.error('Error deleting recipe:', err);
     }
   };
 
-  const handleRecipeUpdate = (updatedRecipe: Recipe) => {
-    // Update the recipe in the cache
-    queryClient.setQueryData(RECIPE_KEYS.detail(recipeId as string), updatedRecipe);
+  const handleRecipeUpdate = async (updatedRecipe: Recipe) => {
+    try {
+      await updateRecipeMutation.mutateAsync(updatedRecipe);
+    } catch (err) {
+      console.error('Error updating recipe:', err);
+    }
   };
 
   if (isLoading) {

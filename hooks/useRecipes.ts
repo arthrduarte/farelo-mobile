@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 
@@ -53,6 +53,73 @@ export const useRecipe = (id: string, profileId?: string) => {
 
             if (error) throw error;
             return data as Recipe;
+        },
+    });
+};
+
+export const useUpdateRecipe = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (recipe: Recipe) => {
+            const { data, error } = await supabase
+                .from('recipes')
+                .update(recipe)
+                .eq('id', recipe.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (updatedRecipe) => {
+            // Update both the list and detail cache
+            queryClient.setQueryData(
+                RECIPE_KEYS.detail(updatedRecipe.id),
+                updatedRecipe
+            );
+
+            // Update the recipe in the list cache
+            queryClient.setQueryData<Recipe[]>(
+                RECIPE_KEYS.list(updatedRecipe.profile_id),
+                (oldRecipes) => {
+                    if (!oldRecipes) return [updatedRecipe];
+                    return oldRecipes.map(recipe =>
+                        recipe.id === updatedRecipe.id ? updatedRecipe : recipe
+                    );
+                }
+            );
+        },
+    });
+};
+
+export const useDeleteRecipe = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (recipe: Recipe) => {
+            const { error } = await supabase
+                .from('recipes')
+                .delete()
+                .eq('id', recipe.id);
+
+            if (error) throw error;
+            return recipe;
+        },
+        onSuccess: (deletedRecipe) => {
+            // Remove from detail cache
+            queryClient.removeQueries({
+                queryKey: RECIPE_KEYS.detail(deletedRecipe.id)
+            });
+
+            // Remove from list cache
+            queryClient.setQueryData<Recipe[]>(
+                RECIPE_KEYS.list(deletedRecipe.profile_id),
+                (oldRecipes) => {
+                    if (!oldRecipes) return [];
+                    return oldRecipes.filter(recipe => recipe.id !== deletedRecipe.id);
+                }
+            );
         },
     });
 }; 
