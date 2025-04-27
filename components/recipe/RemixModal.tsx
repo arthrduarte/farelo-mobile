@@ -2,15 +2,15 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityInd
 import { Recipe } from '@/types/db';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { router } from 'expo-router';
 
 interface RemixModalProps {
   visible: boolean;
   onClose: () => void;
   recipe: Recipe;
-  onSuccess: (newRecipe: Recipe) => void;
 }
 
-export default function RemixModal({ visible, onClose, recipe, onSuccess }: RemixModalProps) {
+export default function RemixModal({ visible, onClose, recipe }: RemixModalProps) {
   const [instructions, setInstructions] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +50,14 @@ export default function RemixModal({ visible, onClose, recipe, onSuccess }: Remi
         throw error;
       }
 
-      onSuccess(data);
       onClose();
       setInstructions('');
+      
+      // Navigate to the new recipe's start screen
+      router.push({
+        pathname: '/[recipeId]/details',
+        params: { recipeId: data.id }
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

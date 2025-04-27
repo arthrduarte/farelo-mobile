@@ -72,7 +72,6 @@ export default function RecipeDetailsScreen() {
         visible={showRemixModal}
         onClose={() => setShowRemixModal(false)}
         recipe={recipe}
-        onSuccess={handleRecipeUpdate}
       />
 
       {/* Back Button */}
