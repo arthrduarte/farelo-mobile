@@ -1,17 +1,22 @@
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import DeleteModal from '@/components/recipe/DeleteModal';
+import RemixModal from '@/components/recipe/RemixModal';
+import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRemixModal, setShowRemixModal] = useState(false);
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -38,6 +43,24 @@ export default function RecipeDetailsScreen() {
     fetchRecipe();
   }, [recipeId]);
 
+  const handleDelete = async (recipeToDelete: Recipe) => {
+    try {
+      const { error } = await supabase
+        .from('recipes')
+        .delete()
+        .eq('id', recipeToDelete.id);
+
+      if (error) throw error;
+      router.back();
+    } catch (err) {
+      console.error('Error deleting recipe:', err);
+    }
+  };
+
+  const handleRecipeUpdate = (updatedRecipe: Recipe) => {
+    setRecipe(updatedRecipe);
+  };
+
   if (isLoading) {
     return (
       <ThemedView style={styles.centerContainer}>
@@ -59,63 +82,158 @@ export default function RecipeDetailsScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <DeleteModal 
+        visible={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          handleDelete(recipe);
+        }}
+        recipe={recipe}
+      />
+
+      <RemixModal
+        visible={showRemixModal}
+        onClose={() => setShowRemixModal(false)}
+        recipe={recipe}
+        onSuccess={handleRecipeUpdate}
+      />
+
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <MaterialIcons name="arrow-back" size={24} color="#793206" />
+      </TouchableOpacity>
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <MaterialIcons name="arrow-back" size={24} color="#793206" />
+        <Text style={styles.title}>{recipe.title}</Text>
+
+        <View style={styles.metaInfo}>
+          <View style={styles.metaItem}>
+            <View style={styles.timeIcon}>
+              <MaterialIcons name="schedule" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{recipe.time} mins</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <View style={styles.servingsIcon}>
+              <MaterialIcons name="people" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{recipe.servings} servings</Text>
+          </View>
+        </View>
+
+        {/* Start Recipe Button */}
+        <TouchableOpacity style={styles.startRecipeButton}>
+          <Text style={styles.startRecipeText}>Start Recipe</Text>
+        </TouchableOpacity>
+
+        {/* Recipe Image */}
+        {recipe.ai_image_url ? (
+          <Image 
+            source={{ uri: recipe.ai_image_url }} 
+            style={styles.recipeImage}
+          />
+        ) : (
+          <PulsingPlaceholder />
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setShowRemixModal(true)}
+          >
+            <MaterialIcons name="refresh" size={24} color="#793206" />
+            <Text style={styles.actionButtonText}>Remix</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>{recipe.title}</Text>
+          <TouchableOpacity style={styles.actionButton}>
+            <MaterialIcons name="edit" size={24} color="#793206" />
+            <Text style={styles.actionButtonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setShowDeleteConfirm(true)}
+          >
+            <MaterialIcons name="delete" size={24} color="#793206" />
+            <Text style={styles.actionButtonText}>Delete</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Recipe Details */}
-        <View style={styles.detailsContainer}>
-          <View style={styles.infoRow}>
-            <MaterialIcons name="timer" size={20} color="#793206" />
-            <Text style={styles.infoText}>{recipe.time} minutes</Text>
-          </View>
+        {/* Tags */}
+        <View style={styles.tagContainer}>
+          {recipe.tags?.map((tag, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
 
-          <View style={styles.infoRow}>
-            <MaterialIcons name="people" size={20} color="#793206" />
-            <Text style={styles.infoText}>{recipe.servings} servings</Text>
-          </View>
+        <View style={styles.divider}/>
 
-          {/* Description */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.description}>{recipe.description}</Text>
-          </View>
-
-          {/* Ingredients */}
-          <View style={styles.section}>
+        {/* Ingredients */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="pepper" color="#793206" size={24} />
             <Text style={styles.sectionTitle}>Ingredients</Text>
-            {recipe.ingredients?.map((ingredient, index) => (
-              <Text key={index} style={styles.ingredient}>• {ingredient}</Text>
-            ))}
           </View>
+          {recipe.ingredients?.map((ingredient, index) => (
+            <View 
+              key={index} 
+              style={[
+                styles.ingredient,
+                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+              ]}
+            >
+              <Text style={[
+                styles.ingredientText,
+                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+              ]}>• {ingredient}</Text>
+            </View>
+          ))}
+        </View>
 
-          {/* Instructions */}
-          <View style={styles.section}>
+        <View style={styles.divider}/>
+
+        {/* Instructions */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
             <Text style={styles.sectionTitle}>Instructions</Text>
-            {recipe.instructions?.map((instruction, index) => (
-              <View key={index} style={styles.instructionContainer}>
-                <Text style={styles.instructionNumber}>{index + 1}</Text>
-                <Text style={styles.instruction}>{instruction}</Text>
-              </View>
-            ))}
+          </View>
+          {recipe.instructions?.map((instruction, index) => (
+            <View 
+              key={index}
+              style={[
+                styles.instruction,
+                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+              ]}
+            >
+              <Text style={[
+                styles.instructionText,
+                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+              ]}>{index + 1}. {instruction}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.divider}/>
+
+        {/* Notes */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Notes</Text>
+          </View>
+          <View style={styles.notesContainer}>
+            <Text style={[styles.notesText, styles.textOnBrown]}>
+              {recipe.notes || 'No notes added yet.'}
+            </Text>
           </View>
         </View>
-      </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.button, styles.startButton]}>
-          <Text style={styles.buttonText}>Start Cooking</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.editButton]}>
-          <Text style={styles.buttonText}>Edit Recipe</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.divider}/>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -123,94 +241,167 @@ export default function RecipeDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 16,
-  },
   backButton: {
-    padding: 8,
+    marginBottom: 16,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#793206',
-    flex: 1,
+    marginBottom: 16,
   },
-  detailsContainer: {
-    padding: 16,
-    gap: 24,
+  metaInfo: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
   },
-  infoRow: {
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
-  infoText: {
-    fontSize: 16,
-    color: '#793206',
-  },
-  section: {
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#793206',
-  },
-  description: {
-    fontSize: 16,
-    color: '#793206',
-    lineHeight: 24,
-  },
-  ingredient: {
-    fontSize: 16,
-    color: '#793206',
-    marginLeft: 8,
-    lineHeight: 24,
-  },
-  instructionContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  instructionNumber: {
-    backgroundColor: '#793206',
-    color: 'white',
+  timeIcon: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    textAlign: 'center',
-    lineHeight: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  instruction: {
-    flex: 1,
+  servingsIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metaText: {
     fontSize: 16,
     color: '#793206',
-    lineHeight: 24,
+  },
+  startRecipeButton: {
+    backgroundColor: '#793206',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  startRecipeText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recipeImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   actionButtons: {
-    padding: 16,
-    gap: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  actionButton: {
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: '#793206',
+    marginTop: 4,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 24,
+  },
+  tag: {
+    backgroundColor: '#793206',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  tagText: {
+    color: 'white',
+    fontSize: 14,
+  },
+  divider: {
+    borderBottomColor: '#79320633',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#793206',
+  },
+  ingredient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  ingredientBrown: {
+    backgroundColor: '#79320633',
+  },
+  ingredientBeige: {
+    backgroundColor: '#EDE4D2',
+  },
+  ingredientText: {
+    fontSize: 18,
+    flex: 1,
+    marginBottom: 0,
+  },
+  textOnBrown: {
+    color: '#793206',
+  },
+  textOnBeige: {
+    color: '#793206',
+  },
+  instruction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  instructionText: {
+    fontSize: 18,
+    flex: 1,
+    marginBottom: 0,
+  },
+  notesContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+  },
+  notesText: {
+    fontSize: 18,
+    lineHeight: 24,
   },
   button: {
     backgroundColor: '#793206',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
-  },
-  startButton: {
-    backgroundColor: '#793206',
-  },
-  editButton: {
-    backgroundColor: '#79320633',
   },
   buttonText: {
     color: 'white',
