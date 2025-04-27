@@ -52,7 +52,7 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
-                name="/[recipeId]/details"
+                name="[recipeId]/details"
                 options={{
                   presentation: 'modal',
                 }}

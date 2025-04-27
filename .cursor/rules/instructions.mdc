@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Before starting anything, check the file [db.ts](mdc:types/db.ts) to understand database schema
