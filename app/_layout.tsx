@@ -58,30 +58,11 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="onboarding" />
               <Stack.Screen name="+not-found" />
-              <Stack.Screen
-                name="new-recipe"
-                options={{
-                  presentation: 'modal',
-                }}
-              />
-              <Stack.Screen
-                name="[recipeId]/details"
-                options={{
-                  presentation: 'modal',
-                }}
-              />
-              <Stack.Screen
-                name="[recipeId]/edit"
-                options={{
-                  presentation: 'modal',
-                }}
-              />
-              <Stack.Screen
-                name="[recipeId]/start"
-                options={{
-                  presentation: 'modal',
-                }}
-              />
+              <Stack.Screen name="new-recipe" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="[recipeId]/details"/>
+              <Stack.Screen name="[recipeId]/edit"/>
+              <Stack.Screen name="[recipeId]/start"/>
+              <Stack.Screen name="[recipeId]/finish"/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>

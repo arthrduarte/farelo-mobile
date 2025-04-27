@@ -184,10 +184,10 @@ export default function StartRecipeScreen() {
 
         <TouchableOpacity 
           style={styles.finishButton} 
-          onPress={() => {
-            // TODO: Handle recipe completion
-            router.back();
-          }}
+          onPress={() => router.push({
+            pathname: '/[recipeId]/finish',
+            params: { recipeId: recipe.id }
+          })}
         >
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>

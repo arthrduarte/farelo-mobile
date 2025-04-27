@@ -9,7 +9,7 @@ import { useRecipes } from '@/hooks/useRecipes';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, loading, refresh } = useLogs(profile?.id ?? '');
+  const { feed, ownLogs, loading, refresh } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
 
   const handleLike = (logId: string) => {
