@@ -11,11 +11,13 @@ import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const { data: recipe, isLoading, isError } = useRecipe(recipeId as string);
+  const { profile } = useAuth();
+  const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
 

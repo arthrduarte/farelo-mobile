@@ -10,6 +10,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Recipe extends BaseRecipe {
   newTag?: string;
@@ -27,7 +28,8 @@ interface ValidationErrors {
 export default function EditRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const { data: recipe, isLoading: isLoadingRecipe, isError } = useRecipe(recipeId as string);
+  const { profile } = useAuth();
+  const { data: recipe, isLoading: isLoadingRecipe, isError } = useRecipe(recipeId as string, profile?.id);
   const [editedRecipe, setEditedRecipe] = useState<Recipe | null>(recipe || null);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isEditing, setIsEditing] = useState<{[key: string]: boolean}>({});

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 
@@ -14,6 +14,7 @@ export const useRecipes = (profileId: string | undefined) => {
     return useQuery({
         queryKey: RECIPE_KEYS.list(profileId || ''),
         queryFn: async () => {
+            console.log("Querying recipes from supabase");
             const { data, error } = await supabase
                 .from('recipes')
                 .select('*')
@@ -27,10 +28,23 @@ export const useRecipes = (profileId: string | undefined) => {
     });
 };
 
-export const useRecipe = (id: string) => {
+export const useRecipe = (id: string, profileId?: string) => {
+    const queryClient = useQueryClient();
+
     return useQuery({
         queryKey: RECIPE_KEYS.detail(id),
         queryFn: async () => {
+            // First try to get from the recipes list cache
+            const recipes = queryClient.getQueryData<Recipe[]>(RECIPE_KEYS.list(profileId || ''));
+            const cachedRecipe = recipes?.find(recipe => recipe.id === id);
+
+            if (cachedRecipe) {
+                console.log("Using recipe from cache");
+                return cachedRecipe;
+            }
+
+            // If not in cache, fetch individually
+            console.log("Querying recipe from supabase");
             const { data, error } = await supabase
                 .from('recipes')
                 .select('*')
