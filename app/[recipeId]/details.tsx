@@ -100,7 +100,13 @@ export default function RecipeDetailsScreen() {
         </View>
 
         {/* Start Recipe Button */}
-        <TouchableOpacity style={styles.startRecipeButton}>
+        <TouchableOpacity 
+          style={styles.startRecipeButton} 
+          onPress={() => router.push({
+            pathname: '/[recipeId]/start',
+            params: { recipeId: recipe.id }
+          })}
+        >
           <Text style={styles.startRecipeText}>Start Recipe</Text>
         </TouchableOpacity>
 
