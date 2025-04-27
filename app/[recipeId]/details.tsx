@@ -147,7 +147,10 @@ export default function RecipeDetailsScreen() {
             <MaterialIcons name="refresh" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Remix</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => router.push(`/${recipeId}/edit` as any)}
+          >
             <MaterialIcons name="edit" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Edit</Text>
           </TouchableOpacity>

@@ -57,6 +57,12 @@ export default function RootLayout() {
                   presentation: 'modal',
                 }}
               />
+              <Stack.Screen
+                name="[recipeId]/edit"
+                options={{
+                  presentation: 'modal',
+                }}
+              />
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>
