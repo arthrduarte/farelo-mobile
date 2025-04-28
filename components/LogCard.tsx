@@ -26,7 +26,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
   const fullName = `${log.profile.first_name} ${log.profile.last_name}`;
   
   return (
-    <TouchableOpacity onPress={() => router.push(`/${log.id}/details`)}>
+    <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Image 

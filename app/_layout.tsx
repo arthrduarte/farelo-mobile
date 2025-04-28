@@ -59,11 +59,11 @@ export default function RootLayout() {
               <Stack.Screen name="onboarding" />
               <Stack.Screen name="+not-found" />
               <Stack.Screen name="new-recipe" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="[recipeId]/details"/>
-              <Stack.Screen name="[recipeId]/edit"/>
-              <Stack.Screen name="[recipeId]/start"/>
-              <Stack.Screen name="[recipeId]/finish"/>
-              <Stack.Screen name="[logId]/details"/>
+              <Stack.Screen name="recipe/[recipeId]/details"/>
+              <Stack.Screen name="recipe/[recipeId]/edit"/>
+              <Stack.Screen name="recipe/[recipeId]/start"/>
+              <Stack.Screen name="recipe/[recipeId]/finish"/>
+              <Stack.Screen name="log/[logId]/details"/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>
