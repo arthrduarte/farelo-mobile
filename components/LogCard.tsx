@@ -3,6 +3,8 @@ import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { Log, Profile, Recipe } from '@/types/db';
+import { router } from 'expo-router';
+import { formatTimeAgo } from '@/lib/utils';
 
 type EnhancedLog = Log & {
   profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
@@ -16,17 +18,6 @@ type LogCardProps = {
   onAdd?: () => void;
 };
 
-const formatTimeAgo = (date: string) => {
-  const now = new Date();
-  const past = new Date(date);
-  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
-
-  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  return `${Math.floor(diffInSeconds / 86400)} days ago`;
-};
-
 export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd }) => {
   if (!log.profile || !log.recipe) {
     return null;
@@ -35,11 +26,12 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
   const fullName = `${log.profile.first_name} ${log.profile.last_name}`;
   
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Image 
-          source={{ uri: log.profile.image }}
-          style={styles.avatar}
+    <TouchableOpacity onPress={() => router.push(`/${log.id}/details`)}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Image 
+            source={{ uri: log.profile.image }}
+            style={styles.avatar}
         />
         <View style={styles.headerText}>
           <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
@@ -79,6 +71,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
         </TouchableOpacity>
       </View>
     </View>
+    </TouchableOpacity>
   );
 };
 
