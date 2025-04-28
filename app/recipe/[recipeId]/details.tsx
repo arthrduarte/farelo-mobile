@@ -12,6 +12,9 @@ import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes'
 import { useAuth } from '@/contexts/AuthContext';
 import { IngredientsSection } from '@/components/recipe/IngredientsSection';
 import { InstructionsSection } from '@/components/recipe/InstructionsSection';
+import { ImagesSection } from '@/components/recipe/ImagesSection';
+import { NotesSection } from '@/components/recipe/NotesSection';
+import { TagsSection } from '@/components/recipe/TagsSection';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -112,14 +115,7 @@ export default function RecipeDetailsScreen() {
         </TouchableOpacity>
 
         {/* Recipe Image */}
-        {recipe.ai_image_url ? (
-          <Image 
-            source={{ uri: recipe.ai_image_url }} 
-            style={styles.recipeImage}
-          />
-        ) : (
-          <PulsingPlaceholder />
-        )}
+        <ImagesSection mainImage={recipe.ai_image_url} />
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
@@ -147,13 +143,7 @@ export default function RecipeDetailsScreen() {
         </View>
 
         {/* Tags */}
-        <View style={styles.tagContainer}>
-          {recipe.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
+        <TagsSection tags={recipe.tags} />
 
         <View style={styles.divider}/>
 
@@ -168,17 +158,7 @@ export default function RecipeDetailsScreen() {
         <View style={styles.divider}/>
 
         {/* Notes */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Notes</Text>
-          </View>
-          <View style={styles.notesContainer}>
-            <Text style={[styles.notesText, styles.textOnBrown]}>
-              {recipe.notes || 'No notes added yet.'}
-            </Text>
-          </View>
-        </View>
+        <NotesSection notes={recipe.notes} />
 
         <View style={styles.divider}/>
       </ScrollView>
@@ -267,53 +247,10 @@ const styles = StyleSheet.create({
     color: '#793206',
     marginTop: 4,
   },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
-  tag: {
-    backgroundColor: '#793206',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  tagText: {
-    color: 'white',
-    fontSize: 14,
-  },
   divider: {
     borderBottomColor: '#79320633',
     borderBottomWidth: StyleSheet.hairlineWidth,
     marginBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#793206',
-  },
-  textOnBrown: {
-    color: '#793206',
-  },
-  textOnBeige: {
-    color: '#793206',
-  },
-  notesContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#fff',
-  },
-  notesText: {
-    fontSize: 18,
-    lineHeight: 24,
   },
   button: {
     backgroundColor: '#793206',
