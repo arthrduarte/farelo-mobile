@@ -10,6 +10,8 @@ import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
+import { IngredientsSection } from '@/components/recipe/IngredientsSection';
+import { InstructionsSection } from '@/components/recipe/InstructionsSection';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -156,50 +158,12 @@ export default function RecipeDetailsScreen() {
         <View style={styles.divider}/>
 
         {/* Ingredients */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="pepper" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-          </View>
-          {recipe.ingredients?.map((ingredient, index) => (
-            <View 
-              key={index} 
-              style={[
-                styles.ingredient,
-                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-              ]}
-            >
-              <Text style={[
-                styles.ingredientText,
-                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-              ]}>• {ingredient}</Text>
-            </View>
-          ))}
-        </View>
+        <IngredientsSection ingredients={recipe.ingredients} />
 
         <View style={styles.divider}/>
 
         {/* Instructions */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Instructions</Text>
-          </View>
-          {recipe.instructions?.map((instruction, index) => (
-            <View 
-              key={index}
-              style={[
-                styles.instruction,
-                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-              ]}
-            >
-              <Text style={[
-                styles.instructionText,
-                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-              ]}>{index + 1}. {instruction}</Text>
-            </View>
-          ))}
-        </View>
+        <InstructionsSection instructions={recipe.instructions} />
 
         <View style={styles.divider}/>
 
@@ -335,41 +299,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#793206',
   },
-  ingredient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 8,
-  },
-  ingredientBrown: {
-    backgroundColor: '#79320633',
-  },
-  ingredientBeige: {
-    backgroundColor: '#EDE4D2',
-  },
-  ingredientText: {
-    fontSize: 18,
-    flex: 1,
-    marginBottom: 0,
-  },
   textOnBrown: {
     color: '#793206',
   },
   textOnBeige: {
     color: '#793206',
-  },
-  instruction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 8,
-  },
-  instructionText: {
-    fontSize: 18,
-    flex: 1,
-    marginBottom: 0,
   },
   notesContainer: {
     padding: 12,
