@@ -1,105 +1,27 @@
 import { useLocalSearchParams } from "expo-router";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import { Log, Profile, Recipe, Log_Comment } from "@/types/db";
 import { MaterialIcons } from '@expo/vector-icons';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useState } from "react";
 import { formatTimeAgo } from "@/lib/utils";
-
-type EnhancedLog = Log & {
-    profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
-    recipe: Recipe;
-};
-
-type ChatMessage = {
-    role: 'user' | 'ai';
-    message: string;
-    timestamp: string;
-};
-
-// Temporary mock data
-const MOCK_LOG: EnhancedLog = {
-    id: "1",
-    profile_id: "1",
-    recipe_id: "1",
-    description: "This recipe turned out amazing! The flavors were perfect.",
-    images: [
-        "https://picsum.photos/400/300",
-        "https://picsum.photos/400/301",
-        "https://picsum.photos/400/302"
-    ],
-    created_at: "2024-03-20T10:00:00Z",
-    profile: {
-        first_name: "John",
-        last_name: "Doe",
-        username: "johndoe",
-        image: "https://picsum.photos/100/100"
-    },
-    recipe: {
-        id: "1",
-        title: "Spaghetti Carbonara",
-        description: "Classic Italian pasta dish",
-        ai_image_url: "",
-        time: 30,
-        servings: 4,
-        ingredients: [
-            "400g spaghetti",
-            "200g pancetta",
-            "4 large eggs",
-            "100g Pecorino Romano",
-            "100g Parmigiano Reggiano",
-            "Black pepper"
-        ],
-        instructions: [
-            "Bring a large pot of salted water to boil",
-            "Cook pasta according to package instructions",
-            "Meanwhile, cook pancetta until crispy",
-            "Mix eggs and cheese in a bowl",
-            "Combine everything and serve hot"
-        ],
-        tags: ["Italian", "Pasta", "Quick"],
-        source_url: "",
-        user_image_url: "",
-        notes: "",
-        profile_id: "1",
-        chat: [] as ChatMessage[]
-    }
-};
-
-const MOCK_COMMENTS: Log_Comment[] = [
-    {
-        id: "1",
-        log_id: "1",
-        profile_id: "2",
-        content: "Looks delicious! I'll try this soon.",
-        created_at: "2024-03-20T11:00:00Z"
-    },
-    {
-        id: "2",
-        log_id: "1",
-        profile_id: "3",
-        content: "Great presentation!",
-        created_at: "2024-03-20T12:00:00Z"
-    }
-];
-
+import { IngredientsSection } from "@/components/recipe/IngredientsSection";
+import { InstructionsSection } from "@/components/recipe/InstructionsSection";
+import { ImagesSection } from "@/components/recipe/ImagesSection";
+import { TagsSection } from "@/components/recipe/TagsSection";
+import { useLog } from "@/hooks/useLogs";
 
 export default function LogDetailsScreen() {
     const { logId } = useLocalSearchParams();
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    
-    // For now using mock data - will be replaced with real data fetching
-    const log = MOCK_LOG;
-    const comments = MOCK_COMMENTS;
+    const { data, isLoading } = useLog(logId as string);
 
-    if (!log) {
+    if (isLoading || !data) {
         return (
             <ThemedView style={styles.centerContainer}>
                 <ActivityIndicator size="large" color="#793206" />
             </ThemedView>
         );
     }
+
+    const { log, comments } = data;
 
     return (
         <ThemedView style={styles.container}>
@@ -124,37 +46,7 @@ export default function LogDetailsScreen() {
                 <Text style={styles.description}>{log.description}</Text>
 
                 {/* Image Carousel */}
-                <View style={styles.carouselContainer}>
-                    <ScrollView
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onScroll={(e) => {
-                            const offset = e.nativeEvent.contentOffset.x;
-                            setCurrentImageIndex(Math.round(offset / styles.carouselImage.width));
-                        }}
-                        scrollEventThrottle={16}
-                    >
-                        {log.images.map((image, index) => (
-                            <Image
-                                key={index}
-                                source={{ uri: image }}
-                                style={styles.carouselImage}
-                            />
-                        ))}
-                    </ScrollView>
-                    <View style={styles.paginationDots}>
-                        {log.images.map((_, index) => (
-                            <View
-                                key={index}
-                                style={[
-                                    styles.dot,
-                                    index === currentImageIndex && styles.activeDot
-                                ]}
-                            />
-                        ))}
-                    </View>
-                </View>
+                <ImagesSection images={log.images} height={250} />
 
                 {/* Add to Cookbook Button */}
                 <TouchableOpacity style={styles.addButton}>
@@ -163,50 +55,15 @@ export default function LogDetailsScreen() {
 
                 <View style={styles.divider} />
 
+                {/* Tags */}
+                <TagsSection tags={log.recipe.tags} />
+
                 {/* Recipe Details */}
-                <View>
-                    <View style={styles.sectionHeader}>
-                        <IconSymbol name="pepper" color="#793206" size={24} />
-                        <Text style={styles.sectionTitle}>Ingredients</Text>
-                    </View>
-                    {log.recipe.ingredients?.map((ingredient, index) => (
-                        <View 
-                            key={index} 
-                            style={[
-                                styles.ingredient,
-                                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-                            ]}
-                        >
-                            <Text style={[
-                                styles.ingredientText,
-                                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                            ]}>• {ingredient}</Text>
-                        </View>
-                    ))}
-                </View>
+                <IngredientsSection ingredients={log.recipe.ingredients} />
 
                 <View style={styles.divider} />
 
-                <View>
-                    <View style={styles.sectionHeader}>
-                        <IconSymbol name="book" color="#793206" size={24} />
-                        <Text style={styles.sectionTitle}>Instructions</Text>
-                    </View>
-                    {log.recipe.instructions?.map((instruction, index) => (
-                        <View 
-                            key={index}
-                            style={[
-                                styles.instruction,
-                                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-                            ]}
-                        >
-                            <Text style={[
-                                styles.instructionText,
-                                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                            ]}>{index + 1}. {instruction}</Text>
-                        </View>
-                    ))}
-                </View>
+                <InstructionsSection instructions={log.recipe.instructions} />
 
                 <View style={styles.divider} />
 
@@ -221,7 +78,7 @@ export default function LogDetailsScreen() {
                             key={comment.id}
                             style={[
                                 styles.comment,
-                                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+                                index % 2 === 0 ? styles.commentBrown : styles.commentBeige,
                             ]}
                         >
                             <Text style={[
@@ -277,31 +134,6 @@ const styles = StyleSheet.create({
         color: '#793206',
         marginBottom: 16,
     },
-    carouselContainer: {
-        height: 300,
-        marginBottom: 16,
-    },
-    carouselImage: {
-        width: 343, // Adjust based on screen width minus padding
-        height: 250,
-        borderRadius: 12,
-    },
-    paginationDots: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#79320633',
-        marginHorizontal: 4,
-    },
-    activeDot: {
-        backgroundColor: '#793206',
-    },
     addButton: {
         backgroundColor: '#793206',
         padding: 16,
@@ -317,7 +149,7 @@ const styles = StyleSheet.create({
     divider: {
         borderBottomColor: '#79320633',
         borderBottomWidth: StyleSheet.hairlineWidth,
-        marginBottom: 16,
+        marginVertical: 16,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -330,46 +162,16 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#793206',
     },
-    ingredient: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-        padding: 12,
-        borderRadius: 8,
-    },
-    ingredientBrown: {
-        backgroundColor: '#79320633',
-    },
-    ingredientBeige: {
-        backgroundColor: '#EDE4D2',
-    },
-    ingredientText: {
-        fontSize: 18,
-        flex: 1,
-        marginBottom: 0,
-    },
-    textOnBrown: {
-        color: '#793206',
-    },
-    textOnBeige: {
-        color: '#793206',
-    },
-    instruction: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-        padding: 12,
-        borderRadius: 8,
-    },
-    instructionText: {
-        fontSize: 18,
-        flex: 1,
-        marginBottom: 0,
-    },
     comment: {
         padding: 12,
         borderRadius: 8,
         marginBottom: 8,
+    },
+    commentBrown: {
+        backgroundColor: '#79320633',
+    },
+    commentBeige: {
+        backgroundColor: '#EDE4D2',
     },
     commentText: {
         fontSize: 16,
@@ -378,5 +180,11 @@ const styles = StyleSheet.create({
     commentTime: {
         fontSize: 12,
         color: '#79320633',
+    },
+    textOnBrown: {
+        color: '#793206',
+    },
+    textOnBeige: {
+        color: '#793206',
     },
 });

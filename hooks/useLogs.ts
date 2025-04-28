@@ -1,14 +1,18 @@
 import { useEffect, useState, useCallback } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
-import { Log, Profile, Recipe } from '../types/db'
-
+import { Log, Log_Comment, Profile, Recipe } from '../types/db'
+import { useQuery } from '@tanstack/react-query'
 type EnhancedLog = Log & {
     profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
-    recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
+    recipe: Recipe;
 }
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
+
+const LOG_KEYS = {
+    detail: (id: string) => ['log', id] as const,
+};
 
 export function useLogs(profile_id: string, pageSize: number = 20) {
     const [feed, setFeed] = useState<EnhancedLog[]>([])
@@ -123,3 +127,43 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
     return { feed, loading, refresh: fetchFeed, ownLogs }
 }
+
+export const useLog = (id: string | undefined) => {
+    return useQuery({
+        queryKey: LOG_KEYS.detail(id || ''),
+        enabled: !!id,
+        queryFn: async () => {
+            // Fetch log with profile and complete recipe information
+            const { data: log, error: logError } = await supabase
+                .from('logs')
+                .select(`
+                    *,
+                    profile:profiles(
+                        first_name,
+                        last_name,
+                        username,
+                        image
+                    ),
+                    recipe:recipes(*)
+                `)
+                .eq('id', id)
+                .single();
+
+            if (logError) throw logError;
+
+            // Fetch comments for this log
+            const { data: comments, error: commentsError } = await supabase
+                .from('log_comments')
+                .select('*')
+                .eq('log_id', id)
+                .order('created_at', { ascending: true });
+
+            if (commentsError) throw commentsError;
+
+            return {
+                log: log as EnhancedLog,
+                comments: comments as Log_Comment[]
+            };
+        },
+    });
+}; 
