@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
-import { Log, Log_Comment, Profile, Recipe } from '../types/db'
+import { Log, Log_Comment, Log_Like, Profile, Recipe } from '../types/db'
 import { useQuery } from '@tanstack/react-query'
+
 type EnhancedLog = Log & {
     profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
     recipe: Recipe;
+    likes: Log_Like[];
 }
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
@@ -73,9 +75,24 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .limit(pageSize)
 
             if (logErr) throw logErr
+
+            // 2c) fetch likes for each log
+            const { data: likes, error: likesErr } = await supabase
+                .from('log_likes')
+                .select('*')
+                .in('log_id', logs.map((log) => log.id))
+
+            if (likesErr) throw likesErr
+            console.log(`Likes for log ${logs[0].id}:`, likes)
+
             if (logs) {
-                setFeed(logs as EnhancedLog[])
-                await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(logs))
+                // Combine logs with their likes
+                const logsWithLikes = logs.map(log => ({
+                    ...log,
+                    likes: likes.filter(like => like.log_id === log.id)
+                }))
+                setFeed(logsWithLikes as EnhancedLog[])
+                await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(logsWithLikes))
             }
         } catch (err) {
             console.error('useFeed › fetchFeed error', err)

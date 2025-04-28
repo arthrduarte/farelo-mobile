@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather } from '@expo/vector-icons';
-import { Log, Profile, Recipe } from '@/types/db';
+import { Log, Profile, Recipe, Log_Like } from '@/types/db';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 
 type EnhancedLog = Log & {
   profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
   recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
+  likes: Log_Like[];
 };
 
 type LogCardProps = {
@@ -61,7 +62,10 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
 
       <View style={styles.actions}>
         <TouchableOpacity onPress={onLike} style={styles.actionButton}>
-          <AntDesign name="heart" size={24} color="#793206" />
+          <View style={styles.actionContainer}>
+            <AntDesign name="heart" size={24} color="#793206" />
+            <ThemedText style={styles.actionCount}>{log.likes?.length || 0}</ThemedText>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity onPress={onComment} style={styles.actionButton}>
           <Feather name="message-circle" size={24} color="#793206" />
@@ -143,5 +147,14 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  actionCount: {
+    color: '#793206',
+    fontSize: 14,
   },
 }); 
