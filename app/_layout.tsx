@@ -63,6 +63,7 @@ export default function RootLayout() {
               <Stack.Screen name="[recipeId]/edit"/>
               <Stack.Screen name="[recipeId]/start"/>
               <Stack.Screen name="[recipeId]/finish"/>
+              <Stack.Screen name="[logId]/details"/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>
