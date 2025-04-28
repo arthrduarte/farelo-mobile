@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useState } from 'react';
+import { Divider } from '@/components/Divider';
 
 export default function StartRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -87,7 +88,7 @@ export default function StartRecipeScreen() {
           style={styles.recipeImage}
         />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Ingredients */}
         <View>
@@ -126,7 +127,7 @@ export default function StartRecipeScreen() {
           ))}
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Instructions */}
         <View>
@@ -165,7 +166,7 @@ export default function StartRecipeScreen() {
           ))}
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Notes */}
         <View>
@@ -180,7 +181,7 @@ export default function StartRecipeScreen() {
           </View>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         <TouchableOpacity 
           style={styles.finishButton} 
@@ -205,11 +206,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  divider: {
-    borderBottomColor: '#79320633',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 16,
   },
   backButton: {
     marginBottom: 16,

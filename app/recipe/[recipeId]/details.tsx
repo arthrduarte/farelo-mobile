@@ -15,7 +15,7 @@ import { InstructionsSection } from '@/components/recipe/InstructionsSection';
 import { ImagesSection } from '@/components/recipe/ImagesSection';
 import { NotesSection } from '@/components/recipe/NotesSection';
 import { TagsSection } from '@/components/recipe/TagsSection';
-
+import { Divider } from '@/components/Divider';
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
@@ -145,22 +145,22 @@ export default function RecipeDetailsScreen() {
         {/* Tags */}
         <TagsSection tags={recipe.tags} />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Ingredients */}
         <IngredientsSection ingredients={recipe.ingredients} />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Instructions */}
         <InstructionsSection instructions={recipe.instructions} />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Notes */}
         <NotesSection notes={recipe.notes} />
 
-        <View style={styles.divider}/>
+        <Divider />
       </ScrollView>
     </ThemedView>
   );
@@ -246,11 +246,6 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: '#793206',
     marginTop: 4,
-  },
-  divider: {
-    borderBottomColor: '#79320633',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 16,
   },
   button: {
     backgroundColor: '#793206',

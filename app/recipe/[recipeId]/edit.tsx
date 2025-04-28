@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { Divider } from '@/components/Divider';
 interface Recipe extends BaseRecipe {
   newTag?: string;
 }
@@ -219,7 +219,7 @@ export default function EditRecipeScreen() {
           }}
         />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Ingredients */}
         <View>
@@ -287,7 +287,7 @@ export default function EditRecipeScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Instructions */}
         <View>
@@ -356,7 +356,7 @@ export default function EditRecipeScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Notes */}
         <View>
@@ -385,7 +385,7 @@ export default function EditRecipeScreen() {
           </View>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
       </ScrollView>
     </ThemedView>
   );
@@ -463,11 +463,6 @@ const styles = StyleSheet.create({
   tagText: {
     color: 'white',
     fontSize: 14,
-  },
-  divider: {
-    borderBottomColor: '#79320633',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 16,
   },
   sectionHeader: {
     flexDirection: 'row',

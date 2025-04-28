@@ -9,6 +9,7 @@ import { ImagesSection } from "@/components/recipe/ImagesSection";
 import { TagsSection } from "@/components/recipe/TagsSection";
 import { useLog } from "@/hooks/useLogs";
 import { useAuth } from "@/contexts/AuthContext";
+import { Divider } from "@/components/Divider";
 
 export default function LogDetailsScreen() {
     const { logId } = useLocalSearchParams();
@@ -66,7 +67,7 @@ export default function LogDetailsScreen() {
                     </TouchableOpacity>
                 ) : null}
 
-                <View style={styles.divider} />
+                <Divider />
 
                 {/* Tags */}
                 <TagsSection tags={log.recipe.tags} />
@@ -74,11 +75,11 @@ export default function LogDetailsScreen() {
                 {/* Recipe Details */}
                 <IngredientsSection ingredients={log.recipe.ingredients} />
 
-                <View style={styles.divider} />
+                <Divider />
 
                 <InstructionsSection instructions={log.recipe.instructions} />
 
-                <View style={styles.divider} />
+                <Divider />
 
                 {/* Comments Section */}
                 <View>
@@ -165,11 +166,6 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
-    },
-    divider: {
-        borderBottomColor: '#79320633',
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        marginVertical: 16,
     },
     sectionHeader: {
         flexDirection: 'row',

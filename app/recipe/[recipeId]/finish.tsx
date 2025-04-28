@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { Divider } from '@/components/Divider';
 
 export default function FinishRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -112,7 +113,7 @@ export default function FinishRecipeScreen() {
           />
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Images */}
         <View style={styles.imagesContainer}>
@@ -128,7 +129,7 @@ export default function FinishRecipeScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Tags */}
         <View style={styles.section}>
@@ -153,7 +154,7 @@ export default function FinishRecipeScreen() {
           </View>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Notes */}
         <View style={styles.section}>
@@ -168,7 +169,7 @@ export default function FinishRecipeScreen() {
           />
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
@@ -306,11 +307,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  divider: {
-    borderBottomColor: '#79320633',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 16,
   },
   disabledButton: {
     opacity: 0.7,
