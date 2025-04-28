@@ -35,23 +35,19 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
     // 2️⃣ fetch both following and own logs
     const fetchFeed = useCallback(async () => {
-        console.log("Fetching feed")
         if (!profile_id) return
         setLoading(true)
         try {
             // 2a) get list of who this user follows
-            console.log("Getting list of who this user follows")
             const { data: follows, error: followErr } = await supabase
                 .from('follows')
                 .select('following_id')
                 .eq('follower_id', profile_id)
-            console.log("Follows:", follows)
 
             if (followErr) throw followErr
             const followingIds = [...(follows?.map((f) => f.following_id) ?? []), profile_id]
 
             // 2b) fetch logs with profile and recipe information
-            console.log("Fetching logs")
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
                 .select(`
@@ -71,11 +67,9 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .in('profile_id', followingIds)
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
-            console.log("Logs:", logs)
 
             if (logErr) throw logErr
             if (logs) {
-                console.log("Setting feed:", logs)
                 setFeed(logs as EnhancedLog[])
                 await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(logs))
             }

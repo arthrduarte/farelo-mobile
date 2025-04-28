@@ -1,16 +1,16 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
+import { router } from 'expo-router';
 
 interface RecipeCardProps {
   recipe: Partial<Recipe>;
-  onPress: () => void;
 }
 
-export default function RecipeCard({ recipe, onPress }: RecipeCardProps) {
+export default function RecipeCard({ recipe }: RecipeCardProps) {
 
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity onPress={() => router.push(`/${recipe.id}/details`)}>
       <View style={styles.recipeCard}>
         <Image 
           source={{ uri: recipe.ai_image_url }} 

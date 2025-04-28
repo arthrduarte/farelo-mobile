@@ -1,22 +1,24 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
+import { ThemedView } from '@/components/ThemedView';
+import { useRecipe } from '@/hooks/useRecipes';
+import { useAuth } from '@/contexts/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Recipe } from '@/types/db';
-import { IconSymbol } from '../ui/IconSymbol';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useState } from 'react';
 
-interface RecipeDetailsProps {
-  recipe: Recipe;
-  onBack: () => void;
-  onFinish: () => void;
-}
+export default function StartRecipeScreen() {
+  const { recipeId } = useLocalSearchParams();
+  const { profile } = useAuth();
+  const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
+  const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>([]);
+  const [checkedInstructions, setCheckedInstructions] = useState<boolean[]>([]);
 
-export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetailsProps) {
-  const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>(
-    new Array(recipe.ingredients?.length || 0).fill(false)
-  );
-  const [checkedInstructions, setCheckedInstructions] = useState<boolean[]>(
-    new Array(recipe.instructions?.length || 0).fill(false)
-  );
+  // Initialize checked states when recipe is loaded
+  if (recipe && checkedIngredients.length === 0) {
+    setCheckedIngredients(new Array(recipe.ingredients?.length || 0).fill(false));
+    setCheckedInstructions(new Array(recipe.instructions?.length || 0).fill(false));
+  }
 
   const toggleIngredient = (index: number) => {
     setCheckedIngredients(prev => {
@@ -34,10 +36,29 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
     });
   };
 
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#793206" />
+      </ThemedView>
+    );
+  }
+
+  if (isError || !recipe) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <Text style={styles.errorText}>Recipe not found</Text>
+        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+          <Text style={styles.buttonText}>Go Back</Text>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <MaterialIcons name="arrow-back" size={24} color="#793206" />
       </TouchableOpacity>
 
@@ -66,20 +87,6 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
           style={styles.recipeImage}
         />
 
-        {/* Notes */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Notes</Text>
-          </View>
-          <View style={styles.notesContainer}>
-            <Text style={[styles.notesText, styles.textOnBrown]}>
-              {recipe.notes || 'No notes added yet.'}
-            </Text>
-          </View>
-        </View>
-
-
         <View style={styles.divider}/>
 
         {/* Ingredients */}
@@ -97,14 +104,17 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
                 index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
                 checkedIngredients[index] && styles.ingredientChecked
               ]}
-              >
+            >
               <TouchableOpacity 
                 style={styles.checkboxContainer}
                 activeOpacity={0.5}
                 onPress={() => toggleIngredient(index)}
               >
                 <IconSymbol 
-                  {...checkedIngredients[index] ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} : {name: "checkbox-inactive", color: "#793206"}}
+                  {...checkedIngredients[index] 
+                    ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} 
+                    : {name: "checkbox-inactive", color: "#793206"}
+                  }
                   size={24} 
                 />
               </TouchableOpacity>
@@ -157,17 +167,44 @@ export default function RecipeDetails({ recipe, onBack, onFinish }: RecipeDetail
 
         <View style={styles.divider}/>
 
-        <TouchableOpacity style={styles.finishButton} onPress={onFinish}>
+        {/* Notes */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="book" color="#793206" size={24} />
+            <Text style={styles.sectionTitle}>Notes</Text>
+          </View>
+          <View style={styles.notesContainer}>
+            <Text style={[styles.notesText, styles.textOnBrown]}>
+              {recipe.notes || 'No notes added yet.'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider}/>
+
+        <TouchableOpacity 
+          style={styles.finishButton} 
+          onPress={() => router.push({
+            pathname: '/[recipeId]/finish',
+            params: { recipeId: recipe.id }
+          })}
+        >
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   divider: {
     borderBottomColor: '#79320633',
@@ -307,5 +344,21 @@ const styles = StyleSheet.create({
   notesText: {
     fontSize: 18,
     lineHeight: 24,
+  },
+  errorText: {
+    color: '#793206',
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  button: {
+    backgroundColor: '#793206',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

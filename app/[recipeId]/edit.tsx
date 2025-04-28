@@ -1,35 +1,42 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe as BaseRecipe } from '@/types/db';
-import { IconSymbol } from '../ui/IconSymbol';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useState } from 'react';
-import TagManager from './edit/TagManager';
-import { PulsingPlaceholder } from './ImagePlaceholder';
+import TagManager from '@/components/recipe/edit/TagManager';
+import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
+import { ThemedView } from '@/components/ThemedView';
+import { useLocalSearchParams, router } from 'expo-router';
+import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Recipe extends BaseRecipe {
   newTag?: string;
 }
 
-interface EditRecipeProps {
-    recipe: Recipe;
-    onBack: () => void;
-    onUpdate: (recipe: Recipe) => void;
-}
-
 interface ValidationErrors {
-    title?: string;
-    time?: string;
-    servings?: string;
-    ingredients?: string;
-    instructions?: string;
-    tags?: string;
+  title?: string;
+  time?: string;
+  servings?: string;
+  ingredients?: string;
+  instructions?: string;
+  tags?: string;
 }
 
-export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps) {
-  const [editedRecipe, setEditedRecipe] = useState<Recipe>(recipe);
+export default function EditRecipeScreen() {
+  const { recipeId } = useLocalSearchParams();
+  const { profile } = useAuth();
+  const { data: recipe, isLoading: isLoadingRecipe, isError } = useRecipe(recipeId as string, profile?.id);
+  const updateRecipeMutation = useUpdateRecipe();
+  const [editedRecipe, setEditedRecipe] = useState<Recipe | null>(recipe || null);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isEditing, setIsEditing] = useState<{[key: string]: boolean}>({});
   const [isTagManagerVisible, setIsTagManagerVisible] = useState(false);
+
+  // Update editedRecipe when recipe data is loaded
+  if (recipe && !editedRecipe) {
+    setEditedRecipe(recipe);
+  }
 
   const validateField = (field: keyof Recipe, value: any): string | undefined => {
     switch (field) {
@@ -49,7 +56,9 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
     }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
+    if (!editedRecipe) return;
+
     const newErrors: ValidationErrors = {};
     Object.keys(editedRecipe).forEach((key) => {
       const error = validateField(key as keyof Recipe, editedRecipe[key as keyof Recipe]);
@@ -59,7 +68,12 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
     });
 
     if (Object.keys(newErrors).length === 0) {
-      onUpdate(editedRecipe);
+      try {
+        await updateRecipeMutation.mutateAsync(editedRecipe);
+        router.back();
+      } catch (err) {
+        console.error('Error updating recipe:', err);
+      }
     } else {
       setErrors(newErrors);
     }
@@ -73,10 +87,29 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
     setIsEditing(prev => ({ ...prev, [field]: false }));
   };
 
+  if (isLoadingRecipe) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#793206" />
+      </ThemedView>
+    );
+  }
+
+  if (isError || !editedRecipe) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <Text style={styles.errorText}>Recipe not found</Text>
+        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+          <Text style={styles.buttonText}>Go Back</Text>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <MaterialIcons name="arrow-back" size={24} color="#793206" />
       </TouchableOpacity>
 
@@ -86,7 +119,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
           <TextInput
             style={[styles.title, styles.input]}
             value={editedRecipe.title}
-            onChangeText={(text) => setEditedRecipe(prev => ({ ...prev, title: text }))}
+            onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, title: text } : null)}
             onBlur={() => stopEditing('title')}
             autoFocus
           />
@@ -108,7 +141,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
                 value={String(editedRecipe.time)}
                 onChangeText={(text) => {
                   const numValue = parseInt(text) || 0;
-                  setEditedRecipe(prev => ({ ...prev, time: numValue }));
+                  setEditedRecipe(prev => prev ? { ...prev, time: numValue } : null);
                 }}
                 onBlur={() => stopEditing('time')}
                 keyboardType="numeric"
@@ -131,7 +164,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
                 value={String(editedRecipe.servings)}
                 onChangeText={(text) => {
                   const numValue = parseInt(text) || 0;
-                  setEditedRecipe(prev => ({ ...prev, servings: numValue }));
+                  setEditedRecipe(prev => prev ? { ...prev, servings: numValue } : null);
                 }}
                 onBlur={() => stopEditing('servings')}
                 keyboardType="numeric"
@@ -182,7 +215,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
           onClose={() => setIsTagManagerVisible(false)}
           tags={editedRecipe.tags || []}
           onUpdateTags={(newTags) => {
-            setEditedRecipe(prev => ({ ...prev, tags: newTags }));
+            setEditedRecipe(prev => prev ? { ...prev, tags: newTags } : null);
           }}
         />
 
@@ -191,7 +224,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
         {/* Ingredients */}
         <View>
           <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
+            <IconSymbol name="pepper" color="#793206" size={24} />
             <Text style={styles.sectionTitle}>Ingredients</Text>
           </View>
           {editedRecipe.ingredients?.map((ingredient, index) => (
@@ -213,7 +246,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
                   onChangeText={(text) => {
                     const newIngredients = [...(editedRecipe.ingredients || [])];
                     newIngredients[index] = text;
-                    setEditedRecipe(prev => ({ ...prev, ingredients: newIngredients }));
+                    setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
                   }}
                   onBlur={() => stopEditing(`ingredient_${index}`)}
                   autoFocus
@@ -231,7 +264,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
                     onPress={() => {
                       const newIngredients = [...(editedRecipe.ingredients || [])];
                       newIngredients.splice(index, 1);
-                      setEditedRecipe(prev => ({ ...prev, ingredients: newIngredients }));
+                      setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
                     }}
                     style={styles.removeButton}
                   >
@@ -245,7 +278,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
             style={[styles.addButton, styles.ingredientBrown]}
             onPress={() => {
               const newIngredients = [...(editedRecipe.ingredients || []), ''];
-              setEditedRecipe(prev => ({ ...prev, ingredients: newIngredients }));
+              setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
               startEditing(`ingredient_${newIngredients.length - 1}`);
             }}
           >
@@ -281,7 +314,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
                   onChangeText={(text) => {
                     const newInstructions = [...(editedRecipe.instructions || [])];
                     newInstructions[index] = text;
-                    setEditedRecipe(prev => ({ ...prev, instructions: newInstructions }));
+                    setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
                   }}
                   onBlur={() => stopEditing(`instruction_${index}`)}
                   autoFocus
@@ -300,7 +333,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
                     onPress={() => {
                       const newInstructions = [...(editedRecipe.instructions || [])];
                       newInstructions.splice(index, 1);
-                      setEditedRecipe(prev => ({ ...prev, instructions: newInstructions }));
+                      setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
                     }}
                     style={styles.removeButton}
                   >
@@ -314,7 +347,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
             style={[styles.addButton, styles.ingredientBrown]}
             onPress={() => {
               const newInstructions = [...(editedRecipe.instructions || []), ''];
-              setEditedRecipe(prev => ({ ...prev, instructions: newInstructions }));
+              setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
               startEditing(`instruction_${newInstructions.length - 1}`);
             }}
           >
@@ -336,7 +369,7 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
               <TextInput
                 style={[styles.notesText, styles.input, styles.textOnBrown]}
                 value={editedRecipe.notes || ''}
-                onChangeText={(text) => setEditedRecipe(prev => ({ ...prev, notes: text }))}
+                onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, notes: text } : null)}
                 onBlur={() => stopEditing('notes')}
                 multiline
                 autoFocus
@@ -354,13 +387,19 @@ export default function EditRecipe({ recipe, onBack, onUpdate }: EditRecipeProps
 
         <View style={styles.divider}/>
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backButton: {
     marginBottom: 16,
@@ -403,35 +442,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#793206',
   },
-  startRecipeButton: {
-    backgroundColor: '#793206',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  startRecipeText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   recipeImage: {
     width: '100%',
     height: 200,
     borderRadius: 12,
     marginBottom: 16,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  actionButton: {
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#793206',
-    marginTop: 4,
   },
   tagContainer: {
     flexDirection: 'row',
@@ -534,15 +549,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  removeTag: {
-    padding: 4,
-  },
-  tagInput: {
-    padding: 8,
-  },
-  addTag: {
-    padding: 8,
-  },
   editableRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -552,14 +558,14 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   addButton: {
-    backgroundColor: '#793206',
-    padding: 16,
-    borderRadius: 8,
+    flexDirection: 'row',
+    gap: 8,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
   },
   addButtonText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -572,4 +578,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 4,
   },
-}); 
+  button: {
+    backgroundColor: '#793206',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

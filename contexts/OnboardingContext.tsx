@@ -36,7 +36,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         const value = await AsyncStorage.getItem(STORAGE_KEY);
         setIsOnboarded(value === 'true');
       } catch (error) {
-        console.error('[OnboardingContext] Error checking onboarding status:', error);
+        console.error('[OnboardingDebug] Error checking onboarding status:', error);
         setIsOnboarded(false);
       }
     };
@@ -60,6 +60,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     // Skip navigation during loading states
     if (authLoading || isOnboarded === null) {
+      console.log('[OnboardingDebug] Skipping navigation - Loading:', {
+        authLoading,
+        isOnboarded,
+        segments
+      });
       return;
     }
     
@@ -81,6 +86,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // Non-authenticated users need onboarding
       if (!isOnboarded && !inOnboardingGroup) {
         router.replace('/onboarding');
+      } else if (isOnboarded && !inOnboardingGroup) {
+        router.replace('/onboarding/login');
       } else if (isOnboarded && inOnboardingGroup) {
         // They've completed onboarding before but aren't logged in 
         // Let them stay in onboarding for login/register screens

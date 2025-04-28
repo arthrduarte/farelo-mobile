@@ -1,40 +1,69 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Recipe } from '@/types/db';
-import { IconSymbol } from '../ui/IconSymbol';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import DeleteModal from './DeleteModal';
-import RemixModal from './RemixModal';
-import { PulsingPlaceholder } from './ImagePlaceholder';
+import { Recipe } from '@/types/db';
+import { ThemedView } from '@/components/ThemedView';
+import { MaterialIcons } from '@expo/vector-icons';
+import DeleteModal from '@/components/recipe/DeleteModal';
+import RemixModal from '@/components/recipe/RemixModal';
+import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface RecipeDetailsProps {
-  recipe: Recipe;
-  onBack: () => void;
-  onStartRecipe: () => void;
-  setEditRecipe: (recipe: Recipe) => void;
-  onDelete: (recipe: Recipe) => void;
-  onRecipeUpdate: (recipe: Recipe) => void;
-}
-
-export default function RecipeDetails({ 
-  recipe, 
-  onBack, 
-  onStartRecipe, 
-  setEditRecipe, 
-  onDelete,
-  onRecipeUpdate 
-}: RecipeDetailsProps) {
+export default function RecipeDetailsScreen() {
+  const { recipeId } = useLocalSearchParams();
+  const { profile } = useAuth();
+  const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
+  const deleteRecipeMutation = useDeleteRecipe();
+  const updateRecipeMutation = useUpdateRecipe();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
 
+  const handleDelete = async (recipeToDelete: Recipe) => {
+    try {
+      await deleteRecipeMutation.mutateAsync(recipeToDelete);
+      router.back();
+    } catch (err) {
+      console.error('Error deleting recipe:', err);
+    }
+  };
+
+  const handleRecipeUpdate = async (updatedRecipe: Recipe) => {
+    try {
+      await updateRecipeMutation.mutateAsync(updatedRecipe);
+    } catch (err) {
+      console.error('Error updating recipe:', err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#793206" />
+      </ThemedView>
+    );
+  }
+
+  if (isError || !recipe) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <Text style={styles.errorText}>Recipe not found</Text>
+        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+          <Text style={styles.buttonText}>Go Back</Text>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       <DeleteModal 
         visible={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => {
           setShowDeleteConfirm(false);
-          onDelete(recipe);
+          handleDelete(recipe);
         }}
         recipe={recipe}
       />
@@ -43,11 +72,10 @@ export default function RecipeDetails({
         visible={showRemixModal}
         onClose={() => setShowRemixModal(false)}
         recipe={recipe}
-        onSuccess={onRecipeUpdate}
       />
 
       {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <MaterialIcons name="arrow-back" size={24} color="#793206" />
       </TouchableOpacity>
 
@@ -71,7 +99,13 @@ export default function RecipeDetails({
         </View>
 
         {/* Start Recipe Button */}
-        <TouchableOpacity style={styles.startRecipeButton} onPress={onStartRecipe}>
+        <TouchableOpacity 
+          style={styles.startRecipeButton} 
+          onPress={() => router.push({
+            pathname: '/[recipeId]/start',
+            params: { recipeId: recipe.id }
+          })}
+        >
           <Text style={styles.startRecipeText}>Start Recipe</Text>
         </TouchableOpacity>
 
@@ -82,7 +116,7 @@ export default function RecipeDetails({
             style={styles.recipeImage}
           />
         ) : (
-            <PulsingPlaceholder />
+          <PulsingPlaceholder />
         )}
 
         {/* Action Buttons */}
@@ -94,7 +128,10 @@ export default function RecipeDetails({
             <MaterialIcons name="refresh" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Remix</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={() => setEditRecipe(recipe)}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => router.push(`/${recipeId}/edit` as any)}
+          >
             <MaterialIcons name="edit" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Edit</Text>
           </TouchableOpacity>
@@ -121,7 +158,7 @@ export default function RecipeDetails({
         {/* Ingredients */}
         <View>
           <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
+            <IconSymbol name="pepper" color="#793206" size={24} />
             <Text style={styles.sectionTitle}>Ingredients</Text>
           </View>
           {recipe.ingredients?.map((ingredient, index) => (
@@ -181,13 +218,19 @@ export default function RecipeDetails({
 
         <View style={styles.divider}/>
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backButton: {
     marginBottom: 16,
@@ -338,4 +381,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
   },
-}); 
+  button: {
+    backgroundColor: '#793206',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  errorText: {
+    color: '#793206',
+    fontSize: 16,
+    marginBottom: 16,
+  },
+});
