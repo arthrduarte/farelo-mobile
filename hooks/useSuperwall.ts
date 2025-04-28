@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { SubscriptionStatus } from '@superwall/react-native-superwall';
-import { superwallService } from '@/services/superwall';
+import { superwallService } from '@/lib/superwall';
 
 export function useSuperwall() {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -30,7 +30,7 @@ export function useSuperwall() {
 
   const showPaywall = async (triggerId: string) => {
     if (isLoading || Platform.OS === 'web') return;
-    
+
     try {
       await superwallService.presentPaywall(triggerId);
       // Refresh subscription status after paywall interaction
