@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
@@ -8,10 +8,12 @@ import { InstructionsSection } from "@/components/recipe/InstructionsSection";
 import { ImagesSection } from "@/components/recipe/ImagesSection";
 import { TagsSection } from "@/components/recipe/TagsSection";
 import { useLog } from "@/hooks/useLogs";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LogDetailsScreen() {
     const { logId } = useLocalSearchParams();
     const { data, isLoading } = useLog(logId as string);
+    const { profile } = useAuth();
 
     if (isLoading || !data) {
         return (
@@ -25,6 +27,11 @@ export default function LogDetailsScreen() {
 
     return (
         <ThemedView style={styles.container}>
+        
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <MaterialIcons name="arrow-back" size={24} color="#793206" />
+            </TouchableOpacity>
+
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Profile Header */}
                 <View style={styles.header}>
@@ -46,12 +53,18 @@ export default function LogDetailsScreen() {
                 <Text style={styles.description}>{log.description}</Text>
 
                 {/* Image Carousel */}
-                <ImagesSection images={log.images} height={250} />
+                {log.images.length === 1 ? (
+                    <ImagesSection mainImage={log.images[0]} height={250} />
+                ) : (
+                    <ImagesSection images={log.images} height={250} />
+                )}
 
                 {/* Add to Cookbook Button */}
-                <TouchableOpacity style={styles.addButton}>
-                    <Text style={styles.addButtonText}>Add to your cookbook</Text>
-                </TouchableOpacity>
+                {log.recipe.profile_id != profile?.id ? (
+                    <TouchableOpacity style={styles.addButton}>
+                        <Text style={styles.addButtonText}>Add to your cookbook</Text>
+                    </TouchableOpacity>
+                ) : null}
 
                 <View style={styles.divider} />
 
@@ -105,6 +118,13 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    backButton: {
+        marginBottom: 16,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
     },
     header: {
         flexDirection: 'row',
