@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { Log, Profile, Recipe, Log_Like, Log_Comment } from '@/types/db';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
@@ -58,14 +58,20 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
         <ThemedText style={styles.description}>{log.description}</ThemedText>
       )}
 
-      <View style={styles.cookingInfo}>
-        <View style={styles.infoItem}>
-          <ThemedText>{log.recipe.time} mins</ThemedText>
+        <View style={styles.metaInfo}>
+          <View style={styles.metaItem}>
+            <View style={styles.timeIcon}>
+              <MaterialIcons name="schedule" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{log.recipe.time} mins</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <View style={styles.servingsIcon}>
+              <MaterialIcons name="people" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{log.recipe.servings} servings</Text>
+          </View>
         </View>
-        <View style={styles.infoItem}>
-          <ThemedText>{log.recipe.servings} servings</ThemedText>
-        </View>
-      </View>
 
       <Image 
         source={{ uri: log.images[0] }}
@@ -141,6 +147,34 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: '#79320633',
+  },
+  metaInfo: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  timeIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  servingsIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metaText: {
+    fontSize: 14,
+    color: '#793206',
   },
   title: {
     fontSize: 20,
