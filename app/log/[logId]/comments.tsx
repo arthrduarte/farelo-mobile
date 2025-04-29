@@ -12,9 +12,29 @@ import { Divider } from "@/components/Divider";
 
 export default function LogCommentsScreen() {
     const { logId } = useLocalSearchParams();
-    const { data, isLoading, refetch } = useLog(logId as string); // Get refetch function
+    const { data, isLoading, refetch } = useLog(logId as string);
     const { profile } = useAuth();
     const [newComment, setNewComment] = useState('');
+
+    const handleAddComment = useCallback(async () => {
+        if (!newComment.trim() || !profile || !data?.log?.id) return;
+
+        const commentToAdd = {
+            log_id: data.log.id,
+            profile_id: profile.id,
+            content: newComment.trim(),
+        };
+
+        setNewComment('');
+
+        try {
+            const { error } = await supabase.from('log_comments').insert(commentToAdd);
+            if (error) throw error;
+            refetch();
+        } catch (error) {
+            console.error("Error adding comment:", error);
+        }
+    }, [newComment, profile, data?.log?.id, refetch]);
 
     if (isLoading || !data || !profile) {
         return (
@@ -26,42 +46,17 @@ export default function LogCommentsScreen() {
 
     const { log, comments } = data;
 
-    const handleAddComment = useCallback(async () => {
-        if (!newComment.trim() || !profile) return;
-
-        const commentToAdd = {
-            log_id: log.id,
-            profile_id: profile.id,
-            content: newComment.trim(),
-        };
-
-        setNewComment(''); // Clear input immediately for better UX
-
-        try {
-            const { error } = await supabase.from('log_comments').insert(commentToAdd);
-            if (error) throw error;
-            refetch(); // Refetch log data to show the new comment
-        } catch (error) {
-            console.error("Error adding comment:", error);
-            // Optionally: Add error handling for the user (e.g., show a toast)
-            // Re-set the input if sending failed? Depends on desired UX.
-            // setNewComment(commentToAdd.content); 
-        }
-    }, [newComment, profile, log.id, refetch]);
-
     return (
         <ThemedView style={styles.container}>
             <KeyboardAvoidingView 
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.keyboardAvoidingContainer}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0} // Adjust offset as needed
+                keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
             >
-                {/* Back Button */}
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <MaterialIcons name="arrow-back" size={24} color="#793206" />
                 </TouchableOpacity>
 
-                {/* Log Header */}
                 <View style={styles.logHeader}>
                     <Image 
                         source={{ uri: log.profile.image }}
@@ -93,7 +88,6 @@ export default function LogCommentsScreen() {
 
                 <Divider />
 
-                {/* Comments List */}
                 <ScrollView style={styles.commentsScrollView}>
                     {comments.map((comment, index) => (
                         <View 
@@ -101,7 +95,7 @@ export default function LogCommentsScreen() {
                             style={styles.commentContainer}
                         >
                             <Image 
-                                source={{ uri: comment.profile?.image }} // Use comment profile image
+                                source={{ uri: comment.profile?.image }}
                                 style={styles.commentAvatar}
                             />
                             <View style={styles.commentContent}>
@@ -122,7 +116,6 @@ export default function LogCommentsScreen() {
                     )}
                 </ScrollView>
 
-                {/* Add Comment Input */}
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -145,7 +138,6 @@ export default function LogCommentsScreen() {
     );
 }
 
-// Add comprehensive styles based on details.tsx and new elements
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -206,17 +198,17 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     description: {
-        fontSize: 16, // Slightly smaller
+        fontSize: 16,
         color: '#793206',
     },
     commentsScrollView: {
-        flex: 1, // Takes remaining space
+        flex: 1,
     },
     commentContainer: {
         flexDirection: 'row',
         borderRadius: 8,
         marginBottom: 8,
-        alignItems: 'flex-start', // Align items to the top
+        alignItems: 'flex-start',
     },
     commentAvatar: {
         width: 40,
@@ -225,13 +217,13 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     commentContent: {
-        flex: 1, // Take remaining width
+        flex: 1,
     },
     commentBrown: {
         backgroundColor: '#79320633',
     },
     commentBeige: {
-        backgroundColor: '#EDE4D2', // Use secondary color
+        backgroundColor: '#EDE4D2',
     },
     commentName: {
         fontSize: 16,
@@ -243,14 +235,14 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     commentTime: {
-        fontSize: 12, // Smaller time
-        color: '#79320680', // Less prominent time color
+        fontSize: 12,
+        color: '#79320680',
     },
     textOnBrown: {
-        color: '#793206', // Main color text
+        color: '#793206',
     },
     textOnBeige: {
-        color: '#793206', // Main color text
+        color: '#793206',
     },
     noCommentsText: {
         textAlign: 'center',
@@ -263,24 +255,24 @@ const styles = StyleSheet.create({
         padding: 16,
         borderTopWidth: 1,
         borderTopColor: '#79320633',
-        backgroundColor: '#EDE4D2', // Match card background
-        alignItems: 'center', // Align items vertically
+        backgroundColor: '#EDE4D2',
+        alignItems: 'center',
     },
     input: {
         flex: 1,
-        minHeight: 40, // Minimum height
-        maxHeight: 120, // Max height before scrolling
-        backgroundColor: '#FFFFFF', // White background for input
-        borderRadius: 20, // Rounded corners
+        minHeight: 40,
+        maxHeight: 120,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
         paddingHorizontal: 16,
-        paddingVertical: 10, // Adjust vertical padding
+        paddingVertical: 10,
         fontSize: 16,
-        color: '#793206', // Text color
+        color: '#793206',
         marginRight: 12,
         borderWidth: 1,
         borderColor: '#79320633',
     },
     sendButton: {
-        padding: 8, // Padding around the icon
+        padding: 8,
     },
 });
