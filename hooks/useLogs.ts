@@ -54,7 +54,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             if (followErr) throw followErr
             const followingIds = [...(follows?.map((f) => f.following_id) ?? []), profile_id]
 
-            // 2b) fetch logs with profile and recipe information
+            // 2b) fetch logs including the full recipe
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
                 .select(`
@@ -65,11 +65,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                         username,
                         image
                     ),
-                    recipe:recipes(
-                        title,
-                        time,
-                        servings
-                    )
+                    recipe:recipes(*)
                 `)
                 .in('profile_id', followingIds)
                 .order('created_at', { ascending: false })
@@ -82,7 +78,6 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 setLoading(false);
                 return;
             }
-
 
             // 2c) fetch likes for each log
             const logIds = logs.map((log) => log.id);
@@ -108,6 +103,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
                 return {
                     ...log,
+                    recipe: log.recipe as Recipe,
                     likes: logLikes,
                     comments: logComments
                 }
@@ -138,11 +134,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                         username,
                         image
                     ),
-                    recipe:recipes(
-                        title,
-                        time,
-                        servings
-                    )
+                    recipe:recipes(*)
                 `)
                 .eq('profile_id', profile_id)
                 .order('created_at', { ascending: false })
@@ -180,6 +172,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
                 return {
                     ...log,
+                    recipe: log.recipe as Recipe,
                     likes: logLikes,
                     comments: logComments
                 }
@@ -262,7 +255,7 @@ export const useLog = (id: string | undefined) => {
 
             return {
                 log: enhancedLogData,
-                comments: comments as (Log_Comment & { profile: Profile })[] // Ensure profile data is included
+                comments: comments as (Log_Comment & { profile: Profile })[]
             };
         },
     });
