@@ -12,21 +12,6 @@ export default function HomeScreen() {
   const { feed, ownLogs, loading, refresh } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
 
-  const handleLike = (logId: string) => {
-    // Handle like action
-    console.log('Liked post:', logId);
-  };
-
-  const handleComment = (logId: string) => {
-    // Handle comment action
-    console.log('Comment on post:', logId);
-  };
-
-  const handleAdd = (logId: string) => {
-    // Handle add action
-    console.log('Added post:', logId);
-  };
-
   return (
     <ThemedView style={styles.container}>
       <ScrollView 
@@ -38,9 +23,6 @@ export default function HomeScreen() {
           <LogCard 
             key={log.id}
             log={log}
-            onLike={() => handleLike(log.id)}
-            onComment={() => handleComment(log.id)}
-            onAdd={() => handleAdd(log.id)}
           />
         ))}
       </ScrollView>

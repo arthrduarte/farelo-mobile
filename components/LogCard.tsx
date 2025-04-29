@@ -5,6 +5,7 @@ import { AntDesign, Feather } from '@expo/vector-icons';
 import { Log, Profile, Recipe, Log_Like } from '@/types/db';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 type EnhancedLog = Log & {
   profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
@@ -14,15 +15,15 @@ type EnhancedLog = Log & {
 
 type LogCardProps = {
   log: EnhancedLog;
-  onLike?: () => void;
-  onComment?: () => void;
-  onAdd?: () => void;
 };
 
-export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd }) => {
+export const LogCard: React.FC<LogCardProps> = ({ log }) => {
+  const { profile } = useAuth();
   if (!log.profile || !log.recipe) {
     return null;
   }
+
+  const isLiked = log.likes.some((like) => like.profile_id === profile?.id);
 
   const fullName = `${log.profile.first_name} ${log.profile.last_name}`;
   
@@ -61,16 +62,20 @@ export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd 
       />
 
       <View style={styles.actions}>
-        <TouchableOpacity onPress={onLike} style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton}>
           <View style={styles.actionContainer}>
-            <AntDesign name="heart" size={24} color="#793206" />
+            {isLiked ? 
+              <AntDesign name="heart" size={24} color="#793206" />
+            :
+              <AntDesign name="hearto" size={24} color="#793206" />
+            }
             <ThemedText style={styles.actionCount}>{log.likes?.length || 0}</ThemedText>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onComment} style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton}>
           <Feather name="message-circle" size={24} color="#793206" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={onAdd} style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton}>
           <AntDesign name="plus" size={24} color="#793206" />
         </TouchableOpacity>
       </View>
