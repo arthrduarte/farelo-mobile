@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather } from '@expo/vector-icons';
-import { Log, Profile, Recipe, Log_Like } from '@/types/db';
+import { Log, Profile, Recipe, Log_Like, Log_Comment } from '@/types/db';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +13,7 @@ type EnhancedLog = Log & {
   profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
   recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
   likes: Log_Like[];
+  comments: Log_Comment[];
 };
 
 type LogCardProps = {
@@ -69,8 +70,8 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
       />
 
       <View style={styles.interactionsContainer}>
-        <Text style={styles.interactionsAmount}>{likeCount} likes</Text>
-        <Text style={styles.interactionsAmount}>comments</Text>
+        <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
+        <Text style={styles.interactionsAmount}>{log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}</Text>
       </View>
 
       <Divider />
