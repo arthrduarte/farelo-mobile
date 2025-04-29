@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const RECIPE_KEYS = {
     all: ['recipes'] as const,
@@ -121,5 +122,78 @@ export const useDeleteRecipe = () => {
                 }
             );
         },
+    });
+};
+
+// New hook for copying a recipe
+export const useCopyRecipe = () => {
+    const queryClient = useQueryClient();
+    const { profile } = useAuth(); // Get current user profile
+
+    return useMutation({
+        mutationFn: async ({ recipeIdToCopy }: { recipeIdToCopy: string }) => {
+            if (!profile) throw new Error("User not authenticated");
+            const currentUserId = profile.id;
+
+            // 1. Fetch the original recipe
+            const { data: originalRecipe, error: fetchError } = await supabase
+                .from('recipes')
+                .select('*')
+                .eq('id', recipeIdToCopy)
+                .single();
+
+            if (fetchError) {
+                console.error("Error fetching original recipe:", fetchError);
+                throw new Error(`Failed to fetch original recipe: ${fetchError.message}`);
+            }
+            if (!originalRecipe) {
+                throw new Error("Original recipe not found");
+            }
+
+            // 2. Prepare the new recipe data
+            const newRecipeData: Omit<Recipe, 'id' | 'created_at'> = {
+                profile_id: currentUserId,
+                title: originalRecipe.title,
+                description: originalRecipe.description,
+                ai_image_url: originalRecipe.ai_image_url, // Keep original AI image
+                time: originalRecipe.time,
+                servings: originalRecipe.servings,
+                ingredients: originalRecipe.ingredients,
+                instructions: originalRecipe.instructions,
+                tags: originalRecipe.tags,
+                source_url: originalRecipe.source_url, // Keep original source URL
+                user_image_url: null, // Reset user image
+                notes: '', // Reset notes
+                chat: null, // Reset chat
+            };
+
+            // 3. Insert the new recipe
+            const { data: newRecipe, error: insertError } = await supabase
+                .from('recipes')
+                .insert(newRecipeData)
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error("Error inserting new recipe:", insertError);
+                throw new Error(`Failed to copy recipe: ${insertError.message}`);
+            }
+
+            return newRecipe as Recipe;
+        },
+        onSuccess: (newRecipe) => {
+            if (!profile) return; // Should not happen if mutationFn succeeded
+            console.log("Recipe copied successfully:", newRecipe);
+            // Invalidate the current user's recipe list to refetch
+            queryClient.invalidateQueries({
+                queryKey: RECIPE_KEYS.list(profile.id)
+            });
+            // Optional: Could potentially add the new recipe directly to the cache
+            // queryClient.setQueryData<Recipe[]>(RECIPE_KEYS.list(profile.id), (oldData) => ...);
+        },
+        onError: (error) => {
+            console.error("Failed to copy recipe:", error.message);
+            // Here you could trigger user feedback, e.g., a toast notification
+        }
     });
 }; 
