@@ -125,7 +125,8 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
     const fetchOwnLogs = useCallback(async () => {
         if (!profile_id) return
-        setLoading(true)
+        // Keep loading state associated with the feed for simplicity now
+        // setLoading(true); 
         try {
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
@@ -146,12 +147,51 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .eq('profile_id', profile_id)
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
+
             if (logErr) throw logErr
-            setOwnLogs(logs as EnhancedLog[])
+            if (!logs || logs.length === 0) {
+                setOwnLogs([]); // Set empty if no logs found
+                // setLoading(false);
+                return;
+            }
+
+            const logIds = logs.map((log) => log.id);
+
+            // Fetch likes for own logs
+            const { data: likes, error: likesErr } = await supabase
+                .from('log_likes')
+                .select('*')
+                .in('log_id', logIds)
+
+            if (likesErr) throw likesErr
+
+            // Fetch comments for own logs
+            const { data: comments, error: commentsError } = await supabase
+                .from('log_comments')
+                .select('*') // Fetch full comments
+                .in('log_id', logIds)
+
+            if (commentsError) throw commentsError;
+
+            // Combine own logs with their likes and comments
+            const ownLogsWithData = logs.map(log => {
+                const logLikes = likes?.filter(like => like.log_id === log.id) ?? [];
+                const logComments = comments?.filter(comment => comment.log_id === log.id) ?? [];
+
+                return {
+                    ...log,
+                    likes: logLikes,
+                    comments: logComments
+                }
+            });
+
+            setOwnLogs(ownLogsWithData as EnhancedLog[]);
+
         } catch (err) {
-            console.error('useFeed › fetchOwnLogs error', err)
+            console.error('useLogs › fetchOwnLogs error', err)
+            setOwnLogs([]); // Set empty on error
         } finally {
-            setLoading(false)
+            // setLoading(false) // Handled by fetchFeed loading
         }
     }, [profile_id, pageSize])
 
