@@ -86,7 +86,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
       <Divider />
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={toggleLike}>
+        <TouchableOpacity onPress={toggleLike}>
           <View style={styles.actionContainer}>
             {isLiked ? 
               <AntDesign name="heart" size={24} color="#793206" />
@@ -96,14 +96,13 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
             <ThemedText style={styles.actionCount}>{likeCount}</ThemedText>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => router.push({
+        <TouchableOpacity onPress={() => router.push({
           pathname: '/log/[logId]/comments',
           params: { logId: log.id }
         })}>
           <Feather name="message-circle" size={24} color="#793206" />
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.actionButton} 
           onPress={handleCopyRecipe} 
           disabled={isCopying || log.recipe.profile_id === profile.id}
         >
@@ -181,10 +180,6 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 8
-  },
-  actionButton: {
-    padding: 8,
   },
   actionContainer: {
     flexDirection: 'row',
