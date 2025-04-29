@@ -26,7 +26,6 @@ export default function HomeScreen() {
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
       >
         {feed.map((log) => (
           <LogCard 
@@ -63,8 +62,5 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  contentContainer: {
-    paddingVertical: 8,
   },
 });

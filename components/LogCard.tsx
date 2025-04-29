@@ -40,7 +40,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   };
 
   return (
-    <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)}>
+    <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Image 
@@ -121,19 +121,9 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#EDE4D2',
-    // borderRadius: 16,
+    backgroundColor: '#fff',
     padding: 16,
-    marginVertical: 8,
-    // marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
   },
   header: {
     flexDirection: 'row',
