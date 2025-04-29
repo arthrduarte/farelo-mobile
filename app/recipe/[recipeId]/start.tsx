@@ -1,40 +1,40 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useState } from 'react';
-import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
-import { MaterialIcons } from '@expo/vector-icons';
-import DeleteModal from '@/components/recipe/DeleteModal';
-import RemixModal from '@/components/recipe/RemixModal';
-import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
+import { MaterialIcons } from '@expo/vector-icons';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useState } from 'react';
+import { Divider } from '@/components/Divider';
 
-export default function RecipeDetailsScreen() {
+export default function StartRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
-  const deleteRecipeMutation = useDeleteRecipe();
-  const updateRecipeMutation = useUpdateRecipe();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showRemixModal, setShowRemixModal] = useState(false);
+  const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>([]);
+  const [checkedInstructions, setCheckedInstructions] = useState<boolean[]>([]);
 
-  const handleDelete = async (recipeToDelete: Recipe) => {
-    try {
-      await deleteRecipeMutation.mutateAsync(recipeToDelete);
-      router.back();
-    } catch (err) {
-      console.error('Error deleting recipe:', err);
-    }
+  // Initialize checked states when recipe is loaded
+  if (recipe && checkedIngredients.length === 0) {
+    setCheckedIngredients(new Array(recipe.ingredients?.length || 0).fill(false));
+    setCheckedInstructions(new Array(recipe.instructions?.length || 0).fill(false));
+  }
+
+  const toggleIngredient = (index: number) => {
+    setCheckedIngredients(prev => {
+      const newChecked = [...prev];
+      newChecked[index] = !newChecked[index];
+      return newChecked;
+    });
   };
 
-  const handleRecipeUpdate = async (updatedRecipe: Recipe) => {
-    try {
-      await updateRecipeMutation.mutateAsync(updatedRecipe);
-    } catch (err) {
-      console.error('Error updating recipe:', err);
-    }
+  const toggleInstruction = (index: number) => {
+    setCheckedInstructions(prev => {
+      const newChecked = [...prev];
+      newChecked[index] = !newChecked[index];
+      return newChecked;
+    });
   };
 
   if (isLoading) {
@@ -58,22 +58,6 @@ export default function RecipeDetailsScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <DeleteModal 
-        visible={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => {
-          setShowDeleteConfirm(false);
-          handleDelete(recipe);
-        }}
-        recipe={recipe}
-      />
-
-      <RemixModal
-        visible={showRemixModal}
-        onClose={() => setShowRemixModal(false)}
-        recipe={recipe}
-      />
-
       {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <MaterialIcons name="arrow-back" size={24} color="#793206" />
@@ -98,86 +82,52 @@ export default function RecipeDetailsScreen() {
           </View>
         </View>
 
-        {/* Start Recipe Button */}
-        <TouchableOpacity 
-          style={styles.startRecipeButton} 
-          onPress={() => router.push({
-            pathname: '/[recipeId]/start',
-            params: { recipeId: recipe.id }
-          })}
-        >
-          <Text style={styles.startRecipeText}>Start Recipe</Text>
-        </TouchableOpacity>
-
         {/* Recipe Image */}
-        {recipe.ai_image_url ? (
-          <Image 
-            source={{ uri: recipe.ai_image_url }} 
-            style={styles.recipeImage}
-          />
-        ) : (
-          <PulsingPlaceholder />
-        )}
+        <Image 
+          source={{ uri: recipe.ai_image_url }} 
+          style={styles.recipeImage}
+        />
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => setShowRemixModal(true)}
-          >
-            <MaterialIcons name="refresh" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Remix</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => router.push(`/${recipeId}/edit` as any)}
-          >
-            <MaterialIcons name="edit" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => setShowDeleteConfirm(true)}
-          >
-            <MaterialIcons name="delete" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Tags */}
-        <View style={styles.tagContainer}>
-          {recipe.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Ingredients */}
         <View>
           <View style={styles.sectionHeader}>
-            <IconSymbol name="pepper" color="#793206" size={24} />
+            <IconSymbol name="book" color="#793206" size={24} />
             <Text style={styles.sectionTitle}>Ingredients</Text>
           </View>
           {recipe.ingredients?.map((ingredient, index) => (
-            <View 
+            <TouchableOpacity 
+              activeOpacity={1}
               key={index} 
               style={[
                 styles.ingredient,
                 index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+                checkedIngredients[index] && styles.ingredientChecked
               ]}
             >
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                activeOpacity={0.5}
+                onPress={() => toggleIngredient(index)}
+              >
+                <IconSymbol 
+                  {...checkedIngredients[index] 
+                    ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} 
+                    : {name: "checkbox-inactive", color: "#793206"}
+                  }
+                  size={24} 
+                />
+              </TouchableOpacity>
               <Text style={[
                 styles.ingredientText,
                 index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-              ]}>• {ingredient}</Text>
-            </View>
+              ]}>{ingredient}</Text>
+            </TouchableOpacity>
           ))}
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Instructions */}
         <View>
@@ -186,22 +136,37 @@ export default function RecipeDetailsScreen() {
             <Text style={styles.sectionTitle}>Instructions</Text>
           </View>
           {recipe.instructions?.map((instruction, index) => (
-            <View 
+            <TouchableOpacity 
               key={index}
+              activeOpacity={1}
               style={[
                 styles.instruction,
                 index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+                checkedInstructions[index] && styles.ingredientChecked
               ]}
             >
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                activeOpacity={0.5}
+                onPress={() => toggleInstruction(index)}
+              >
+                <IconSymbol 
+                  {...checkedInstructions[index] 
+                    ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} 
+                    : {name: "checkbox-inactive", color: "#793206"}
+                  }
+                  size={24} 
+                />
+              </TouchableOpacity>
               <Text style={[
                 styles.instructionText,
                 index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
               ]}>{index + 1}. {instruction}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Notes */}
         <View>
@@ -216,7 +181,17 @@ export default function RecipeDetailsScreen() {
           </View>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
+
+        <TouchableOpacity 
+          style={styles.finishButton} 
+          onPress={() => router.push({
+            pathname: '/recipe/[recipeId]/finish',
+            params: { recipeId: recipe.id }
+          })}
+        >
+          <Text style={styles.finishButtonText}>Finish</Text>
+        </TouchableOpacity>
       </ScrollView>
     </ThemedView>
   );
@@ -273,55 +248,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#793206',
   },
-  startRecipeButton: {
-    backgroundColor: '#793206',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  startRecipeText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   recipeImage: {
     width: '100%',
     height: 200,
     borderRadius: 12,
-    marginBottom: 16,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  actionButton: {
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#793206',
-    marginTop: 4,
-  },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
-  tag: {
-    backgroundColor: '#793206',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  tagText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  divider: {
-    borderBottomColor: '#79320633',
-    borderBottomWidth: StyleSheet.hairlineWidth,
     marginBottom: 16,
   },
   sectionHeader: {
@@ -338,6 +268,7 @@ const styles = StyleSheet.create({
   ingredient: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 8,
     padding: 12,
     borderRadius: 8,
@@ -347,6 +278,22 @@ const styles = StyleSheet.create({
   },
   ingredientBeige: {
     backgroundColor: '#EDE4D2',
+  },
+  ingredientChecked: {
+    backgroundColor: '#329F5B',  // A nice material design green
+  },
+  activeCheckbox: {
+    shadowColor: '#1D5D36',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  checkboxContainer: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ingredientText: {
     fontSize: 18,
@@ -362,6 +309,7 @@ const styles = StyleSheet.create({
   instruction: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 8,
     padding: 12,
     borderRadius: 8,
@@ -370,6 +318,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     flex: 1,
     marginBottom: 0,
+  },
+  finishButton: {
+    backgroundColor: '#793206',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  finishButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   notesContainer: {
     padding: 12,
@@ -381,6 +341,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
   },
+  errorText: {
+    color: '#793206',
+    fontSize: 16,
+    marginBottom: 16,
+  },
   button: {
     backgroundColor: '#793206',
     padding: 16,
@@ -391,10 +356,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-  },
-  errorText: {
-    color: '#793206',
-    fontSize: 16,
-    marginBottom: 16,
   },
 });

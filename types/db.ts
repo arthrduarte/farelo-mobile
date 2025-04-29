@@ -9,10 +9,10 @@ export type Recipe = {
     instructions: string[];
     tags: string[];
     source_url: string; // URL to the source of the recipe
-    user_image_url: string; // URL to the user's image
+    user_image_url: string | null; // URL to the user's image
     notes: string;
     profile_id: string; // UUID of the user who created the recipe
-    chat: JSON; // JSONB array of messages [{role: 'user' | 'ai', message: string, timestamp: timestamptz}]
+    chat: JSON | null; // JSONB array of messages [{role: 'user' | 'ai', message: string, timestamp: timestamptz}]
 };
 
 export type Profile = {
