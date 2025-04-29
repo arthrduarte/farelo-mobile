@@ -3,13 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
 import { Log, Log_Comment, Log_Like, Profile, Recipe } from '../types/db'
 import { useQuery } from '@tanstack/react-query'
-
-type EnhancedLog = Log & {
-    profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
-    recipe: Recipe;
-    likes: Log_Like[];
-    comments: Log_Comment[];
-}
+import { EnhancedLog } from '@/types/types'
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
 
