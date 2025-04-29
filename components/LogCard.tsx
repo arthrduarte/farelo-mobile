@@ -7,14 +7,9 @@ import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLikes } from '@/hooks/useLikes';
+import { useCopyRecipe } from '@/hooks/useRecipes';
 import { Divider } from './Divider';
-
-type EnhancedLog = Log & {
-  profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
-  recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
-  likes: Log_Like[];
-  comments: Log_Comment[];
-};
+import { EnhancedLog } from '@/types/types';
 
 type LogCardProps = {
   log: EnhancedLog;
@@ -28,13 +23,22 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
     initialLikeCount: log.likes?.length || 0,
     logId: log.id,
   });
+  const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
   
-  if (!log.profile || !log.recipe) {
+  if (!log.profile || !log.recipe || !profile) {
     return null;
   }
 
   const fullName = `${log.profile.first_name} ${log.profile.last_name}`;
   
+  const handleCopyRecipe = () => {
+    if (log.recipe.profile_id === profile.id) {
+      console.log("Cannot copy your own recipe from a log.");
+      return;
+    }
+    copyRecipe({ recipeIdToCopy: log.recipe_id });
+  };
+
   return (
     <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)}>
       <View style={styles.container}>
@@ -98,8 +102,16 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
         })}>
           <Feather name="message-circle" size={24} color="#793206" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <AntDesign name="plus" size={24} color="#793206" />
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={handleCopyRecipe} 
+          disabled={isCopying || log.recipe.profile_id === profile.id}
+        >
+          <AntDesign 
+            name="plus" 
+            size={24} 
+            color={isCopying || log.recipe.profile_id === profile.id ? "#79320633" : "#793206"}
+          />
         </TouchableOpacity>
       </View>
     </View>
