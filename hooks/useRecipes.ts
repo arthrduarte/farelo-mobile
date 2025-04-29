@@ -2,6 +2,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { router } from 'expo-router';
 
 export const RECIPE_KEYS = {
     all: ['recipes'] as const,
@@ -190,6 +191,10 @@ export const useCopyRecipe = () => {
             });
             // Optional: Could potentially add the new recipe directly to the cache
             // queryClient.setQueryData<Recipe[]>(RECIPE_KEYS.list(profile.id), (oldData) => ...);
+            router.push({
+                pathname: '/recipe/[recipeId]/edit',
+                params: { recipeId: newRecipe.id }
+            });
         },
         onError: (error) => {
             console.error("Failed to copy recipe:", error.message);
