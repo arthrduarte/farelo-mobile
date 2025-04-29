@@ -186,7 +186,7 @@ export default function StartRecipeScreen() {
         <TouchableOpacity 
           style={styles.finishButton} 
           onPress={() => router.push({
-            pathname: '/[recipeId]/finish',
+            pathname: '/recipe/[recipeId]/finish',
             params: { recipeId: recipe.id }
           })}
         >

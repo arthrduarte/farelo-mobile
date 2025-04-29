@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { Log, Profile, Recipe, Log_Like } from '@/types/db';
@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLikes } from '@/hooks/useLikes';
+import { Divider } from './Divider';
 
 type EnhancedLog = Log & {
   profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
@@ -66,6 +67,13 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
         style={styles.mainImage}
         resizeMode="cover"
       />
+
+      <View style={styles.interactionsContainer}>
+        <Text style={styles.interactionsAmount}>{likeCount} likes</Text>
+        <Text style={styles.interactionsAmount}>comments</Text>
+      </View>
+
+      <Divider />
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={toggleLike}>
@@ -150,6 +158,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     backgroundColor: '#79320633',
+  },
+  interactionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  interactionsAmount: {
+    fontSize: 12,
+    color: '#793206',
   },
   actions: {
     flexDirection: 'row',
