@@ -8,6 +8,7 @@ import { InstructionsSection } from "@/components/recipe/InstructionsSection";
 import { ImagesSection } from "@/components/recipe/ImagesSection";
 import { TagsSection } from "@/components/recipe/TagsSection";
 import { useLog } from "@/hooks/useLogs";
+import { useCopyRecipe } from "@/hooks/useRecipes";
 import { useAuth } from "@/contexts/AuthContext";
 import { Divider } from "@/components/Divider";
 
@@ -15,8 +16,9 @@ export default function LogDetailsScreen() {
     const { logId } = useLocalSearchParams();
     const { data, isLoading } = useLog(logId as string);
     const { profile } = useAuth();
+    const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
 
-    if (isLoading || !data) {
+    if (isLoading || !data || !profile) {
         return (
             <ThemedView style={styles.centerContainer}>
                 <ActivityIndicator size="large" color="#793206" />
@@ -25,6 +27,12 @@ export default function LogDetailsScreen() {
     }
 
     const { log, comments } = data;
+    const isOwnRecipe = log.recipe.profile_id === profile.id;
+
+    const handleCopyRecipe = () => {
+        if (isOwnRecipe) return;
+        copyRecipe({ recipeIdToCopy: log.recipe.id });
+    };
 
     return (
         <ThemedView style={styles.container}>
@@ -63,9 +71,15 @@ export default function LogDetailsScreen() {
                 )}
 
                 {/* Add to Cookbook Button */}
-                {log.recipe.profile_id != profile?.id ? (
-                    <TouchableOpacity style={styles.addButton}>
-                        <Text style={styles.addButtonText}>Add to your cookbook</Text>
+                {!isOwnRecipe ? (
+                    <TouchableOpacity 
+                        style={[styles.addButton, isCopying && styles.disabledButton]}
+                        onPress={handleCopyRecipe}
+                        disabled={isCopying}
+                    >
+                        <Text style={styles.addButtonText}>
+                            {isCopying ? "Adding..." : "Add to your cookbook"}
+                        </Text>
                     </TouchableOpacity>
                 ) : null}
 
@@ -169,6 +183,9 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
         marginVertical: 16,
+    },
+    disabledButton: {
+        backgroundColor: '#79320680',
     },
     addButtonText: {
         color: 'white',
