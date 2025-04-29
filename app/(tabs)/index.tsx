@@ -41,7 +41,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDE4D2',
+    // backgroundColor: '#EDE4D2',
   },
   headerContainer: {
     flexDirection: 'row',
@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 20 : 10,
     paddingBottom: 10,
-    backgroundColor: '#EDE4D2',
-    borderBottomWidth: 1,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#79320633',
   },
   headerTitlePlaceholder: {

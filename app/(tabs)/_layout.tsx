@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
@@ -20,8 +20,9 @@ export default function TabLayout() {
             borderTopWidth: 0,
           },
           default: {
-            backgroundColor: '#EDE4D2',
-            borderTopWidth: 0,
+            backgroundColor: '#fff',
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: '#79320633',
           },
         }),
       }}>
