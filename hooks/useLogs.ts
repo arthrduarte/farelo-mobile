@@ -75,25 +75,32 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .limit(pageSize)
 
             if (logErr) throw logErr
+            if (!logs) {
+                setFeed([]); // Ensure feed is empty if no logs
+                await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify([]));
+                setLoading(false);
+                return;
+            }
+
 
             // 2c) fetch likes for each log
+            const logIds = logs.map((log) => log.id);
             const { data: likes, error: likesErr } = await supabase
                 .from('log_likes')
                 .select('*')
-                .in('log_id', logs.map((log) => log.id))
+                .in('log_id', logIds)
 
             if (likesErr) throw likesErr
-            console.log(`Likes for log ${logs[0].id}:`, likes)
 
-            if (logs) {
-                // Combine logs with their likes
-                const logsWithLikes = logs.map(log => ({
-                    ...log,
-                    likes: likes.filter(like => like.log_id === log.id)
-                }))
-                setFeed(logsWithLikes as EnhancedLog[])
-                await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(logsWithLikes))
-            }
+            // Combine logs with their likes
+            const logsWithLikes = logs.map(log => ({
+                ...log,
+                likes: likes?.filter(like => like.log_id === log.id) ?? [] // Ensure likes is always an array
+            }));
+
+            setFeed(logsWithLikes as EnhancedLog[]);
+            await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(logsWithLikes))
+
         } catch (err) {
             console.error('useFeed › fetchFeed error', err)
         } finally {
