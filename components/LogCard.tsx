@@ -71,7 +71,12 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
 
       <View style={styles.interactionsContainer}>
         <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
-        <Text style={styles.interactionsAmount}>{log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}</Text>
+        <TouchableOpacity onPress={() => router.push({
+          pathname: '/log/[logId]/comments',
+          params: { logId: log.id }
+        })}>
+          <Text style={styles.interactionsAmount}>{log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}</Text>
+        </TouchableOpacity>
       </View>
 
       <Divider />
@@ -87,7 +92,10 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
             <ThemedText style={styles.actionCount}>{likeCount}</ThemedText>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => router.push({
+          pathname: '/log/[logId]/comments',
+          params: { logId: log.id }
+        })}>
           <Feather name="message-circle" size={24} color="#793206" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton}>

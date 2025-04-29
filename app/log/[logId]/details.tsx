@@ -50,8 +50,10 @@ export default function LogDetailsScreen() {
                     </View>
                 </View>
 
-                {/* Description */}
-                <Text style={styles.description}>{log.description}</Text>
+                <Text style={styles.recipeName}>{log.recipe.title}</Text>
+                {log.description && (
+                    <Text style={styles.description}>{log.description}</Text>
+                )}
 
                 {/* Image Carousel */}
                 {log.images.length === 1 ? (
@@ -149,6 +151,12 @@ const styles = StyleSheet.create({
     time: {
         fontSize: 12,
         color: '#79320633',
+    },
+    recipeName: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#793206',
+        marginBottom: 8,
     },
     description: {
         fontSize: 16,
