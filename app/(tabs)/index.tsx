@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 20 : 10,
     paddingBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#EDE4D2',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#79320633',
   },

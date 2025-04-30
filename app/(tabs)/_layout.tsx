@@ -20,7 +20,7 @@ export default function TabLayout() {
             borderTopWidth: 0,
           },
           default: {
-            backgroundColor: '#fff',
+            backgroundColor: '#EDE4D2',
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: '#79320633',
           },
