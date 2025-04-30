@@ -126,9 +126,10 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     padding: 16,
     marginBottom: 16,
+    borderRadius: 12,
+    boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
   },
   header: {
     flexDirection: 'row',
