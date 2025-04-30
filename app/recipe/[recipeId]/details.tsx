@@ -107,7 +107,7 @@ export default function RecipeDetailsScreen() {
         <TouchableOpacity 
           style={styles.startRecipeButton} 
           onPress={() => router.push({
-            pathname: '/[recipeId]/start',
+            pathname: '/recipe/[recipeId]/start',
             params: { recipeId: recipe.id }
           })}
         >
@@ -128,7 +128,7 @@ export default function RecipeDetailsScreen() {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => router.push(`/${recipeId}/edit` as any)}
+            onPress={() => router.push(`/recipe/${recipeId}/edit` as any)}
           >
             <MaterialIcons name="edit" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Edit</Text>

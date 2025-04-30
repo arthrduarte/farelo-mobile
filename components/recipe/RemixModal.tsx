@@ -55,7 +55,7 @@ export default function RemixModal({ visible, onClose, recipe }: RemixModalProps
       
       // Navigate to the new recipe's start screen
       router.push({
-        pathname: '/[recipeId]/details',
+        pathname: '/recipe/[recipeId]/details',
         params: { recipeId: data.id }
       });
     } catch (err) {
