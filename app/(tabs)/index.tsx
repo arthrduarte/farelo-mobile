@@ -26,7 +26,6 @@ export default function HomeScreen() {
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
       >
         {feed.map((log) => (
           <LogCard 
@@ -42,7 +41,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDE4D2',
+    // backgroundColor: '#EDE4D2',
   },
   headerContainer: {
     flexDirection: 'row',
@@ -52,7 +51,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 20 : 10,
     paddingBottom: 10,
     backgroundColor: '#EDE4D2',
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#79320633',
   },
   headerTitlePlaceholder: {
@@ -63,8 +62,5 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  contentContainer: {
-    paddingVertical: 8,
   },
 });

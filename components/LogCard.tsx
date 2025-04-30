@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { Log, Profile, Recipe, Log_Like, Log_Comment } from '@/types/db';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
@@ -40,7 +40,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   };
 
   return (
-    <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)}>
+    <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Image 
@@ -58,14 +58,20 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
         <ThemedText style={styles.description}>{log.description}</ThemedText>
       )}
 
-      <View style={styles.cookingInfo}>
-        <View style={styles.infoItem}>
-          <ThemedText>{log.recipe.time} mins</ThemedText>
+        <View style={styles.metaInfo}>
+          <View style={styles.metaItem}>
+            <View style={styles.timeIcon}>
+              <MaterialIcons name="schedule" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{log.recipe.time} mins</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <View style={styles.servingsIcon}>
+              <MaterialIcons name="people" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{log.recipe.servings} servings</Text>
+          </View>
         </View>
-        <View style={styles.infoItem}>
-          <ThemedText>{log.recipe.servings} servings</ThemedText>
-        </View>
-      </View>
 
       <Image 
         source={{ uri: log.images[0] }}
@@ -86,7 +92,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
       <Divider />
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={toggleLike}>
+        <TouchableOpacity onPress={toggleLike}>
           <View style={styles.actionContainer}>
             {isLiked ? 
               <AntDesign name="heart" size={24} color="#793206" />
@@ -96,14 +102,13 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
             <ThemedText style={styles.actionCount}>{likeCount}</ThemedText>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => router.push({
+        <TouchableOpacity onPress={() => router.push({
           pathname: '/log/[logId]/comments',
           params: { logId: log.id }
         })}>
           <Feather name="message-circle" size={24} color="#793206" />
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.actionButton} 
           onPress={handleCopyRecipe} 
           disabled={isCopying || log.recipe.profile_id === profile.id}
         >
@@ -121,19 +126,9 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#EDE4D2',
-    // borderRadius: 16,
+    backgroundColor: '#fff',
     padding: 16,
-    marginVertical: 8,
-    // marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
   },
   header: {
     flexDirection: 'row',
@@ -152,6 +147,34 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: '#79320633',
+  },
+  metaInfo: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  timeIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  servingsIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metaText: {
+    fontSize: 14,
+    color: '#793206',
   },
   title: {
     fontSize: 20,
@@ -191,10 +214,6 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 8
-  },
-  actionButton: {
-    padding: 8,
   },
   actionContainer: {
     flexDirection: 'row',
