@@ -51,8 +51,8 @@ export default function SearchScreen() {
 
     const handleSelectUser = (selectedProfile: Profile) => {
         router.push({
-            pathname: '/profile/[profileId]/profile',
-            params: { profileId: selectedProfile.id }
+            pathname: '/(tabs)/profile/[id]',
+            params: { id: selectedProfile.id }
         });
     };
 
