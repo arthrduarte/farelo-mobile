@@ -66,6 +66,7 @@ export default function RootLayout() {
               <Stack.Screen name="log/[logId]/details"/>
               <Stack.Screen name="log/[logId]/comments"/>
               <Stack.Screen name="search"/>
+              <Stack.Screen name="(tabs)/profile/[id]"/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>

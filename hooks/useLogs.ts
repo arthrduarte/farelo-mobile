@@ -53,12 +53,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .from('logs')
                 .select(`
                     *,
-                    profile:profiles(
-                        first_name,
-                        last_name,
-                        username,
-                        image
-                    ),
+                    profile:profiles(*),
                     recipe:recipes(*)
                 `)
                 .in('profile_id', followingIds)
@@ -122,12 +117,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .from('logs')
                 .select(`
                     *,
-                    profile:profiles(
-                        first_name,
-                        last_name,
-                        username,
-                        image
-                    ),
+                    profile:profiles(*),
                     recipe:recipes(*)
                 `)
                 .eq('profile_id', profile_id)
