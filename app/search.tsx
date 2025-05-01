@@ -52,7 +52,10 @@ export default function SearchScreen() {
     const handleSelectUser = (selectedProfile: Profile) => {
         router.push({
             pathname: '/profile/[id]',
-            params: { id: selectedProfile.id }
+            params: { 
+                id: selectedProfile.id,
+                profile: JSON.stringify(selectedProfile)
+            }
         });
     };
 

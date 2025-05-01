@@ -48,7 +48,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
     console.log(log.profile);
     router.push({
       pathname: '/profile/[id]',
-      params: { id: log.profile.id }
+      params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
     });
   };
 
