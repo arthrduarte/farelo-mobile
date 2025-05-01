@@ -11,7 +11,7 @@ import { Feather } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, ownLogs, loading, refresh } = useLogs(profile?.id ?? '');
+  const { feed, profileLogs, loading, refresh } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
 
   return (

@@ -7,7 +7,7 @@ import { LogCard } from '@/components/LogCard';
 
 export default function ProfileScreen() {
   const { profile } = useAuth();
-  const { ownLogs } = useLogs(profile?.id ?? '');
+  const { profileLogs } = useLogs(profile?.id ?? '');
 
   if (!profile) {
     return <Text>No profile found</Text>;
@@ -15,8 +15,8 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ProfileHeader profile={profile} logs={ownLogs} />
-      {ownLogs.map((log) => (
+      <ProfileHeader profile={profile} logs={profileLogs} />
+      {profileLogs.map((log) => (
         <LogCard key={log.id} log={log} />
       ))}
     </ThemedView>

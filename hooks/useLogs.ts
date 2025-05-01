@@ -14,7 +14,7 @@ const LOG_KEYS = {
 export function useLogs(profile_id: string, pageSize: number = 20) {
     const [feed, setFeed] = useState<EnhancedLog[]>([])
     const [loading, setLoading] = useState(true)
-    const [ownLogs, setOwnLogs] = useState<EnhancedLog[]>([])
+    const [profileLogs, setprofileLogs] = useState<EnhancedLog[]>([])
 
     // 1️⃣ load cached logs on mount
     useEffect(() => {
@@ -136,7 +136,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
             if (logErr) throw logErr
             if (!logs || logs.length === 0) {
-                setOwnLogs([]); // Set empty if no logs found
+                setprofileLogs([]); // Set empty if no logs found
                 // setLoading(false);
                 return;
             }
@@ -160,7 +160,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             if (commentsError) throw commentsError;
 
             // Combine own logs with their likes and comments
-            const ownLogsWithData = logs.map(log => {
+            const profileLogsWithData = logs.map(log => {
                 const logLikes = likes?.filter(like => like.log_id === log.id) ?? [];
                 const logComments = comments?.filter(comment => comment.log_id === log.id) ?? [];
 
@@ -172,11 +172,11 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 }
             });
 
-            setOwnLogs(ownLogsWithData as EnhancedLog[]);
+            setprofileLogs(profileLogsWithData as EnhancedLog[]);
 
         } catch (err) {
             console.error('useLogs › fetchProfileLogs error', err)
-            setOwnLogs([]); // Set empty on error
+            setprofileLogs([]); // Set empty on error
         } finally {
             // setLoading(false) // Handled by fetchFeed loading
         }
@@ -191,7 +191,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         }
     }, [fetchFeed, profile_id])
 
-    return { feed, loading, refresh: fetchFeed, ownLogs }
+    return { feed, loading, refresh: fetchFeed, profileLogs }
 }
 
 export const useLog = (id: string | undefined) => {
