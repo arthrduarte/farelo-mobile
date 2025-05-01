@@ -113,7 +113,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         }
     }, [profile_id, pageSize])
 
-    const fetchOwnLogs = useCallback(async () => {
+    const fetchProfileLogs = useCallback(async () => {
         if (!profile_id) return
         // Keep loading state associated with the feed for simplicity now
         // setLoading(true); 
@@ -175,7 +175,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             setOwnLogs(ownLogsWithData as EnhancedLog[]);
 
         } catch (err) {
-            console.error('useLogs › fetchOwnLogs error', err)
+            console.error('useLogs › fetchProfileLogs error', err)
             setOwnLogs([]); // Set empty on error
         } finally {
             // setLoading(false) // Handled by fetchFeed loading
@@ -187,7 +187,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     useEffect(() => {
         if (profile_id) {
             fetchFeed()
-            fetchOwnLogs()
+            fetchProfileLogs()
         }
     }, [fetchFeed, profile_id])
 
