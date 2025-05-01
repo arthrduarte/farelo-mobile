@@ -1,7 +1,8 @@
-import { View, StyleSheet, Text, Image, Button, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, Image, Button, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Profile, Log } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
+import { useFollow } from '@/hooks/useFollow';
 
 interface ProfileHeaderProps {
   profile: Partial<Profile>
@@ -9,6 +10,7 @@ interface ProfileHeaderProps {
 }
 export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
   const { profile: currentProfile } = useAuth();
+  const { isFollowing, loading, toggleFollow } = useFollow(profile?.id || '');
 
   return (
       <View style={styles.header}>
@@ -43,8 +45,18 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
                 <Text style={styles.followButtonText}>Edit Profile</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.followButton}>
-                <Text style={styles.followButtonText}>Follow</Text>
+              <TouchableOpacity 
+                style={[styles.followButton, isFollowing && styles.followingButton]} 
+                onPress={toggleFollow}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.followButtonText}>
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </Text>
+                )}
               </TouchableOpacity>
             )}
         </View>
@@ -79,6 +91,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 10,
     paddingHorizontal: 20,
+  },
+  followingButton: {
+    backgroundColor: '#79320633',
   },
   followButtonText: {
     color: '#fff',
