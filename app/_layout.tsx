@@ -65,6 +65,7 @@ export default function RootLayout() {
               <Stack.Screen name="recipe/[recipeId]/finish"/>
               <Stack.Screen name="log/[logId]/details"/>
               <Stack.Screen name="log/[logId]/comments"/>
+              <Stack.Screen name="profile/[profileId]/profile.tsx"/>
               <Stack.Screen name="search"/>
             </Stack>
             <StatusBar style="auto" />
