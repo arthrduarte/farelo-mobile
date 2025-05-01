@@ -1,15 +1,22 @@
 import { LogCard } from '@/components/LogCard';
 import ProfileHeader from '@/components/ProfileHeader';
 import { ThemedView } from '@/components/ThemedView';
+import { useLogs } from '@/hooks/useLogs';
 import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams();
+  const { profileLogs } = useLogs(id as string);
+
+  const profile = profileLogs[0]?.profile;
 
   return (
     <ThemedView style={styles.container}>
-      <Text>Profile {id}</Text>
+      <ProfileHeader profile={profile} logs={profileLogs} />
+      {profileLogs.map((log) => (
+        <LogCard key={log.id} log={log} />
+      ))}
     </ThemedView>
   );
 }
