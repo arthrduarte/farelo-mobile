@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
     carouselImage: {
         width: 343, // Adjust based on screen width minus padding
         borderRadius: 12,
+        marginRight: 16,
     },
     paginationDots: {
         flexDirection: 'row',

@@ -25,6 +25,8 @@ export default function RecipeDetailsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
 
+  console.log(recipe);
+
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
       await deleteRecipeMutation.mutateAsync(recipeToDelete);
@@ -115,7 +117,11 @@ export default function RecipeDetailsScreen() {
         </TouchableOpacity>
 
         {/* Recipe Image */}
-        <ImagesSection mainImage={recipe.ai_image_url} />
+        {recipe.user_images_url && recipe.user_images_url.length > 0 ? (
+          <ImagesSection images={recipe.user_images_url} />
+        ) : (
+          <ImagesSection mainImage={recipe.ai_image_url} />
+        )}
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
