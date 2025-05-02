@@ -1,4 +1,4 @@
-import { View, Image, StyleSheet, ScrollView } from 'react-native';
+import { View, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { PulsingPlaceholder } from '../recipe/ImagePlaceholder';
 import { useState } from 'react';
 
@@ -6,12 +6,14 @@ interface LogImageProps {
     images?: string[];
     mainImage?: string;
     height?: number;
+    onImagePress?: () => void;
 }
 
 export const LogImage: React.FC<LogImageProps> = ({ 
     images, 
     mainImage,
-    height = 200
+    height = 200,
+    onImagePress
 }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -42,11 +44,16 @@ export const LogImage: React.FC<LogImageProps> = ({
                     scrollEventThrottle={16}
                 >
                     {images.map((image, index) => (
-                        <Image
-                            key={index}
-                            source={{ uri: image }}
-                            style={[styles.carouselImage, { height }]}
-                        />
+                        <TouchableOpacity 
+                            key={index} 
+                            onPress={onImagePress}
+                            activeOpacity={onImagePress ? 0.8 : 1}
+                        >
+                            <Image
+                                source={{ uri: image }}
+                                style={[styles.carouselImage, { height }]}
+                            />
+                        </TouchableOpacity>
                     ))}
                 </ScrollView>
                 <View style={styles.paginationDots}>
