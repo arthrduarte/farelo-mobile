@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, Platform, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, Platform, View, FlatList, RefreshControl } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { LogCard } from '@/components/LogCard';
 import { Log } from '@/types/db';
@@ -11,7 +11,7 @@ import { Feather } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, ownLogs, loading, refresh } = useLogs(profile?.id ?? '');
+  const { feed, profileLogs, loading, refresh } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
 
   return (
@@ -23,17 +23,19 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <FlatList 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-      >
-        {feed.map((log) => (
+        data={feed}
+        renderItem={({ item }) => (
           <LogCard 
-            key={log.id}
-            log={log}
+            key={item.id}
+            log={item}
           />
-        ))}
-      </ScrollView>
+        )}
+        onRefresh={refresh}
+        refreshing={loading}
+      />
     </ThemedView>
   );
 }

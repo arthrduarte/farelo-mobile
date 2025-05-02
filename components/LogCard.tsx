@@ -39,24 +39,39 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
     copyRecipe({ recipeIdToCopy: log.recipe_id });
   };
 
+  const handleProfilePress = (e: any) => {
+    // e.stopPropagation();
+    // router.push({
+    //   pathname: '/(tabs)/profile/[id]',
+    //   params: { id: log.profile.id }
+    // });
+    console.log(log.profile);
+    router.push({
+      pathname: '/profile/[id]',
+      params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
+    });
+  };
+
   return (
     <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Image 
-            source={{ uri: log.profile.image }}
-            style={styles.avatar}
-        />
-        <View style={styles.headerText}>
-          <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
-          <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
-        </View>
-      </View>
+        <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.8}>
+          <View style={styles.header}>
+            <Image 
+              source={{ uri: log.profile.image }}
+              style={styles.avatar}
+            />
+            <View style={styles.headerText}>
+              <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
+              <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
+            </View>
+          </View>
+        </TouchableOpacity>
 
-      <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
-      {log.description && (
-        <ThemedText style={styles.description}>{log.description}</ThemedText>
-      )}
+        <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
+        {log.description && (
+          <ThemedText style={styles.description}>{log.description}</ThemedText>
+        )}
 
         <View style={styles.metaInfo}>
           <View style={styles.metaItem}>
@@ -73,53 +88,53 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
           </View>
         </View>
 
-      <Image 
-        source={{ uri: log.images[0] }}
-        style={styles.mainImage}
-        resizeMode="cover"
-      />
+        <Image 
+          source={{ uri: log.images[0] }}
+          style={styles.mainImage}
+          resizeMode="cover"
+        />
 
-      <View style={styles.interactionsContainer}>
-        <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
-        <TouchableOpacity onPress={() => router.push({
-          pathname: '/log/[logId]/comments',
-          params: { logId: log.id }
-        })}>
-          <Text style={styles.interactionsAmount}>{log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}</Text>
-        </TouchableOpacity>
+        <View style={styles.interactionsContainer}>
+          <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
+          <TouchableOpacity onPress={() => router.push({
+            pathname: '/log/[logId]/comments',
+            params: { logId: log.id }
+          })}>
+            <Text style={styles.interactionsAmount}>{log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Divider />
+
+        <View style={styles.actions}>
+          <TouchableOpacity onPress={toggleLike}>
+            <View style={styles.actionContainer}>
+              {isLiked ? 
+                <AntDesign name="heart" size={24} color="#793206" />
+              :
+                <AntDesign name="hearto" size={24} color="#793206" />
+              }
+              <ThemedText style={styles.actionCount}>{likeCount}</ThemedText>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({
+            pathname: '/log/[logId]/comments',
+            params: { logId: log.id }
+          })}>
+            <Feather name="message-circle" size={24} color="#793206" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={handleCopyRecipe} 
+            disabled={isCopying || log.recipe.profile_id === profile.id}
+          >
+            <AntDesign 
+              name="plus" 
+              size={24} 
+              color={isCopying || log.recipe.profile_id === profile.id ? "#79320633" : "#793206"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <Divider />
-
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={toggleLike}>
-          <View style={styles.actionContainer}>
-            {isLiked ? 
-              <AntDesign name="heart" size={24} color="#793206" />
-            :
-              <AntDesign name="hearto" size={24} color="#793206" />
-            }
-            <ThemedText style={styles.actionCount}>{likeCount}</ThemedText>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push({
-          pathname: '/log/[logId]/comments',
-          params: { logId: log.id }
-        })}>
-          <Feather name="message-circle" size={24} color="#793206" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={handleCopyRecipe} 
-          disabled={isCopying || log.recipe.profile_id === profile.id}
-        >
-          <AntDesign 
-            name="plus" 
-            size={24} 
-            color={isCopying || log.recipe.profile_id === profile.id ? "#79320633" : "#793206"}
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
     </TouchableOpacity>
   );
 };

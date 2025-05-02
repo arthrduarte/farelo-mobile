@@ -50,10 +50,13 @@ export default function SearchScreen() {
     }, [searchQuery, searchUsers]);
 
     const handleSelectUser = (selectedProfile: Profile) => {
-        // TODO: Navigate to user profile screen in the future?
-        console.log("Selected user:", selectedProfile.username);
-        // For now, maybe just go back or clear search?
-        router.back(); 
+        router.push({
+            pathname: '/profile/[id]',
+            params: { 
+                id: selectedProfile.id,
+                profile: JSON.stringify(selectedProfile)
+            }
+        });
     };
 
     const renderItem = ({ item }: { item: Profile }) => (
