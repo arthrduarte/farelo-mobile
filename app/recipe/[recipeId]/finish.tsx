@@ -9,6 +9,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { Divider } from '@/components/Divider';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function FinishRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -21,10 +22,30 @@ export default function FinishRecipeScreen() {
   const [newTag, setNewTag] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<string[] | null>(null);
 
   // Initialize tags when recipe is loaded
   if (recipe && tags.length === 0) {
     setTags(recipe.tags || []);
+  }
+
+  const imagePicker = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImages([...(images || []), result.assets[0].uri]);
+    }
+  }
+
+  const removeImage = (index: number) => {
+    setImages(images?.filter((_, i) => i !== index) || null);
   }
 
   const handleAddTag = () => {
@@ -122,9 +143,24 @@ export default function FinishRecipeScreen() {
             source={{ uri: recipe.ai_image_url }} 
             style={styles.recipeImage}
           />
+
+          {images && images.map((image, index) => (
+            <View key={index} style={styles.imageWrapper}>
+              <Image 
+                source={{ uri: image }} 
+                style={styles.recipeImage}
+              />
+              <TouchableOpacity 
+                style={styles.removeButton} 
+                onPress={() => removeImage(index)}
+              >
+                <MaterialIcons name="close" size={24} color="#793206" />
+              </TouchableOpacity>
+            </View>
+          ))}
           
           {/* Upload Photo Button */}
-          <TouchableOpacity style={styles.uploadButton}>
+          <TouchableOpacity style={styles.uploadButton} onPress={imagePicker}>
             <MaterialIcons name="add-a-photo" size={24} color="#793206" />
           </TouchableOpacity>
         </View>
@@ -244,6 +280,19 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 8,
+  },
+  imageWrapper: {
+    position: 'relative',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 1,
+    // borderWidth: 1,
+    // borderColor: '#79320633',
   },
   uploadButton: {
     width: 140,

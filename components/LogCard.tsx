@@ -10,7 +10,7 @@ import { useLikes } from '@/hooks/useLikes';
 import { useCopyRecipe } from '@/hooks/useRecipes';
 import { Divider } from './Divider';
 import { EnhancedLog } from '@/types/types';
-
+import { ImagesSection } from './recipe/ImagesSection';
 type LogCardProps = {
   log: EnhancedLog;
 };
@@ -88,11 +88,11 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
           </View>
         </View>
 
-        <Image 
-          source={{ uri: log.images[0] }}
-          style={styles.mainImage}
-          resizeMode="cover"
-        />
+        {log.images && log.images.length > 0 ? (
+          <ImagesSection images={log.images} />
+        ) : (
+          <ImagesSection mainImage={log.images[0]} />
+        )}
 
         <View style={styles.interactionsContainer}>
           <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
