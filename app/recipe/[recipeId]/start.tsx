@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useState } from 'react';
 import { Divider } from '@/components/Divider';
+import { ImagesSection } from '@/components/recipe/ImagesSection';
 
 export default function StartRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -83,10 +84,11 @@ export default function StartRecipeScreen() {
         </View>
 
         {/* Recipe Image */}
-        <Image 
-          source={{ uri: recipe.ai_image_url }} 
-          style={styles.recipeImage}
-        />
+        {recipe.user_images_url && recipe.user_images_url.length > 0 ? (
+          <ImagesSection images={recipe.user_images_url} />
+        ) : (
+          <ImagesSection mainImage={recipe.ai_image_url} />
+        )}
 
         <Divider />
 

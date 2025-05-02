@@ -10,6 +10,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { Divider } from '@/components/Divider';
+import { ImagesSection } from '@/components/recipe/ImagesSection';
 interface Recipe extends BaseRecipe {
   newTag?: string;
 }
@@ -180,13 +181,10 @@ export default function EditRecipeScreen() {
         </View>
 
         {/* Recipe Image */}
-        {editedRecipe.ai_image_url ? (
-          <Image 
-            source={{ uri: editedRecipe.ai_image_url }} 
-            style={styles.recipeImage}
-          />
+        {editedRecipe.user_images_url && editedRecipe.user_images_url.length > 0 ? (
+          <ImagesSection images={editedRecipe.user_images_url} />
         ) : (
-          <PulsingPlaceholder />
+          <ImagesSection mainImage={editedRecipe.ai_image_url} />
         )}
 
         {/* Action Buttons */}
