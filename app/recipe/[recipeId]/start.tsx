@@ -7,7 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useState } from 'react';
 import { Divider } from '@/components/Divider';
-import { ImagesSection } from '@/components/recipe/ImagesSection';
+import { ImagesSection } from '@/components/recipe/RecipeImage';
 
 export default function StartRecipeScreen() {
   const { recipeId } = useLocalSearchParams();

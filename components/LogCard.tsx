@@ -2,7 +2,6 @@ import React from 'react';
 import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
-import { Log, Profile, Recipe, Log_Like, Log_Comment } from '@/types/db';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +9,8 @@ import { useLikes } from '@/hooks/useLikes';
 import { useCopyRecipe } from '@/hooks/useRecipes';
 import { Divider } from './Divider';
 import { EnhancedLog } from '@/types/types';
-import { ImagesSection } from './recipe/ImagesSection';
+import { LogImage } from './log/LogImage';
+
 type LogCardProps = {
   log: EnhancedLog;
 };
@@ -89,9 +89,9 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
         </View>
 
         {log.images && log.images.length === 1 ? (
-          <ImagesSection mainImage={log.images[0]} />
+          <LogImage mainImage={log.images[0]} />
         ) : (
-          <ImagesSection images={log.images} />
+          <LogImage images={log.images} />
         )}
 
         <View style={styles.interactionsContainer}>

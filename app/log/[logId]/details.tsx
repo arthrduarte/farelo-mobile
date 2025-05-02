@@ -5,7 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
 import { IngredientsSection } from "@/components/recipe/IngredientsSection";
 import { InstructionsSection } from "@/components/recipe/InstructionsSection";
-import { ImagesSection } from "@/components/recipe/ImagesSection";
+import { ImagesSection } from "@/components/recipe/RecipeImage";
 import { TagsSection } from "@/components/recipe/TagsSection";
 import { useLog } from "@/hooks/useLogs";
 import { useCopyRecipe } from "@/hooks/useRecipes";

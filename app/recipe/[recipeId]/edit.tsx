@@ -10,7 +10,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { Divider } from '@/components/Divider';
-import { ImagesSection } from '@/components/recipe/ImagesSection';
+import { ImagesSection } from '@/components/recipe/RecipeImage';
 interface Recipe extends BaseRecipe {
   newTag?: string;
 }
