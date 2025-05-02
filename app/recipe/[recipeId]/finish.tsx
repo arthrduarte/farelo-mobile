@@ -122,14 +122,22 @@ export default function FinishRecipeScreen() {
         <Divider />
 
         {/* Images */}
-        <View style={styles.imagesContainer}>
-          {/* Recipe Image */}
-          <Image 
-            source={{ uri: recipe.ai_image_url }} 
-            style={styles.recipeImage}
-          />
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.imagesContainer}
+          contentContainerStyle={styles.imagesContentContainer}
+        >
+          {/* Show AI image only if no user images */}
+          {(!images || images.length === 0) && (
+            <Image 
+              source={{ uri: recipe.ai_image_url }} 
+              style={styles.recipeImage}
+            />
+          )}
 
-          {images && images.map((image, index) => (
+          {/* User Images */}
+          {images?.map((image, index) => (
             <View key={index} style={styles.imageWrapper}>
               <Image 
                 source={{ uri: image }} 
@@ -148,7 +156,7 @@ export default function FinishRecipeScreen() {
           <TouchableOpacity style={styles.uploadButton} onPress={imagePicker}>
             <MaterialIcons name="add-a-photo" size={24} color="#793206" />
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
         <Divider />
 
@@ -232,9 +240,11 @@ const styles = StyleSheet.create({
     color: '#793206',
   },
   imagesContainer: {
-    flexDirection: 'row',
+    paddingVertical: 12,
+  },
+  imagesContentContainer: {
     gap: 16,
-    marginBottom: 24,
+    alignItems: 'center',
   },
   recipeImage: {
     width: 140,
