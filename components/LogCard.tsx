@@ -88,10 +88,10 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
           </View>
         </View>
 
-        {log.images && log.images.length > 0 ? (
-          <ImagesSection images={log.images} />
-        ) : (
+        {log.images && log.images.length === 1 ? (
           <ImagesSection mainImage={log.images[0]} />
+        ) : (
+          <ImagesSection images={log.images} />
         )}
 
         <View style={styles.interactionsContainer}>
