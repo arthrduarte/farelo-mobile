@@ -10,6 +10,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { Divider } from '@/components/Divider';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { decode } from 'base64-arraybuffer';
+import 'react-native-url-polyfill/auto';
 
 export default function FinishRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -46,31 +49,92 @@ export default function FinishRecipeScreen() {
 
     try {
       setIsSubmitting(true);
+      
+      // 1. Upload images to storage if they exist
+      let uploadedImageUrls: string[] = [];
+      if (images && images.length > 0) {
+        console.log("Starting to upload images:", images);
+        const uploadPromises = images.map(async (uri) => {
+          try {
+            console.log(`Processing image URI: ${uri}`);
+            
+            // Read the file content as base64
+            const base64 = await FileSystem.readAsStringAsync(uri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            
+            // Determine file type and name
+            const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg'; // Simple extension extraction
+            const contentType = `image/${fileExt}`; // Basic content type mapping
+            const fileName = `${profile.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`; 
+            
+            console.log(`Uploading ${fileName} (Content-Type: ${contentType})`);
 
-      const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes;
+            // Upload the decoded base64 content
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('log.images')
+              .upload(fileName, decode(base64), { contentType }); // Use decode and set content type
 
-      // Update recipe with notes
+            if (uploadError) {
+              console.error(`Supabase Upload Error for ${fileName}:`, uploadError);
+              throw uploadError; // Re-throw Supabase specific error
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+              .from('log.images')
+              .getPublicUrl(fileName);
+              
+            console.log(`Uploaded image to storage: ${publicUrl}`);
+            return publicUrl;
+
+          } catch (fileProcessingError) {
+             console.error(`Error processing or uploading file ${uri}:`, fileProcessingError);
+             throw fileProcessingError; // Re-throw error to stop Promise.all
+          }
+        });
+
+        uploadedImageUrls = await Promise.all(uploadPromises);
+        console.log("All images uploaded successfully:", uploadedImageUrls);
+      }
+
+      // 2. Update recipe with new user images (Consider if this is still needed if log has images)
+      // Maybe only update if there were pre-existing images or notes change?
+      console.log("Updating recipe notes (if provided)");
+      const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes; // Combine notes if existing ones
+      // Only update user_images_url on the recipe if it makes sense in your data model
+      // For now, let's assume the log images are sufficient and we only update notes
       await updateRecipeMutation.mutateAsync({
         ...recipe,
-        notes: updatedNotes,
+        notes: notes ? updatedNotes : recipe.notes, // Update notes only if new notes were added
+        // user_images_url: uploadedImageUrls.length > 0 ? uploadedImageUrls : recipe.user_images_url, // Decide if recipe needs user_images_url
       });
+      console.log("Recipe notes updated.");
 
-      // Create new log
+
+      // 3. Create new log
+      console.log("Creating new log entry");
       const { error: logError } = await supabase
         .from('logs')
         .insert({
           profile_id: profile.id,
           recipe_id: recipe.id,
-          description,
-          images: [recipe.ai_image_url],
+          description: description || null, // Use null if empty
+          images: uploadedImageUrls.length > 0 ? uploadedImageUrls : [recipe.ai_image_url], // Use uploaded or fallback to AI image
         });
 
-      if (logError) throw Error(logError.message);
+      if (logError) {
+        console.error("Supabase Insert Log Error:", logError);
+        throw new Error(logError.message); // Use new Error for consistency
+      }
+      console.log("Log entry created successfully.");
 
       // Use replace to prevent going back to the form
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('Error saving log:', error);
+      // Catch errors from file processing, upload, recipe update, or log insert
+      console.error('Error in handleNewLog:', error); 
+      // TODO: Add user-facing error handling UI (e.g., Alert.alert('Upload Failed', error.message))
     } finally {
       setIsSubmitting(false);
     }
