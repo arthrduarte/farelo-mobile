@@ -19,15 +19,8 @@ export default function FinishRecipeScreen() {
   
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
-  const [newTag, setNewTag] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[] | null>(null);
-
-  // Initialize tags when recipe is loaded
-  if (recipe && tags.length === 0) {
-    setTags(recipe.tags || []);
-  }
 
   const imagePicker = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -48,13 +41,6 @@ export default function FinishRecipeScreen() {
     setImages(images?.filter((_, i) => i !== index) || null);
   }
 
-  const handleAddTag = () => {
-    if (newTag.trim()) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag('');
-    }
-  };
-
   const handleNewLog = async () => {
     if (!recipe || !profile) return;
 
@@ -63,11 +49,10 @@ export default function FinishRecipeScreen() {
 
       const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes;
 
-      // Update recipe with notes and tags
+      // Update recipe with notes
       await updateRecipeMutation.mutateAsync({
         ...recipe,
         notes: updatedNotes,
-        tags: tags,
       });
 
       // Create new log
@@ -163,31 +148,6 @@ export default function FinishRecipeScreen() {
           <TouchableOpacity style={styles.uploadButton} onPress={imagePicker}>
             <MaterialIcons name="add-a-photo" size={24} color="#793206" />
           </TouchableOpacity>
-        </View>
-
-        <Divider />
-
-        {/* Tags */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tags</Text>
-          <View style={styles.tagsContainer}>
-            {tags.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-            <View style={styles.addTagContainer}>
-              <TextInput
-                style={styles.tagInput}
-                placeholder="add more"
-                placeholderTextColor="#79320680"
-                value={newTag}
-                onChangeText={setNewTag}
-                onSubmitEditing={handleAddTag}
-                returnKeyType="done"
-              />
-            </View>
-          </View>
         </View>
 
         <Divider />
@@ -304,33 +264,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: '#793206',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  tagText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
-  addTagContainer: {
-    borderWidth: 1,
-    borderColor: '#79320633',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  tagInput: {
-    fontSize: 14,
-    color: '#793206',
-    minWidth: 80,
   },
   actionButtons: {
     gap: 12,
