@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
+import { useCreateRecipe } from '@/hooks/useRecipes';
+import { router } from 'expo-router';
 
 // Define a type for the manual form data, omitting fields not manually entered
 type ManualRecipeFormData = Pick<
   Recipe, 
-  'title' | 'description' | 'time' | 'servings' | 'ingredients' | 'instructions' | 'tags' | 'notes'
+  'title' | 'description' | 'time' | 'servings' | 'ingredients' | 'instructions' | 'tags' | 'notes' | 'source_url'
 >;
 
 // Final data structure for submission (includes filtered lists)
@@ -22,34 +24,86 @@ const initialManualFormData: ManualRecipeFormData = {
   description: '',
   time: 0,
   servings: 0,
-  ingredients: [''], // Start with one empty ingredient
-  instructions: [''], // Start with one empty instruction
-  tags: [''], // Start with one empty tag
+  ingredients: [''],
+  instructions: [''],
+  tags: [''],
   notes: '',
+  source_url: '',
 };
 
 export default function AddManually() {
   const [manualFormData, setManualFormData] = useState<ManualRecipeFormData>(initialManualFormData);
+  const createRecipeMutation = useCreateRecipe();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Check form validity and notify parent
   useEffect(() => {
     const finalIngredients = manualFormData.ingredients.filter(item => item.trim() !== '');
     const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
-    const finalTags = manualFormData.tags.filter(item => item.trim() !== '');
     const isValid = !!(manualFormData.title.trim() && manualFormData.time > 0 && manualFormData.servings > 0 && finalIngredients.length > 0 && finalInstructions.length > 0);
     console.log('isValid', isValid);
   }, [manualFormData]);
 
-  // Helper to update manual form state for simple fields
   const handleManualFormChange = (field: keyof Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags'>, value: string | number) => {
     setManualFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmission = () => {
-    console.log('Submission');
-  }
+  const handleSubmission = async () => {
+    try {
+      setIsSubmitting(true);
 
-  // --- Handlers for Dynamic Lists ---
+      // Validate required fields
+      if (!manualFormData.title.trim()) {
+        Alert.alert('Error', 'Please enter a title');
+        return;
+      }
+      if (!manualFormData.time || manualFormData.time <= 0) {
+        Alert.alert('Error', 'Please enter a valid cooking time');
+        return;
+      }
+      if (!manualFormData.servings || manualFormData.servings <= 0) {
+        Alert.alert('Error', 'Please enter a valid number of servings');
+        return;
+      }
+
+      // Filter out empty items
+      const finalIngredients = manualFormData.ingredients.filter(item => item.trim() !== '');
+      const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
+      const finalTags = manualFormData.tags.filter(item => item.trim() !== '');
+
+      if (finalIngredients.length === 0) {
+        Alert.alert('Error', 'Please add at least one ingredient');
+        return;
+      }
+      if (finalInstructions.length === 0) {
+        Alert.alert('Error', 'Please add at least one instruction');
+        return;
+      }
+
+      // Prepare final data
+      const finalData: FinalManualRecipeData = {
+        ...manualFormData,
+        ingredients: finalIngredients,
+        instructions: finalInstructions,
+        tags: finalTags,
+      };
+
+      // Submit to Supabase
+      const newRecipe = await createRecipeMutation.mutateAsync(finalData);
+      console.log('Recipe created successfully:', newRecipe);
+
+      // Navigate to the recipe details
+      router.replace({
+        pathname: '/recipe/[recipeId]/details',
+        params: { recipeId: newRecipe.id }
+      });
+    } catch (error) {
+      console.error('Error creating recipe:', error);
+      Alert.alert('Error', 'Failed to create recipe. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleListItemChange = (
     listType: 'ingredients' | 'instructions' | 'tags', 
@@ -66,13 +120,12 @@ export default function AddManually() {
   const addListItem = (listType: 'ingredients' | 'instructions' | 'tags') => {
     setManualFormData(prev => ({
       ...prev,
-      [listType]: [...prev[listType], ''] // Add empty string for new item
+      [listType]: [...prev[listType], '']
     }));
   };
 
   const removeListItem = (listType: 'ingredients' | 'instructions' | 'tags', index: number) => {
     setManualFormData(prev => {
-      // Prevent removing the last item if it's the only one
       if (prev[listType].length <= 1) return prev; 
       const newList = [...prev[listType]];
       newList.splice(index, 1);
@@ -213,8 +266,17 @@ export default function AddManually() {
         multiline
       />
 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmission}>
-        <Text style={styles.submitButtonText}>Submit</Text>
+      <TouchableOpacity 
+        style={[
+          styles.submitButton,
+          isSubmitting && styles.submitButtonDisabled
+        ]} 
+        onPress={handleSubmission}
+        disabled={isSubmitting}
+      >
+        <Text style={styles.submitButtonText}>
+          {isSubmitting ? 'Creating Recipe...' : 'Submit'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -301,5 +363,8 @@ const styles = StyleSheet.create({
     color: '#EDE4D2',
     fontSize: 16,
     fontWeight: '600',
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
 });
