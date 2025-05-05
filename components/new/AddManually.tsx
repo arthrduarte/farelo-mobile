@@ -10,9 +10,10 @@ type ManualRecipeFormData = Pick<
 >;
 
 // Final data structure for submission (includes filtered lists)
-export type FinalManualRecipeData = Omit<ManualRecipeFormData, 'ingredients' | 'instructions'> & {
+export type FinalManualRecipeData = Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags'> & {
   ingredients: string[];
   instructions: string[];
+  tags: string[];
 };
 
 // Initial state for the manual form
@@ -23,7 +24,7 @@ const initialManualFormData: ManualRecipeFormData = {
   servings: 0,
   ingredients: [''], // Start with one empty ingredient
   instructions: [''], // Start with one empty instruction
-  tags: [], 
+  tags: [''], // Start with one empty tag
   notes: '',
 };
 
@@ -39,6 +40,7 @@ export default function AddManually({ onSubmit, onValidityChange }: AddManuallyP
   useEffect(() => {
     const finalIngredients = manualFormData.ingredients.filter(item => item.trim() !== '');
     const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
+    const finalTags = manualFormData.tags.filter(item => item.trim() !== '');
     const isValid = !!(manualFormData.title.trim() && manualFormData.time > 0 && manualFormData.servings > 0 && finalIngredients.length > 0 && finalInstructions.length > 0);
     onValidityChange(isValid);
   }, [manualFormData, onValidityChange]);
@@ -51,7 +53,7 @@ export default function AddManually({ onSubmit, onValidityChange }: AddManuallyP
   // --- Handlers for Dynamic Lists ---
 
   const handleListItemChange = (
-    listType: 'ingredients' | 'instructions', 
+    listType: 'ingredients' | 'instructions' | 'tags', 
     index: number, 
     value: string
   ) => {
@@ -62,14 +64,14 @@ export default function AddManually({ onSubmit, onValidityChange }: AddManuallyP
     });
   };
 
-  const addListItem = (listType: 'ingredients' | 'instructions') => {
+  const addListItem = (listType: 'ingredients' | 'instructions' | 'tags') => {
     setManualFormData(prev => ({
       ...prev,
       [listType]: [...prev[listType], ''] // Add empty string for new item
     }));
   };
 
-  const removeListItem = (listType: 'ingredients' | 'instructions', index: number) => {
+  const removeListItem = (listType: 'ingredients' | 'instructions' | 'tags', index: number) => {
     setManualFormData(prev => {
       // Prevent removing the last item if it's the only one
       if (prev[listType].length <= 1) return prev; 
@@ -78,20 +80,6 @@ export default function AddManually({ onSubmit, onValidityChange }: AddManuallyP
       return { ...prev, [listType]: newList };
     });
   };
-
-  // --- Handler for Tags ---
-  const handleTagsChange = (text: string) => {
-    // Split by comma, trim whitespace around each tag, filter empty strings
-    const tagsArray = text.split(',')
-                          .map(tag => tag.trim()) // Trim whitespace around tags
-                          .filter(tag => tag !== ''); // Remove empty tags resulting from multiple commas etc.
-    setManualFormData(prev => ({ ...prev, tags: tagsArray }));
-  };
-
-  // Function to prepare and submit data (called by parent via prop)
-  // This is implicitly handled by the parent now, which reads the state
-  // via the onSubmit prop when the main button is pressed.
-  // We just ensure the validity is reported correctly.
 
   return (
     <View style={styles.manualFormContainer}>
@@ -192,14 +180,28 @@ export default function AddManually({ onSubmit, onValidityChange }: AddManuallyP
       </TouchableOpacity>
        
       {/* Tags */}
-      <Text style={styles.formLabel}>Tags (comma-separated)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g., quick, easy dinner, vegan" // Updated placeholder
-        value={manualFormData.tags.join(', ')} // Join array for display
-        onChangeText={handleTagsChange} // Use updated handler
-        placeholderTextColor="#79320680"
-      />
+      <Text style={styles.formLabel}>Tags</Text>
+      {manualFormData.tags.map((tag, index) => (
+        <View key={index} style={styles.listItemContainer}>
+          <TextInput
+            style={[styles.input, styles.listItemInput]}
+            placeholder={`Tag ${index + 1}`}
+            value={tag}
+            onChangeText={(text) => handleListItemChange('tags', index, text)}
+            placeholderTextColor="#79320680"
+          />
+          {/* Show remove button only if there's more than one item */}
+          {manualFormData.tags.length > 1 && (
+            <TouchableOpacity onPress={() => removeListItem('tags', index)} style={styles.removeButton}>
+              <MaterialIcons name="close" size={20} color="#793206" />
+            </TouchableOpacity>
+          )}
+        </View>
+      ))}
+      <TouchableOpacity style={styles.addButton} onPress={() => addListItem('tags')}>
+         <MaterialIcons name="add" size={20} color="#793206" />
+         <Text style={styles.addButtonText}>Add Tag</Text>
+      </TouchableOpacity>
 
       {/* Notes */}
       <Text style={styles.formLabel}>Notes</Text>
