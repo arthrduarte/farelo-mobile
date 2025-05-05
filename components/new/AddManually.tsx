@@ -28,12 +28,7 @@ const initialManualFormData: ManualRecipeFormData = {
   notes: '',
 };
 
-interface AddManuallyProps {
-  onSubmit: (data: FinalManualRecipeData) => void;
-  onValidityChange: (isValid: boolean) => void;
-}
-
-export default function AddManually({ onSubmit, onValidityChange }: AddManuallyProps) {
+export default function AddManually() {
   const [manualFormData, setManualFormData] = useState<ManualRecipeFormData>(initialManualFormData);
 
   // Check form validity and notify parent
@@ -42,13 +37,17 @@ export default function AddManually({ onSubmit, onValidityChange }: AddManuallyP
     const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
     const finalTags = manualFormData.tags.filter(item => item.trim() !== '');
     const isValid = !!(manualFormData.title.trim() && manualFormData.time > 0 && manualFormData.servings > 0 && finalIngredients.length > 0 && finalInstructions.length > 0);
-    onValidityChange(isValid);
-  }, [manualFormData, onValidityChange]);
+    console.log('isValid', isValid);
+  }, [manualFormData]);
 
   // Helper to update manual form state for simple fields
   const handleManualFormChange = (field: keyof Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags'>, value: string | number) => {
     setManualFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleSubmission = () => {
+    console.log('Submission');
+  }
 
   // --- Handlers for Dynamic Lists ---
 
@@ -213,6 +212,10 @@ export default function AddManually({ onSubmit, onValidityChange }: AddManuallyP
         placeholderTextColor="#79320680"
         multiline
       />
+
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmission}>
+        <Text style={styles.submitButtonText}>Submit</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -286,5 +289,17 @@ const styles = StyleSheet.create({
       color: '#793206',
       fontWeight: '600',
       fontSize: 16,
+  },
+  submitButton: {
+    backgroundColor: '#793206',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  submitButtonText: {
+    color: '#EDE4D2',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

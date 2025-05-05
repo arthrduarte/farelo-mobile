@@ -2,20 +2,26 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-interface SelectGalleryProps {
-  onPress: () => void;
-}
+export default function SelectGallery() {
 
-export default function SelectGallery({ onPress }: SelectGalleryProps) {
+  const handleSubmission = () => {
+    console.log('Submission');
+  }
+
   return (
+    <>
     <TouchableOpacity 
       style={styles.placeholderContainer} 
-      onPress={onPress}
+      onPress={handleSubmission}
       activeOpacity={0.7}
-    >
+      >
       <MaterialIcons name="photo-library" size={48} color="#79320680" />
       <Text style={styles.placeholderText}>Tap to select an image</Text>
     </TouchableOpacity>
+    <TouchableOpacity style={styles.uploadButton} onPress={handleSubmission}>
+      <Text style={styles.uploadButtonText}>Continue</Text>
+    </TouchableOpacity>
+      </>
   );
 }
 
@@ -35,5 +41,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 12,
     textAlign: 'center',
+  },
+    uploadButton: {
+    backgroundColor: '#793206',
+    marginHorizontal: 16,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  uploadButtonDisabled: {
+    backgroundColor: '#79320680',
+  },
+  uploadButtonText: {
+    color: '#EDE4D2',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

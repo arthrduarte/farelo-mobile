@@ -97,15 +97,12 @@ export default function NewRecipeModal() {
   const renderContent = () => {
     switch (importMethod) {
       case 'image':
-        return <SelectGallery onPress={handleUpload} />;
+        return <SelectGallery />;
       case 'camera':
-        return <TakePicture onPress={handleUpload} />;
+        return <TakePicture />;
       case 'manual':
         return (
-          <AddManually 
-            onSubmit={handleManualSubmit}
-            onValidityChange={handleFormValidityChange}
-          />
+          <AddManually />
         );
       default: // 'link'
         return <ImportLink recipeUrl={recipeUrl} setRecipeUrl={setRecipeUrl} />;
@@ -130,24 +127,6 @@ export default function NewRecipeModal() {
 
         {/* Dynamic Content */}
         {renderContent()}
-
-        {/* Upload Button */}
-        <TouchableOpacity 
-          style={[
-            styles.uploadButton, 
-            (importMethod === 'link' && !recipeUrl.trim()) && styles.uploadButtonDisabled,
-            (importMethod === 'manual' && !isFormValid) && styles.uploadButtonDisabled 
-          ]} 
-          onPress={handleButtonPress}
-          disabled={
-            (importMethod === 'link' && !recipeUrl.trim()) ||
-            (importMethod === 'manual' && !isFormValid)
-          }
-        >
-          <Text style={styles.uploadButtonText}>
-            {importMethod === 'link' ? 'Import Recipe' : 'Continue'}
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Bottom Drawer */}
