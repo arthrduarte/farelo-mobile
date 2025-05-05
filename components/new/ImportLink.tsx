@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, StyleSheet, Alert, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { RECIPE_KEYS } from '@/hooks/useRecipes';
@@ -24,6 +24,29 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const loadingSteps = [
+    "Reading recipe...",
+    "Formatting recipe...",
+    "Creating image..."
+  ];
+
+  // Effect to handle loading step changes
+  useEffect(() => {
+    if (!isImporting) {
+      setLoadingStep(0);
+      return;
+    }
+
+    const timers = [
+      setTimeout(() => setLoadingStep(1), 3000),
+      setTimeout(() => setLoadingStep(2), 6000)
+    ];
+
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, [isImporting]);
 
   const importRecipeMutation = useMutation({
     mutationFn: async (url: string) => {
@@ -137,8 +160,21 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
         keyboardType="url"
         editable={!isImporting}
       />
-      <TouchableOpacity style={styles.submitButton} onPress={handleUrlSubmit}>
-        <Text style={styles.submitButtonText}>Submit</Text>
+      <TouchableOpacity 
+        style={[styles.submitButton, isImporting && styles.submitButtonDisabled]} 
+        onPress={handleUrlSubmit}
+        disabled={isImporting}
+      >
+        {isImporting ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#EDE4D2" />
+            <Text style={styles.submitButtonText}>
+              {loadingSteps[loadingStep]}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.submitButtonText}>Submit</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -172,6 +208,15 @@ const styles = StyleSheet.create({
     color: '#EDE4D2',
     fontSize: 16, 
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  submitButtonDisabled: {
+    opacity: 0.8,
   },
 });
 
