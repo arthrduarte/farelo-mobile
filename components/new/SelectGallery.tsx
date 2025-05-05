@@ -1,10 +1,139 @@
-import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, Image, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { TouchableOpacity, Text, StyleSheet, View, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '@/contexts/AuthContext';
+import { router } from 'expo-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { RECIPE_KEYS } from '@/hooks/useRecipes';
+import { supabase } from '@/lib/supabase';
+import { Recipe } from '@/types/db';
 
 export default function SelectGallery() {
+  const { profile } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStep, setUploadStep] = useState(0);
+  const uploadSteps = [
+    "Reading recipe...",
+    "Formatting recipe...",
+    "Creating image..."
+  ];
+
+  // Effect to handle loading step changes
+  useEffect(() => {
+    if (!isUploading) {
+      setUploadStep(0);
+      return;
+    }
+
+    const timers = [
+      setTimeout(() => setUploadStep(1), 5000),
+      setTimeout(() => setUploadStep(2), 10000)
+    ];
+
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, [isUploading]);
+
+  const importRecipeMutation = useMutation({
+    mutationFn: async (images: string[]) => {
+      if (!profile) throw new Error('User not authenticated');
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('profile_id', profile.id);
+      
+      // Append each image
+      images.forEach((uri, index) => {
+        const filename = uri.split('/').pop() || `image${index}.jpg`;
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        
+        formData.append('images', {
+          uri,
+          name: filename,
+          type,
+        } as any);
+      });
+
+      console.log('Uploading images to server');
+      const response = await fetch('https://usefarelo.com/api/recipes/import/images', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          // Note: Don't set Content-Type header, it's automatically set with boundary
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('API error response:', error);
+        throw new Error(error.error?.message || 'Failed to import recipe from images');
+      }
+
+      const { recipeId, success } = await response.json();
+      console.log('Successfully imported recipe:', { recipeId, success });
+
+      if (!success || !recipeId) {
+        throw new Error('Failed to import recipe: Invalid response from server');
+      }
+
+      // Fetch the full recipe data from Supabase
+      console.log('Fetching full recipe data from Supabase');
+      const { data: recipe, error: fetchError } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', recipeId)
+        .single();
+
+      if (fetchError || !recipe) {
+        console.error('Error fetching recipe:', fetchError);
+        throw new Error('Failed to fetch imported recipe details');
+      }
+
+      console.log('Full recipe data fetched:', recipe);
+      return recipe as Recipe;
+    },
+    onSuccess: (newRecipe) => {
+      console.log('Mutation succeeded, updating cache with recipe:', newRecipe);
+      // Update the recipes list cache
+      queryClient.setQueryData<Recipe[]>(
+        RECIPE_KEYS.list(newRecipe.profile_id),
+        (oldRecipes) => {
+          if (!oldRecipes) return [newRecipe];
+          return [newRecipe, ...oldRecipes];
+        }
+      );
+
+      // Navigate to the recipe details
+      console.log('Navigating to recipe details with ID:', newRecipe.id);
+      router.replace(`/recipe/${newRecipe.id}/details`);
+    },
+    onError: (error: Error) => {
+      console.error('Import mutation error:', error);
+      Alert.alert('Error', error.message);
+    }
+  });
+
+  const handleSubmission = async () => {
+    if (selectedImages.length === 0) {
+      Alert.alert('Error', 'Please select at least one image');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      await importRecipeMutation.mutateAsync(selectedImages);
+    } catch (error) {
+      // Error is handled by the mutation's onError
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const pickImages = async () => {
     try {
@@ -47,10 +176,6 @@ export default function SelectGallery() {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmission = () => {
-    console.log('Submission');
-  }
-
   return (
     <>
       <ScrollView 
@@ -92,12 +217,21 @@ export default function SelectGallery() {
       <TouchableOpacity 
         style={[
           styles.uploadButton,
-          selectedImages.length === 0 && styles.uploadButtonDisabled
+          (selectedImages.length === 0 || isUploading) && styles.uploadButtonDisabled
         ]} 
         onPress={handleSubmission}
-        disabled={selectedImages.length === 0}
+        disabled={selectedImages.length === 0 || isUploading}
       >
-        <Text style={styles.uploadButtonText}>Continue</Text>
+        {isUploading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#EDE4D2" />
+            <Text style={styles.uploadButtonText}>
+              {uploadSteps[uploadStep]}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.uploadButtonText}>Continue</Text>
+        )}
       </TouchableOpacity>
     </>
   );
@@ -160,5 +294,11 @@ const styles = StyleSheet.create({
     color: '#EDE4D2',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });
