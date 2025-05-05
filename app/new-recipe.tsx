@@ -98,8 +98,8 @@ export default function NewRecipeModal() {
     switch (importMethod) {
       case 'image':
         return <SelectGallery />;
-      case 'camera':
-        return <TakePicture />;
+      // case 'camera':
+        // return <TakePicture />;
       case 'manual':
         return (
           <AddManually />
@@ -174,13 +174,13 @@ export default function NewRecipeModal() {
           <Text style={styles.drawerOptionText}>Select from Gallery</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.drawerOption} 
           onPress={() => handleDrawerOption('camera')}
         >
           <MaterialIcons name="camera-alt" size={24} color="#793206" />
           <Text style={styles.drawerOptionText}>Take a Picture</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Add Manual Option */}
         <TouchableOpacity 
