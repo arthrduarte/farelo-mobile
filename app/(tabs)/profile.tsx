@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, Image } from 'react-native';
+import { View, StyleSheet, Text, Image, ScrollView } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import ProfileHeader from '@/components/ProfileHeader';
@@ -15,10 +15,12 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ProfileHeader profile={profile} logs={profileLogs} />
-      {profileLogs.map((log) => (
-        <LogCard key={log.id} log={log} />
-      ))}
+      <ScrollView>
+        <ProfileHeader profile={profile} logs={profileLogs} />
+        {profileLogs.map((log) => (
+          <LogCard key={log.id} log={log} />
+        ))}
+      </ScrollView>
     </ThemedView>
   );
 }
