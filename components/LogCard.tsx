@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ import { useCopyRecipe } from '@/hooks/useRecipes';
 import { Divider } from './Divider';
 import { EnhancedLog } from '@/types/types';
 import { LogImage } from './log/LogImage';
+import { Log } from '@/types/db';
+import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
 
 type LogCardProps = {
   log: EnhancedLog;
@@ -25,6 +27,23 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   });
   const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
   
+  const [profileData, setProfileData] = useState(log.profile);
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = async (updatedProfile: any) => {
+      if (updatedProfile.id === log.profile_id) {
+        setProfileData(updatedProfile);
+      }
+    };
+
+    profileUpdateEmitter.on(PROFILE_UPDATED, handleProfileUpdate);
+
+    return () => {
+      profileUpdateEmitter.off(PROFILE_UPDATED, handleProfileUpdate);
+    };
+  }, [log.profile_id]);
+
   if (!log.profile || !log.recipe || !profile) {
     return null;
   }
@@ -57,7 +76,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
       <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.8}>
         <View style={styles.header}>
           <Image 
-            source={{ uri: log.profile.image }}
+            source={{ uri: profileData?.image }}
             style={styles.avatar}
           />
           <View style={styles.headerText}>

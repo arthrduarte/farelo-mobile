@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Log, Log_Comment, Log_Like, Profile, Recipe } from '../types/db'
 import { useQuery } from '@tanstack/react-query'
 import { EnhancedLog } from '@/types/types'
+import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext'
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
 
@@ -15,6 +16,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     const [feed, setFeed] = useState<EnhancedLog[]>([])
     const [loading, setLoading] = useState(true)
     const [profileLogs, setprofileLogs] = useState<EnhancedLog[]>([])
+    const [error, setError] = useState<Error | null>(null)
 
     // 1️⃣ load cached logs on mount
     useEffect(() => {
@@ -181,7 +183,21 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         }
     }, [fetchFeed, profile_id])
 
-    return { feed, loading, refresh: fetchFeed, profileLogs }
+    // Listen for profile updates and refetch logs
+    useEffect(() => {
+        const handleProfileUpdate = () => {
+            fetchFeed()
+            fetchProfileLogs()
+        }
+
+        profileUpdateEmitter.on(PROFILE_UPDATED, handleProfileUpdate)
+
+        return () => {
+            profileUpdateEmitter.off(PROFILE_UPDATED, handleProfileUpdate)
+        }
+    }, [fetchFeed, fetchProfileLogs])
+
+    return { feed, loading, refresh: fetchFeed, profileLogs, error }
 }
 
 export const useLog = (id: string | undefined) => {
