@@ -4,9 +4,11 @@ import { router } from "expo-router";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, SafeAreaView } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import * as ImagePicker from 'expo-image-picker';
+import { useState } from "react";
 
 export default function EditProfile() {
   const { profile } = useAuth();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleImagePick = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -17,8 +19,7 @@ export default function EditProfile() {
     });
 
     if (!result.canceled) {
-      // TODO: Handle image upload
-      console.log(result.assets[0].uri);
+      setSelectedImage(result.assets[0].uri);
     }
   };
 
@@ -36,7 +37,7 @@ export default function EditProfile() {
           <TouchableOpacity onPress={handleImagePick}>
             <Image 
               style={styles.avatar} 
-              source={{ uri: profile?.image || 'https://via.placeholder.com/150' }} 
+              source={{ uri: selectedImage || profile?.image || 'https://via.placeholder.com/150' }} 
             />
             <Text style={styles.changePicture}>Change Picture</Text>
           </TouchableOpacity>
@@ -98,17 +99,19 @@ const styles = StyleSheet.create({
   },
   imageSection: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingBottom: 12,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#EDE4D2',
     marginBottom: 8,
   },
   changePicture: {
     color: '#793206',
     fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
   },
   section: {
