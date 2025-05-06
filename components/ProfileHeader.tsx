@@ -8,9 +8,10 @@ interface ProfileHeaderProps {
   profile: Partial<Profile>
   logs: Log[]
 }
+
 export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
   const { profile: currentProfile } = useAuth();
-  const { isFollowing, loading, toggleFollow } = useFollow(profile?.id || '');
+  const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(profile?.id || '');
 
   return (
       <View style={styles.header}>
@@ -30,11 +31,11 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
                   </View>
                   <View>
                       <Text>Followers</Text>
-                      <Text style={styles.statValue}>10</Text>
+                      <Text style={styles.statValue}>{followersCount}</Text>
                   </View>
                   <View>
                       <Text>Following</Text>
-                      <Text style={styles.statValue}>10</Text>
+                      <Text style={styles.statValue}>{followingCount}</Text>
                   </View>
               </View>
           </View>

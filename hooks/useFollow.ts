@@ -6,6 +6,38 @@ export const useFollow = (profileId: string) => {
     const { profile: currentProfile } = useAuth();
     const [isFollowing, setIsFollowing] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [followersCount, setFollowersCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
+
+    useEffect(() => {
+        if (!profileId) return;
+
+        const fetchCounts = async () => {
+            try {
+                // Get followers count
+                const { count: followers, error: followersError } = await supabase
+                    .from('follows')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('following_id', profileId);
+
+                if (followersError) throw followersError;
+                setFollowersCount(followers || 0);
+
+                // Get following count
+                const { count: following, error: followingError } = await supabase
+                    .from('follows')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('follower_id', profileId);
+
+                if (followingError) throw followingError;
+                setFollowingCount(following || 0);
+            } catch (error) {
+                console.error('Error fetching follow counts:', error);
+            }
+        };
+
+        fetchCounts();
+    }, [profileId, isFollowing]); // Re-fetch when isFollowing changes
 
     useEffect(() => {
         if (!currentProfile || !profileId) return;
@@ -49,6 +81,7 @@ export const useFollow = (profileId: string) => {
 
                 if (error) throw error;
                 setIsFollowing(false);
+                setFollowersCount(prev => prev - 1); // Decrement followers count
             } else {
                 // Follow
                 const { error } = await supabase
@@ -60,6 +93,7 @@ export const useFollow = (profileId: string) => {
 
                 if (error) throw error;
                 setIsFollowing(true);
+                setFollowersCount(prev => prev + 1); // Increment followers count
             }
         } catch (error) {
             console.error('Error toggling follow:', error);
@@ -71,6 +105,8 @@ export const useFollow = (profileId: string) => {
     return {
         isFollowing,
         loading,
-        toggleFollow
+        toggleFollow,
+        followersCount,
+        followingCount
     };
 }; 
