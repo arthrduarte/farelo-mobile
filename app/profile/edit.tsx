@@ -11,7 +11,7 @@ import { decode } from 'base64-arraybuffer';
 import 'react-native-url-polyfill/auto';
 
 export default function EditProfile() {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -99,6 +99,7 @@ export default function EditProfile() {
 
       if (error) throw error;
 
+      await refreshProfile();
       Alert.alert('Success', 'Profile updated successfully');
       router.back();
     } catch (error: any) {
