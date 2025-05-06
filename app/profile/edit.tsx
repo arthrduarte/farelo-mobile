@@ -1,14 +1,23 @@
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, SafeAreaView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, SafeAreaView, Alert } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import * as FileSystem from 'expo-file-system';
+import { decode } from 'base64-arraybuffer';
+import 'react-native-url-polyfill/auto';
 
 export default function EditProfile() {
   const { profile } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : '',
+    username: profile?.username || '',
+  });
 
   const handleImagePick = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -20,6 +29,82 @@ export default function EditProfile() {
 
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    try {
+      // Read the file content as base64
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      // Determine file type and name
+      const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg';
+      const contentType = `image/${fileExt}`;
+      const fileName = `${profile?.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      console.log(`Uploading ${fileName} (Content-Type: ${contentType})`);
+
+      // Upload the decoded base64 content
+      const { error: uploadError } = await supabase.storage
+        .from('avatar.images')
+        .upload(fileName, decode(base64), { contentType });
+
+      if (uploadError) {
+        console.error(`Upload Error:`, uploadError);
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatar.images')
+        .getPublicUrl(fileName);
+        
+      console.log(`Uploaded image to storage: ${publicUrl}`);
+      return publicUrl;
+
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+
+      if (!profile?.id) {
+        throw new Error('Profile not found');
+      }
+
+      // Split name into first and last name
+      const [firstName = '', ...lastNameParts] = formData.name.trim().split(' ');
+      const lastName = lastNameParts.join(' ');
+
+      let imageUrl = profile?.image;
+      if (selectedImage) {
+        imageUrl = await uploadImage(selectedImage);
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: firstName,
+          last_name: lastName || null,
+          username: formData.username.trim(),
+          image: imageUrl,
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      Alert.alert('Success', 'Profile updated successfully');
+      router.back();
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,7 +135,8 @@ export default function EditProfile() {
             <Text style={styles.label}>Name</Text>
             <TextInput
               style={styles.input}
-              value={profile?.first_name + ' ' + profile?.last_name}
+              value={formData.name}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
               placeholder="Your name"
               placeholderTextColor="#79320680"
             />
@@ -60,16 +146,21 @@ export default function EditProfile() {
             <Text style={styles.label}>Username</Text>
             <TextInput
               style={styles.input}
-              value={profile?.username}
+              value={formData.username}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, username: text }))}
               placeholder="Your username"
               placeholderTextColor="#79320680"
-              keyboardType="url"
+              keyboardType="default"
               autoCapitalize="none"
             />
           </View>
 
-          <TouchableOpacity style={styles.saveButton} onPress={() => console.log('Save')}>
-            <Text style={styles.saveButtonText}>Save</Text>
+          <TouchableOpacity 
+            style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            <Text style={styles.saveButtonText}>{isLoading ? 'Saving...' : 'Save'}</Text>
           </TouchableOpacity>
         </View>
       </ThemedView>
@@ -168,5 +259,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '500',
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
 });
