@@ -57,12 +57,22 @@ export default function RegisterScreen() {
       console.log("[Register] Sign up successful")
       await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
       
-      // Authentication state will be handled by the context
-      // Note: setIsOnboarded may not be needed anymore since it's handled by the auth state
       setIsOnboarded(true);
       
       // To avoid circular navigation, delay the redirection slightly
-      setTimeout(() => {
+      setTimeout(async () => {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        })
+
+        if (error) {
+          console.error("[Register] Sign in error:", error.message)
+          Alert.alert(error.message)
+          return
+        }
+
+        console.log("[Register] Sign in successful")
         router.replace('/')
       }, 100)
     } catch (err) {

@@ -10,7 +10,7 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
-  const { profile: currentProfile } = useAuth();
+  const { profile: currentProfile, signOut } = useAuth();
   const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(profile?.id || '');
 
   return (
@@ -60,6 +60,9 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
                 )}
               </TouchableOpacity>
             )}
+            <TouchableOpacity onPress={() => signOut()}>
+              <Text>Logout</Text>
+            </TouchableOpacity>
         </View>
       </View>
   );
