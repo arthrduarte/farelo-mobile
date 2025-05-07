@@ -10,7 +10,12 @@ import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { IngredientsSection } from '@/components/recipe/IngredientsSection';
+import { InstructionsSection } from '@/components/recipe/InstructionsSection';
+import { ImagesSection } from '@/components/recipe/RecipeImage';
+import { NotesSection } from '@/components/recipe/NotesSection';
+import { TagsSection } from '@/components/recipe/TagsSection';
+import { Divider } from '@/components/Divider';
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
@@ -19,6 +24,8 @@ export default function RecipeDetailsScreen() {
   const updateRecipeMutation = useUpdateRecipe();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
+
+  console.log(recipe);
 
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
@@ -102,7 +109,7 @@ export default function RecipeDetailsScreen() {
         <TouchableOpacity 
           style={styles.startRecipeButton} 
           onPress={() => router.push({
-            pathname: '/[recipeId]/start',
+            pathname: '/recipe/[recipeId]/start',
             params: { recipeId: recipe.id }
           })}
         >
@@ -110,13 +117,10 @@ export default function RecipeDetailsScreen() {
         </TouchableOpacity>
 
         {/* Recipe Image */}
-        {recipe.ai_image_url ? (
-          <Image 
-            source={{ uri: recipe.ai_image_url }} 
-            style={styles.recipeImage}
-          />
+        {recipe.user_images_url && recipe.user_images_url.length > 0 ? (
+          <ImagesSection images={recipe.user_images_url} />
         ) : (
-          <PulsingPlaceholder />
+          <ImagesSection mainImage={recipe.ai_image_url} />
         )}
 
         {/* Action Buttons */}
@@ -130,7 +134,7 @@ export default function RecipeDetailsScreen() {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => router.push(`/${recipeId}/edit` as any)}
+            onPress={() => router.push(`/recipe/${recipeId}/edit` as any)}
           >
             <MaterialIcons name="edit" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Edit</Text>
@@ -145,78 +149,24 @@ export default function RecipeDetailsScreen() {
         </View>
 
         {/* Tags */}
-        <View style={styles.tagContainer}>
-          {recipe.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
+        <TagsSection tags={recipe.tags} />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Ingredients */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="pepper" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-          </View>
-          {recipe.ingredients?.map((ingredient, index) => (
-            <View 
-              key={index} 
-              style={[
-                styles.ingredient,
-                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-              ]}
-            >
-              <Text style={[
-                styles.ingredientText,
-                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-              ]}>• {ingredient}</Text>
-            </View>
-          ))}
-        </View>
+        <IngredientsSection ingredients={recipe.ingredients} />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Instructions */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Instructions</Text>
-          </View>
-          {recipe.instructions?.map((instruction, index) => (
-            <View 
-              key={index}
-              style={[
-                styles.instruction,
-                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-              ]}
-            >
-              <Text style={[
-                styles.instructionText,
-                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-              ]}>{index + 1}. {instruction}</Text>
-            </View>
-          ))}
-        </View>
+        <InstructionsSection instructions={recipe.instructions} />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Notes */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Notes</Text>
-          </View>
-          <View style={styles.notesContainer}>
-            <Text style={[styles.notesText, styles.textOnBrown]}>
-              {recipe.notes || 'No notes added yet.'}
-            </Text>
-          </View>
-        </View>
+        <NotesSection notes={recipe.notes} />
 
-        <View style={styles.divider}/>
+        <Divider />
       </ScrollView>
     </ThemedView>
   );
@@ -302,84 +252,6 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: '#793206',
     marginTop: 4,
-  },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
-  tag: {
-    backgroundColor: '#793206',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  tagText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  divider: {
-    borderBottomColor: '#79320633',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#793206',
-  },
-  ingredient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 8,
-  },
-  ingredientBrown: {
-    backgroundColor: '#79320633',
-  },
-  ingredientBeige: {
-    backgroundColor: '#EDE4D2',
-  },
-  ingredientText: {
-    fontSize: 18,
-    flex: 1,
-    marginBottom: 0,
-  },
-  textOnBrown: {
-    color: '#793206',
-  },
-  textOnBeige: {
-    color: '#793206',
-  },
-  instruction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 8,
-  },
-  instructionText: {
-    fontSize: 18,
-    flex: 1,
-    marginBottom: 0,
-  },
-  notesContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#fff',
-  },
-  notesText: {
-    fontSize: 18,
-    lineHeight: 24,
   },
   button: {
     backgroundColor: '#793206',
