@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity, Platform, View, FlatList, RefreshControl } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { LogCard } from '@/components/LogCard';
 import { Log } from '@/types/db';
@@ -6,44 +6,36 @@ import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLogs } from '@/hooks/useLogs';
 import { useRecipes } from '@/hooks/useRecipes';
+import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, ownLogs, loading, refresh } = useLogs(profile?.id ?? '');
+  const { feed, profileLogs, loading, refresh } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
-
-  const handleLike = (logId: string) => {
-    // Handle like action
-    console.log('Liked post:', logId);
-  };
-
-  const handleComment = (logId: string) => {
-    // Handle comment action
-    console.log('Comment on post:', logId);
-  };
-
-  const handleAdd = (logId: string) => {
-    // Handle add action
-    console.log('Added post:', logId);
-  };
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView 
+      <View style={styles.headerContainer}>
+        <View style={styles.headerTitlePlaceholder} />
+        <TouchableOpacity onPress={() => router.push('/search')} style={styles.searchIconContainer}>
+          <Feather name="search" size={24} color="#793206" />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        {feed.map((log) => (
+        data={feed}
+        renderItem={({ item }) => (
           <LogCard 
-            key={log.id}
-            log={log}
-            onLike={() => handleLike(log.id)}
-            onComment={() => handleComment(log.id)}
-            onAdd={() => handleAdd(log.id)}
+            key={item.id}
+            log={item}
           />
-        ))}
-      </ScrollView>
+        )}
+        onRefresh={refresh}
+        refreshing={loading}
+      />
     </ThemedView>
   );
 }
@@ -51,11 +43,26 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // backgroundColor: '#EDE4D2',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 20 : 10,
+    paddingBottom: 10,
+    backgroundColor: '#EDE4D2',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#79320633',
+  },
+  headerTitlePlaceholder: {
+    width: 24,
+  },
+  searchIconContainer: {
+    padding: 8,
   },
   scrollView: {
     flex: 1,
-  },
-  contentContainer: {
-    paddingVertical: 16,
   },
 });

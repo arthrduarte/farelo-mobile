@@ -1,102 +1,172 @@
-import React from 'react';
-import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { AntDesign, Feather } from '@expo/vector-icons';
-import { Log, Profile, Recipe } from '@/types/db';
-
-type EnhancedLog = Log & {
-  profile: Pick<Profile, 'first_name' | 'last_name' | 'username' | 'image'>;
-  recipe: Pick<Recipe, 'title' | 'time' | 'servings'>;
-};
+import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { formatTimeAgo } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLikes } from '@/hooks/useLikes';
+import { useCopyRecipe } from '@/hooks/useRecipes';
+import { Divider } from './Divider';
+import { EnhancedLog } from '@/types/types';
+import { LogImage } from './log/LogImage';
+import { Log } from '@/types/db';
+import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
 
 type LogCardProps = {
   log: EnhancedLog;
-  onLike?: () => void;
-  onComment?: () => void;
-  onAdd?: () => void;
 };
 
-const formatTimeAgo = (date: string) => {
-  const now = new Date();
-  const past = new Date(date);
-  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+export const LogCard: React.FC<LogCardProps> = ({ log }) => {
+  const { profile } = useAuth();
+  
+  const { isLiked, likeCount, toggleLike } = useLikes({
+    initialIsLiked: log.likes.some((like) => like.profile_id === profile?.id),
+    initialLikeCount: log.likes?.length || 0,
+    logId: log.id,
+  });
+  const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
+  
+  const [profileData, setProfileData] = useState(log.profile);
 
-  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  return `${Math.floor(diffInSeconds / 86400)} days ago`;
-};
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = async (updatedProfile: any) => {
+      if (updatedProfile.id === log.profile_id) {
+        setProfileData(updatedProfile);
+      }
+    };
 
-export const LogCard: React.FC<LogCardProps> = ({ log, onLike, onComment, onAdd }) => {
-  if (!log.profile || !log.recipe) {
+    profileUpdateEmitter.on(PROFILE_UPDATED, handleProfileUpdate);
+
+    return () => {
+      profileUpdateEmitter.off(PROFILE_UPDATED, handleProfileUpdate);
+    };
+  }, [log.profile_id]);
+
+  if (!log.profile || !log.recipe || !profile) {
     return null;
   }
 
   const fullName = `${log.profile.first_name} ${log.profile.last_name}`;
   
+  const handleCopyRecipe = () => {
+    if (log.recipe.profile_id === profile.id) {
+      console.log("Cannot copy your own recipe from a log.");
+      return;
+    }
+    copyRecipe({ recipeIdToCopy: log.recipe_id });
+  };
+
+  const handleProfilePress = (e: any) => {
+    // e.stopPropagation();
+    // router.push({
+    //   pathname: '/(tabs)/profile/[id]',
+    //   params: { id: log.profile.id }
+    // });
+    console.log(log.profile);
+    router.push({
+      pathname: '/profile/[id]',
+      params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
+    });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Image 
-          source={{ uri: log.profile.image }}
-          style={styles.avatar}
-        />
-        <View style={styles.headerText}>
-          <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
-          <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
+      <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.8}>
+        <View style={styles.header}>
+          <Image 
+            source={{ uri: profileData?.image }}
+            style={styles.avatar}
+          />
+          <View style={styles.headerText}>
+            <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
+            <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>  
+        <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
+        {log.description && (
+          <ThemedText style={styles.description}>{log.description}</ThemedText>
+        )}
 
-      <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
-      {log.description && (
-        <ThemedText style={styles.description}>{log.description}</ThemedText>
+        <View style={styles.metaInfo}>
+          <View style={styles.metaItem}>
+            <View style={styles.timeIcon}>
+              <MaterialIcons name="schedule" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{log.recipe.time} mins</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <View style={styles.servingsIcon}>
+              <MaterialIcons name="people" size={16} color="#603808" />
+            </View>
+            <Text style={styles.metaText}>{log.recipe.servings} servings</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {log.images && log.images.length === 1 ? (
+        <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
+          <LogImage mainImage={log.images[0]} />
+        </TouchableOpacity>
+      ) : (
+        <LogImage images={log.images} onImagePress={() => router.push(`/log/${log.id}/details`)} />
       )}
 
-      <View style={styles.cookingInfo}>
-        <View style={styles.infoItem}>
-          <ThemedText>{log.recipe.time} mins</ThemedText>
+      <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
+        <View style={styles.interactionsContainer}>
+          <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
+          <TouchableOpacity onPress={() => router.push({
+            pathname: '/log/[logId]/comments',
+            params: { logId: log.id }
+          })}>
+            <Text style={styles.interactionsAmount}>{log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.infoItem}>
-          <ThemedText>{log.recipe.servings} servings</ThemedText>
+
+        <Divider />
+
+        <View style={styles.actions}>
+          <TouchableOpacity onPress={toggleLike}>
+            <View style={styles.actionContainer}>
+              {isLiked ? 
+                <AntDesign name="heart" size={24} color="#793206" />
+              :
+                <AntDesign name="hearto" size={24} color="#793206" />
+              }
+              <ThemedText style={styles.actionCount}>{likeCount}</ThemedText>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({
+            pathname: '/log/[logId]/comments',
+            params: { logId: log.id }
+          })}>
+            <Feather name="message-circle" size={24} color="#793206" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={handleCopyRecipe} 
+            disabled={isCopying || log.recipe.profile_id === profile.id}
+          >
+            <AntDesign 
+              name="plus" 
+              size={24} 
+              color={isCopying || log.recipe.profile_id === profile.id ? "#79320633" : "#793206"}
+            />
+          </TouchableOpacity>
         </View>
-      </View>
-
-      <Image 
-        source={{ uri: log.images[0] }}
-        style={styles.mainImage}
-        resizeMode="cover"
-      />
-
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={onLike} style={styles.actionButton}>
-          <AntDesign name="heart" size={24} color="#793206" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onComment} style={styles.actionButton}>
-          <Feather name="message-circle" size={24} color="#793206" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onAdd} style={styles.actionButton}>
-          <AntDesign name="plus" size={24} color="#793206" />
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#EDE4D2',
-    // borderRadius: 16,
     padding: 16,
-    marginVertical: 8,
-    // marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
+    borderRadius: 12,
+    boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
   },
   header: {
     flexDirection: 'row',
@@ -115,6 +185,34 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: '#79320633',
+  },
+  metaInfo: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  timeIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  servingsIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metaText: {
+    fontSize: 14,
+    color: '#793206',
   },
   title: {
     fontSize: 20,
@@ -143,12 +241,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#79320633',
   },
+  interactionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  interactionsAmount: {
+    fontSize: 12,
+    color: '#793206',
+  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 8
   },
-  actionButton: {
-    padding: 8,
+  actionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  actionCount: {
+    color: '#793206',
+    fontSize: 14,
   },
 }); 

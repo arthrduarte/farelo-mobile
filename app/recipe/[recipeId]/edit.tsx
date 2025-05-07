@@ -9,7 +9,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { Divider } from '@/components/Divider';
+import { ImagesSection } from '@/components/recipe/RecipeImage';
 interface Recipe extends BaseRecipe {
   newTag?: string;
 }
@@ -180,13 +181,10 @@ export default function EditRecipeScreen() {
         </View>
 
         {/* Recipe Image */}
-        {editedRecipe.ai_image_url ? (
-          <Image 
-            source={{ uri: editedRecipe.ai_image_url }} 
-            style={styles.recipeImage}
-          />
+        {editedRecipe.user_images_url && editedRecipe.user_images_url.length > 0 ? (
+          <ImagesSection images={editedRecipe.user_images_url} />
         ) : (
-          <PulsingPlaceholder />
+          <ImagesSection mainImage={editedRecipe.ai_image_url} />
         )}
 
         {/* Action Buttons */}
@@ -219,7 +217,7 @@ export default function EditRecipeScreen() {
           }}
         />
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Ingredients */}
         <View>
@@ -287,7 +285,7 @@ export default function EditRecipeScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Instructions */}
         <View>
@@ -356,7 +354,7 @@ export default function EditRecipeScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
 
         {/* Notes */}
         <View>
@@ -385,7 +383,7 @@ export default function EditRecipeScreen() {
           </View>
         </View>
 
-        <View style={styles.divider}/>
+        <Divider />
       </ScrollView>
     </ThemedView>
   );
@@ -463,11 +461,6 @@ const styles = StyleSheet.create({
   tagText: {
     color: 'white',
     fontSize: 14,
-  },
-  divider: {
-    borderBottomColor: '#79320633',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
