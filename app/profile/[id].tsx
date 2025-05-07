@@ -4,7 +4,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useLogs } from '@/hooks/useLogs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Profile } from '@/types/db';
 
 export default function ProfileScreen() {
@@ -30,10 +30,12 @@ export default function ProfileScreen() {
   if (!profile) {
     return (
       <ThemedView style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#793206" />
-        </TouchableOpacity>
-        <Text style={styles.loadingText}>Loading profile...</Text>
+        <ScrollView>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <MaterialIcons name="arrow-back" size={24} color="#793206" />
+          </TouchableOpacity>
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </ScrollView>
       </ThemedView>
     );
   }
