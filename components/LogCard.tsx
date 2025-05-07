@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
-import { Log, Profile, Recipe, Log_Like, Log_Comment } from '@/types/db';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +9,9 @@ import { useLikes } from '@/hooks/useLikes';
 import { useCopyRecipe } from '@/hooks/useRecipes';
 import { Divider } from './Divider';
 import { EnhancedLog } from '@/types/types';
+import { LogImage } from './log/LogImage';
+import { Log } from '@/types/db';
+import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
 
 type LogCardProps = {
   log: EnhancedLog;
@@ -25,6 +27,23 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   });
   const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
   
+  const [profileData, setProfileData] = useState(log.profile);
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = async (updatedProfile: any) => {
+      if (updatedProfile.id === log.profile_id) {
+        setProfileData(updatedProfile);
+      }
+    };
+
+    profileUpdateEmitter.on(PROFILE_UPDATED, handleProfileUpdate);
+
+    return () => {
+      profileUpdateEmitter.off(PROFILE_UPDATED, handleProfileUpdate);
+    };
+  }, [log.profile_id]);
+
   if (!log.profile || !log.recipe || !profile) {
     return null;
   }
@@ -53,21 +72,20 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   };
 
   return (
-    <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
-      <View style={styles.container}>
-        <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.8}>
-          <View style={styles.header}>
-            <Image 
-              source={{ uri: log.profile.image }}
-              style={styles.avatar}
-            />
-            <View style={styles.headerText}>
-              <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
-              <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
-            </View>
+    <View style={styles.container}>
+      <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.8}>
+        <View style={styles.header}>
+          <Image 
+            source={{ uri: profileData?.image }}
+            style={styles.avatar}
+          />
+          <View style={styles.headerText}>
+            <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
+            <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
           </View>
-        </TouchableOpacity>
-
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>  
         <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
         {log.description && (
           <ThemedText style={styles.description}>{log.description}</ThemedText>
@@ -87,13 +105,17 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
             <Text style={styles.metaText}>{log.recipe.servings} servings</Text>
           </View>
         </View>
+      </TouchableOpacity>
 
-        <Image 
-          source={{ uri: log.images[0] }}
-          style={styles.mainImage}
-          resizeMode="cover"
-        />
+      {log.images && log.images.length === 1 ? (
+        <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
+          <LogImage mainImage={log.images[0]} />
+        </TouchableOpacity>
+      ) : (
+        <LogImage images={log.images} onImagePress={() => router.push(`/log/${log.id}/details`)} />
+      )}
 
+      <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
         <View style={styles.interactionsContainer}>
           <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
           <TouchableOpacity onPress={() => router.push({
@@ -134,8 +156,8 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
             />
           </TouchableOpacity>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 };
 

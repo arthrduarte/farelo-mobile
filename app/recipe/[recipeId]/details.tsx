@@ -12,7 +12,7 @@ import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes'
 import { useAuth } from '@/contexts/AuthContext';
 import { IngredientsSection } from '@/components/recipe/IngredientsSection';
 import { InstructionsSection } from '@/components/recipe/InstructionsSection';
-import { ImagesSection } from '@/components/recipe/ImagesSection';
+import { ImagesSection } from '@/components/recipe/RecipeImage';
 import { NotesSection } from '@/components/recipe/NotesSection';
 import { TagsSection } from '@/components/recipe/TagsSection';
 import { Divider } from '@/components/Divider';
@@ -24,6 +24,8 @@ export default function RecipeDetailsScreen() {
   const updateRecipeMutation = useUpdateRecipe();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
+
+  console.log(recipe);
 
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
@@ -115,7 +117,11 @@ export default function RecipeDetailsScreen() {
         </TouchableOpacity>
 
         {/* Recipe Image */}
-        <ImagesSection mainImage={recipe.ai_image_url} />
+        {recipe.user_images_url && recipe.user_images_url.length > 0 ? (
+          <ImagesSection images={recipe.user_images_url} />
+        ) : (
+          <ImagesSection mainImage={recipe.ai_image_url} />
+        )}
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>

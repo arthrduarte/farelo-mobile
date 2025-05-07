@@ -201,4 +201,47 @@ export const useCopyRecipe = () => {
             // Here you could trigger user feedback, e.g., a toast notification
         }
     });
+};
+
+export const useCreateRecipe = () => {
+    const queryClient = useQueryClient();
+    const { profile } = useAuth();
+
+    return useMutation({
+        mutationFn: async (recipeData: Omit<Recipe, 'id' | 'profile_id' | 'ai_image_url' | 'user_image_url' | 'user_images_url' | 'chat'>) => {
+            if (!profile) throw new Error("User not authenticated");
+
+            const newRecipe = {
+                ...recipeData,
+                profile_id: profile.id,
+                ai_image_url: '', // This will be updated later if AI generates an image
+                user_image_url: null,
+                user_images_url: null,
+                chat: null,
+            };
+
+            const { data, error } = await supabase
+                .from('recipes')
+                .insert(newRecipe)
+                .select()
+                .single();
+
+            if (error) {
+                console.error("Error creating recipe:", error);
+                throw error;
+            }
+
+            return data as Recipe;
+        },
+        onSuccess: (newRecipe) => {
+            // Update the recipes list cache
+            queryClient.setQueryData<Recipe[]>(
+                RECIPE_KEYS.list(newRecipe.profile_id),
+                (oldRecipes) => {
+                    if (!oldRecipes) return [newRecipe];
+                    return [newRecipe, ...oldRecipes];
+                }
+            );
+        },
+    });
 }; 

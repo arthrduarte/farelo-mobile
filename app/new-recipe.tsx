@@ -1,16 +1,42 @@
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { useState, useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Recipe } from '@/types/db'; // Import Recipe type
 // import * as ImagePicker from 'expo-image-picker';
 
-type ImportMethod = 'link' | 'image' | 'camera';
+// Import components
+import ImportLink from '@/components/new/ImportLink';
+import AddManually, { FinalManualRecipeData } from '@/components/new/AddManually';
+import SelectGallery from '@/components/new/SelectGallery';
+import TakePicture from '@/components/new/TakePicture';
+
+type ImportMethod = 'link' | 'image' | 'camera' | 'manual';
+
+// Define a type for the manual form data, omitting fields not manually entered
+type ManualRecipeFormData = Pick<
+  Recipe, 
+  'title' | 'description' | 'time' | 'servings' | 'ingredients' | 'instructions' | 'tags' | 'notes'
+>;
+
+// Initial state for the manual form
+const initialManualFormData: ManualRecipeFormData = {
+  title: '',
+  description: '',
+  time: 0,
+  servings: 0,
+  ingredients: [''], // Start with one empty ingredient
+  instructions: [''], // Start with one empty instruction
+  tags: [], 
+  notes: '',
+};
 
 export default function NewRecipeModal() {
   const [recipeUrl, setRecipeUrl] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [importMethod, setImportMethod] = useState<ImportMethod>('link');
+  const [isFormValid, setIsFormValid] = useState(false); // New state for form validity
   const drawerAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBack = () => {
@@ -35,52 +61,51 @@ export default function NewRecipeModal() {
     toggleDrawer();
   };
 
+  // Handler for form validity changes from AddManually component
+  const handleFormValidityChange = (isValid: boolean) => {
+    setIsFormValid(isValid);
+  };
+
+  // Handler for AddManually form submission
+  const handleManualSubmit = (data: FinalManualRecipeData) => {
+    console.log('Manual recipe data:', data);
+    // TODO: Add actual submission logic here (e.g., API call)
+    // router.push('/somewhere-after-success');
+  };
+
+  // --- Submission Handler ---
   const handleUpload = () => {
     if (importMethod === 'link' && !recipeUrl.trim()) {
       return;
     }
+    
     console.log('Upload:', { method: importMethod, url: recipeUrl });
+    // TODO: Add logic for image/camera uploads
+  };
+
+  // Wrapper function that handles the TouchableOpacity onPress event
+  const handleButtonPress = () => {
+    if (importMethod === 'manual') {
+      // For manual mode, we need to get data from the form component
+      // This will be handled via the AddManually component's onSubmit prop
+      console.log('Manual form button pressed');
+    } else {
+      handleUpload();
+    }
   };
 
   const renderContent = () => {
     switch (importMethod) {
       case 'image':
+        return <SelectGallery />;
+      // case 'camera':
+        // return <TakePicture />;
+      case 'manual':
         return (
-          <TouchableOpacity 
-            style={styles.placeholderContainer} 
-            onPress={handleUpload}
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="photo-library" size={48} color="#79320680" />
-            <Text style={styles.placeholderText}>Tap to select an image</Text>
-          </TouchableOpacity>
+          <AddManually />
         );
-      case 'camera':
-        return (
-          <TouchableOpacity 
-            style={styles.placeholderContainer} 
-            onPress={handleUpload}
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="camera-alt" size={48} color="#79320680" />
-            <Text style={styles.placeholderText}>Tap to take a picture</Text>
-          </TouchableOpacity>
-        );
-      default:
-        return (
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Paste recipe URL here..."
-              value={recipeUrl}
-              onChangeText={setRecipeUrl}
-              placeholderTextColor="#79320680"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-            />
-          </View>
-        );
+      default: // 'link'
+        return <ImportLink recipeUrl={recipeUrl} setRecipeUrl={setRecipeUrl} />;
     }
   };
 
@@ -102,17 +127,6 @@ export default function NewRecipeModal() {
 
         {/* Dynamic Content */}
         {renderContent()}
-
-        {/* Upload Button */}
-        <TouchableOpacity 
-          style={[styles.uploadButton, !recipeUrl.trim() && importMethod === 'link' && styles.uploadButtonDisabled]} 
-          onPress={handleUpload}
-          disabled={importMethod === 'link' && !recipeUrl.trim()}
-        >
-          <Text style={styles.uploadButtonText}>
-            {importMethod === 'link' ? 'Import Recipe' : 'Continue'}
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Bottom Drawer */}
@@ -124,7 +138,7 @@ export default function NewRecipeModal() {
         />
       )}
       
-      <Animated.View 
+      <Animated.ScrollView 
         style={[
           styles.drawer,
           {
@@ -160,14 +174,23 @@ export default function NewRecipeModal() {
           <Text style={styles.drawerOptionText}>Select from Gallery</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.drawerOption} 
           onPress={() => handleDrawerOption('camera')}
         >
           <MaterialIcons name="camera-alt" size={24} color="#793206" />
           <Text style={styles.drawerOptionText}>Take a Picture</Text>
+        </TouchableOpacity> */}
+
+        {/* Add Manual Option */}
+        <TouchableOpacity 
+          style={[styles.drawerOption, { marginBottom: 32 }]} 
+          onPress={() => handleDrawerOption('manual')}
+        >
+          <MaterialIcons name="edit-note" size={24} color="#793206" />
+          <Text style={styles.drawerOptionText}>Add Manually</Text>
         </TouchableOpacity>
-      </Animated.View>
+      </Animated.ScrollView>
     </ThemedView>
   );
 }
@@ -195,35 +218,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#793206',
-  },
-  inputContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    color: '#793206',
-    borderWidth: 1,
-    borderColor: '#79320633',
-    fontSize: 16,
-  },
-  placeholderContainer: {
-    backgroundColor: '#79320633',
-    borderRadius: 8,
-    padding: 32,
-    alignItems: 'center',
-    marginBottom: 24,
-    marginHorizontal: 16,
-    minHeight: 200,
-    justifyContent: 'center',
-  },
-  placeholderText: {
-    color: '#793206',
-    fontSize: 16,
-    marginTop: 12,
-    textAlign: 'center',
   },
   uploadButton: {
     backgroundColor: '#793206',

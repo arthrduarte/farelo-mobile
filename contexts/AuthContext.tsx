@@ -15,6 +15,11 @@ import {
 } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { Profile } from '../types/db'
+import { EventEmitter } from 'events';
+
+// Global event emitter for profile updates
+export const profileUpdateEmitter = new EventEmitter();
+export const PROFILE_UPDATED = 'PROFILE_UPDATED';
 
 type AuthContextType = {
   user: User | null
@@ -24,6 +29,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   onAuthStateChange: (callback: (isAuthenticated: boolean) => void) => () => void
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,6 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signOut: async () => {},
   onAuthStateChange: () => () => {},
+  refreshProfile: async () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -151,6 +158,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }
   }
+
+  const refreshProfile = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('[AuthContext] Error refreshing profile:', error);
+      } else {
+        setProfile(data);
+        // Emit event to notify all listeners that profile was updated
+        profileUpdateEmitter.emit(PROFILE_UPDATED, data);
+      }
+    } catch (err) {
+      console.error('[AuthContext] Unexpected error refreshing profile:', err);
+    }
+  };
     
   return (
     <AuthContext.Provider
@@ -161,7 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading, 
         signIn, 
         signOut,
-        onAuthStateChange 
+        onAuthStateChange,
+        refreshProfile 
       }}
     >
       {children}
