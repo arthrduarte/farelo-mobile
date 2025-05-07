@@ -10,75 +10,72 @@ import { useRecipes } from '@/hooks/useRecipes';
 export default function RecipesScreen() {
   const { profile } = useAuth();
   const { data: recipes, isLoading, isError, error, refetch } = useRecipes(profile?.id);
-  
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#793206" />
-        </View>
-      );
-    }
 
-    if (isError) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>{error?.message || 'Failed to load recipes. Please try again later.'}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>
+        You haven't added any recipes yet.{'\n'}
+        Start by adding your first recipe!
+      </Text>
+    </View>
+  );
+
+  const LoadingComponent = () => (
+    <View style={styles.centerContainer}>
+      <ActivityIndicator size="large" color="#793206" />
+    </View>
+  );
+
+  const ErrorComponent = () => (
+    <View style={styles.centerContainer}>
+      <Text style={styles.errorText}>{error?.message || 'Failed to load recipes. Please try again later.'}</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+        <Text style={styles.retryButtonText}>Try Again</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <ThemedView style={styles.container}>
+      {/* Header - Always visible */}
+      <View style={styles.header}>
+        <Link href="/new-recipe" asChild>
+          <TouchableOpacity style={styles.addButton}>
+            <Text style={styles.addButtonText}>Add new recipe</Text>
+          </TouchableOpacity>
+        </Link>
+        
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Text style={styles.searchText}>Search</Text>
+          </View>
+          <TouchableOpacity style={styles.filterButton}>
+            <MaterialIcons name="filter-list" size={24} color="#603808" />
           </TouchableOpacity>
         </View>
-      );
-    }
+      </View>
 
-    if (!recipes || recipes.length === 0) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.emptyText}>No recipes found</Text>
-        </View>
-      );
-    }
-
-    return (
-      <>
-        {/* Header Buttons */}
-        <View style={styles.header}>
-          <Link href="/new-recipe" asChild>
-            <TouchableOpacity style={styles.addButton}>
-              <Text style={styles.addButtonText}>Add new recipe</Text>
-            </TouchableOpacity>
-          </Link>
-          
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputContainer}>
-              <Text style={styles.searchText}>Search</Text>
-            </View>
-            <TouchableOpacity style={styles.filterButton}>
-              <MaterialIcons name="filter-list" size={24} color="#603808" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
+      {/* Content */}
+      {isLoading ? (
+        <LoadingComponent />
+      ) : isError ? (
+        <ErrorComponent />
+      ) : (
         <FlatList 
           style={styles.recipeList} 
           showsVerticalScrollIndicator={false} 
           data={recipes} 
           renderItem={({ item }) => (
-              <RecipeCard 
-                key={item.id} 
-                recipe={item} 
-              />
+            <RecipeCard 
+              key={item.id} 
+              recipe={item} 
+            />
           )}
+          ListEmptyComponent={EmptyComponent}
           refreshing={isLoading}
           onRefresh={refetch}
         />
-      </>
-    );
-  };
-
-  return (
-    <ThemedView style={styles.container}>
-      {renderContent()}
+      )}
     </ThemedView>
   );
 }
@@ -136,6 +133,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '50%',
+  },
   errorText: {
     color: '#793206',
     fontSize: 16,
@@ -146,6 +149,7 @@ const styles = StyleSheet.create({
     color: '#793206',
     fontSize: 16,
     textAlign: 'center',
+    lineHeight: 24,
   },
   retryButton: {
     backgroundColor: '#793206',
