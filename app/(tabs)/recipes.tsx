@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList, TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import RecipeCard from '@/components/recipe/RecipeCard';
@@ -6,16 +6,43 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import { Link } from 'expo-router';
 import { useRecipes } from '@/hooks/useRecipes';
+import { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
-  const { data: recipes, isLoading, isError, error, refetch } = useRecipes(profile?.id);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  const { data: recipes, isLoading, isError, error, refetch } = useRecipes(profile?.id, debouncedSearchTerm);
+
+  const debouncedSetSearchTerm = useCallback(
+    debounce((term) => {
+      setDebouncedSearchTerm(term);
+    }, 500),
+    []
+  );
+
+  useEffect(() => {
+    debouncedSetSearchTerm(searchQuery);
+    return () => {
+      debouncedSetSearchTerm.cancel();
+    };
+  }, [searchQuery, debouncedSetSearchTerm]);
 
   const EmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>
         You haven't added any recipes yet.{'\n'}
         Start by adding your first recipe!
+      </Text>
+    </View>
+  );
+
+  const NoSearchResultsComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>
+        No recipes found matching your search.
       </Text>
     </View>
   );
@@ -47,11 +74,14 @@ export default function RecipesScreen() {
         
         <View style={styles.searchContainer}>
           <View style={styles.searchInputContainer}>
-            <Text style={styles.searchText}>Search</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by name or tag..."
+              placeholderTextColor="#79320680"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <MaterialIcons name="filter-list" size={24} color="#603808" />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -71,7 +101,7 @@ export default function RecipesScreen() {
               recipe={item} 
             />
           )}
-          ListEmptyComponent={EmptyComponent}
+          ListEmptyComponent={debouncedSearchTerm ? NoSearchResultsComponent : EmptyComponent}
           refreshing={isLoading}
           onRefresh={refetch}
         />
@@ -103,26 +133,19 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     gap: 8,
+    alignItems: 'center',
   },
   searchInputContainer: {
     flex: 1,
     backgroundColor: '#79320633',
-    padding: 16,
     borderRadius: 8,
     justifyContent: 'center',
   },
-  searchText: {
-    color: '#793206',
+  searchInput: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 16,
-    opacity: 0.6,
-  },
-  filterButton: {
-    backgroundColor: '#EDE4D2',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    aspectRatio: 1,
+    color: '#793206',
   },
   recipeList: {
     flex: 1,
