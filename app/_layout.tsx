@@ -69,6 +69,8 @@ export default function RootLayout() {
               <Stack.Screen name="profile/[id]"/>
               <Stack.Screen name="profile/edit"/>
               <Stack.Screen name="settings/main"/>
+              <Stack.Screen name="settings/account/email"/>
+              <Stack.Screen name="settings/account/password"/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>
