@@ -2,6 +2,7 @@ import { View, StyleSheet, Text, Image, ScrollView, TouchableOpacity, Platform }
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import ProfileHeader from '@/components/ProfileHeader';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
 import { LogCard } from '@/components/LogCard';
 import { router } from 'expo-router';
@@ -17,21 +18,18 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <View style={[styles.headerItem, { alignItems: 'flex-start' }]}>
-        <TouchableOpacity style={styles.editProfileButton} onPress={() => router.push('/profile/edit')}>
-          <Text style={{ color: '#FFFFFF' }}>Edit profile</Text>
-        </TouchableOpacity>
-        </View>
-        <View style={[styles.headerItem, { alignItems: 'center' }]}>
-          <Text style={styles.username}>{profile.username}</Text>
-        </View>
-        <View style={[styles.headerItem, { alignItems: 'flex-end' }]}>
-        <TouchableOpacity onPress={() => router.push('/profile/settings')} style={styles.searchIconContainer}>
-          <Feather name="settings" size={24} color="#793206" />
-        </TouchableOpacity>
-        </View>
-      </View>
+      <ScreenHeader title={profile.username} 
+        rightItem={
+          <TouchableOpacity onPress={() => router.push('/profile/settings')}>
+            <Feather name="settings" size={24} color="#793206" />
+          </TouchableOpacity>
+        }
+        leftItem={
+          <TouchableOpacity onPress={() => router.push('/profile/edit')}>
+            <Text style={{ color: '#793206' }}>Edit Profile</Text>
+          </TouchableOpacity>
+        }
+        />
 
       <ScrollView>
         <ProfileHeader profile={profile} logs={profileLogs} />

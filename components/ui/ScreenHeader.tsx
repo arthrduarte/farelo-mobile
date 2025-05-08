@@ -27,7 +27,7 @@ export function ScreenHeader({ title, leftItem, rightItem, showBackButton }: Scr
     }
     if (showBackButton) {
       return (
-        <TouchableOpacity onPress={defaultBackPress} style={styles.touchableItem}>
+        <TouchableOpacity onPress={defaultBackPress}>
           <Feather name="arrow-left" size={24} color="#793206" />
         </TouchableOpacity>
       );
@@ -77,12 +77,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   titleText: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#793206', // BROWN - Main color
-  },
-  touchableItem: {
-    padding: 8, // Makes it easier to press
   },
   // placeholder: { // Optional: if you want to ensure the space is taken even if empty
   //   width: 24, // Example width, match your icon size or desired spacing
