@@ -20,7 +20,7 @@ export default function ProfileScreen() {
     <ThemedView style={styles.container}>
       <ScreenHeader title={profile.username} 
         rightItem={
-          <TouchableOpacity onPress={() => router.push('/profile/settings')}>
+          <TouchableOpacity onPress={() => router.push('/settings/main')}>
             <Feather name="settings" size={24} color="#793206" />
           </TouchableOpacity>
         }

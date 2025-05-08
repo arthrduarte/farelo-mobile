@@ -68,7 +68,7 @@ export default function RootLayout() {
               <Stack.Screen name="search"/>
               <Stack.Screen name="profile/[id]"/>
               <Stack.Screen name="profile/edit"/>
-              <Stack.Screen name="profile/settings"/>
+              <Stack.Screen name="settings/main"/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>
