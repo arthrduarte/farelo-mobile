@@ -27,7 +27,7 @@ export default function ProfileScreen() {
           <Text style={styles.username}>{profile.username}</Text>
         </View>
         <View style={[styles.headerItem, { alignItems: 'flex-end' }]}>
-        <TouchableOpacity onPress={() => router.push('/settings')} style={styles.searchIconContainer}>
+        <TouchableOpacity onPress={() => router.push('/profile/settings')} style={styles.searchIconContainer}>
           <Feather name="settings" size={24} color="#793206" />
         </TouchableOpacity>
         </View>
