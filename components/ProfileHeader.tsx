@@ -41,11 +41,7 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
           </View>
         </View>
         <View style={styles.headerBottom}>
-            {currentProfile?.id === profile?.id ? (
-              <TouchableOpacity style={styles.followButton} onPress={() => router.push('/profile/edit')}>
-                <Text style={styles.followButtonText}>Edit Profile</Text>
-              </TouchableOpacity>
-            ) : (
+            {currentProfile?.id != profile?.id && (
               <TouchableOpacity 
                 style={[styles.followButton, isFollowing && styles.followingButton]} 
                 onPress={toggleFollow}
@@ -60,9 +56,6 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
                 )}
               </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={() => signOut()}>
-              <Text>Logout</Text>
-            </TouchableOpacity>
         </View>
       </View>
   );
