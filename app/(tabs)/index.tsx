@@ -1,8 +1,7 @@
 import { StyleSheet, TouchableOpacity, Platform, View, FlatList, Text } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 import { LogCard } from '@/components/LogCard';
-import { Log } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLogs } from '@/hooks/useLogs';
 import { useRecipes } from '@/hooks/useRecipes';
@@ -38,12 +37,13 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <View style={styles.headerTitlePlaceholder} />
-        <TouchableOpacity onPress={() => router.push('/search')} style={styles.searchIconContainer}>
-          <Feather name="search" size={24} color="#793206" />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title="Home" 
+        rightItem={
+          <TouchableOpacity onPress={() => router.push('/search')}>
+            <Feather name="search" size={24} color="#793206" />
+          </TouchableOpacity>
+        }
+        />
 
       <FlatList 
         style={styles.scrollView}

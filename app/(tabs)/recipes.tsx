@@ -1,13 +1,13 @@
 import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList, TextInput } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Recipe } from '@/types/db';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import RecipeCard from '@/components/recipe/RecipeCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useState, useEffect, useCallback } from 'react';
 import { debounce } from 'lodash';
+import { Feather } from '@expo/vector-icons';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
@@ -64,14 +64,21 @@ export default function RecipesScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header - Always visible */}
-      <View style={styles.header}>
-        <Link href="/new-recipe" asChild>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.addButtonText}>Add new recipe</Text>
+      <ScreenHeader title="Recipes"
+        rightItem={
+          <TouchableOpacity>
+            <Feather name="search" size={24} color="#793206" />
           </TouchableOpacity>
-        </Link>
-        
+        }
+        leftItem={
+          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/new-recipe')}>
+            <Feather name="plus" size={16} color="white" />
+            <Text style={styles.addButtonText}>Add New</Text>
+          </TouchableOpacity>
+        }
+      />
+      {/* Header - Always visible */}
+      <View style={styles.header}>        
         <View style={styles.searchContainer}>
           <View style={styles.searchInputContainer}>
             <TextInput
@@ -113,22 +120,22 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   header: {
     gap: 16,
-    marginVertical: 16,
+    padding: 16,
   },
   addButton: {
+    flexDirection: 'row',
+    gap: 4,
     backgroundColor: '#793206',
-    padding: 16,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
     alignItems: 'center',
   },
   addButtonText: {
     color: 'white',
-    fontWeight: '600',
-    fontSize: 20,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -149,6 +156,7 @@ const styles = StyleSheet.create({
   },
   recipeList: {
     flex: 1,
+    paddingHorizontal: 16,
     width: '100%',
   },
   centerContainer: {
