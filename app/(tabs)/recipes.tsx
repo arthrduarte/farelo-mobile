@@ -36,9 +36,10 @@ export default function RecipesScreen() {
       }),
     ]).start();
 
-    if (!isSearchVisible) {
+    if (isSearchVisible) {
       // When closing search, clear the search query
       setSearchQuery('');
+      setDebouncedSearchTerm('');
     }
   };
 
