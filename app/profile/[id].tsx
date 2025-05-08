@@ -1,6 +1,7 @@
 import { LogCard } from '@/components/LogCard';
 import ProfileHeader from '@/components/ProfileHeader';
 import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -42,9 +43,7 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back" size={24} color="#793206" />
-      </TouchableOpacity>
+      <ScreenHeader title={profile.username} showBackButton={true} />
 
       <ProfileHeader profile={profile} logs={profileLogs} />
       {renderContent()}

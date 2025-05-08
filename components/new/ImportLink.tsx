@@ -182,7 +182,6 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
 
 const styles = StyleSheet.create({
   inputContainer: {
-    paddingHorizontal: 16,
     marginBottom: 24,
   },
   input: {

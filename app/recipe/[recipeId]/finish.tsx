@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Divider } from '@/components/Divider';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -161,12 +162,9 @@ export default function FinishRecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back" size={24} color="#793206" />
-      </TouchableOpacity>
+      <ScreenHeader title="Finish Recipe" showBackButton={true} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
         {/* Header */}
         <Text style={styles.title}>{recipe.title}</Text>
 
@@ -266,7 +264,6 @@ export default function FinishRecipeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   centerContainer: {
     flex: 1,

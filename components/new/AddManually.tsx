@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import { useCreateRecipe } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
+import { Divider } from '@/components/Divider';
 
 // Define a type for the manual form data, omitting fields not manually entered
 type ManualRecipeFormData = Pick<
@@ -278,6 +279,8 @@ export default function AddManually() {
           {isSubmitting ? 'Creating Recipe...' : 'Submit'}
         </Text>
       </TouchableOpacity>
+      
+      <Divider/>
     </View>
   );
 }
@@ -285,7 +288,6 @@ export default function AddManually() {
 // Styles moved from the parent component
 const styles = StyleSheet.create({
   manualFormContainer: {
-    paddingHorizontal: 16,
     marginBottom: 24,
   },
   input: {

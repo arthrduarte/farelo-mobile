@@ -239,7 +239,6 @@ export default function SelectGallery() {
 
 const styles = StyleSheet.create({
   scrollView: {
-    marginHorizontal: 16,
     marginBottom: 24,
   },
   scrollViewEmpty: {
@@ -282,7 +281,6 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     backgroundColor: '#793206',
-    marginHorizontal: 16,
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
