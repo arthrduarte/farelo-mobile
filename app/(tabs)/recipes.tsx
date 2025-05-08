@@ -1,11 +1,11 @@
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList, TextInput } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList, TextInput, Animated } from 'react-native';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import RecipeCard from '@/components/recipe/RecipeCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import { Link, router } from 'expo-router';
 import { useRecipes } from '@/hooks/useRecipes';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce } from 'lodash';
 import { Feather } from '@expo/vector-icons';
 
@@ -13,8 +13,34 @@ export default function RecipesScreen() {
   const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const searchBarHeight = useRef(new Animated.Value(0)).current;
+  const searchBarOpacity = useRef(new Animated.Value(0)).current;
 
   const { data: recipes, isLoading, isError, error, refetch } = useRecipes(profile?.id, debouncedSearchTerm);
+
+  const toggleSearch = () => {
+    const toValue = isSearchVisible ? 0 : 1;
+    setIsSearchVisible(!isSearchVisible);
+    
+    Animated.parallel([
+      Animated.timing(searchBarHeight, {
+        toValue,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(searchBarOpacity, {
+        toValue,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+    ]).start();
+
+    if (!isSearchVisible) {
+      // When closing search, clear the search query
+      setSearchQuery('');
+    }
+  };
 
   const debouncedSetSearchTerm = useCallback(
     debounce((term) => {
@@ -66,8 +92,8 @@ export default function RecipesScreen() {
     <ThemedView style={styles.container}>
       <ScreenHeader title="Recipes"
         rightItem={
-          <TouchableOpacity>
-            <Feather name="search" size={24} color="#793206" />
+          <TouchableOpacity onPress={toggleSearch}>
+            <Feather name={isSearchVisible ? "x" : "search"} size={24} color="#793206" />
           </TouchableOpacity>
         }
         leftItem={
@@ -77,20 +103,30 @@ export default function RecipesScreen() {
           </TouchableOpacity>
         }
       />
-      {/* Header - Always visible */}
-      <View style={styles.header}>        
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by name or tag..."
-              placeholderTextColor="#79320680"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
+      
+      {/* Animated Search Header */}
+      <Animated.View style={[
+        styles.searchContainer,
+        {
+          maxHeight: searchBarHeight.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 80]
+          }),
+          opacity: searchBarOpacity,
+          overflow: 'hidden',
+        }
+      ]}>        
+        <View style={styles.searchButton}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name or tag..."
+            placeholderTextColor="#79320680"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus={isSearchVisible}
             />
-          </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Content */}
       {isLoading ? (
@@ -122,8 +158,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    gap: 16,
-    padding: 16,
+    paddingHorizontal: 16,
+    // paddingBottom: 16,
   },
   addButton: {
     flexDirection: 'row',
@@ -142,11 +178,13 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: 'center',
   },
-  searchInputContainer: {
+  searchButton: {
     flex: 1,
     backgroundColor: '#79320633',
     borderRadius: 8,
     justifyContent: 'center',
+    marginHorizontal: 16,
+    marginVertical: 16,
   },
   searchInput: {
     paddingHorizontal: 16,
