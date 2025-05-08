@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Feather } from "@expo/vector-icons";
@@ -6,6 +6,15 @@ import { router } from "expo-router";
 
 export default function AccountSettings() {
 
+  const handleDeleteAccount = () => {
+    Alert.alert("Delete Account", "Are you sure you want to delete your account?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => {
+        console.log("Delete Account");
+      } },
+    ]);
+  };
+  
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader title="Account Settings" showBackButton />
@@ -32,7 +41,7 @@ export default function AccountSettings() {
           </TouchableOpacity>
         </View>
         <View style={styles.bottomSection}>
-          <TouchableOpacity style={styles.logoutButton} >
+          <TouchableOpacity style={styles.logoutButton} onPress={handleDeleteAccount}>
             <Text style={styles.logoutButtonText}>Delete Account</Text>
           </TouchableOpacity>
         </View>
