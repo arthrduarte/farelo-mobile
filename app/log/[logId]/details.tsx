@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
 import { IngredientsSection } from "@/components/recipe/IngredientsSection";
 import { InstructionsSection } from "@/components/recipe/InstructionsSection";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ImagesSection } from "@/components/recipe/RecipeImage";
 import { TagsSection } from "@/components/recipe/TagsSection";
 import { useLog } from "@/hooks/useLogs";
@@ -36,12 +37,9 @@ export default function LogDetailsScreen() {
 
     return (
         <ThemedView style={styles.container}>
-        
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <MaterialIcons name="arrow-back" size={24} color="#793206" />
-            </TouchableOpacity>
+            <ScreenHeader title="Details" showBackButton={true} />
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
                 {/* Profile Header */}
                 <View style={styles.header}>
                     <Image 
@@ -96,31 +94,6 @@ export default function LogDetailsScreen() {
                 <InstructionsSection instructions={log.recipe.instructions} />
 
                 <Divider />
-
-                {/* Comments Section */}
-                <View>
-                    <View style={styles.sectionHeader}>
-                        <MaterialIcons name="comment" size={24} color="#793206" />
-                        <Text style={styles.sectionTitle}>Comments</Text>
-                    </View>
-                    {comments.map((comment, index) => (
-                        <View 
-                            key={comment.id}
-                            style={[
-                                styles.comment,
-                                index % 2 === 0 ? styles.commentBrown : styles.commentBeige,
-                            ]}
-                        >
-                            <Text style={[
-                                styles.commentText,
-                                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                            ]}>{comment.content}</Text>
-                            <Text style={styles.commentTime}>
-                                {formatTimeAgo(comment.created_at)}
-                            </Text>
-                        </View>
-                    ))}
-                </View>
             </ScrollView>
         </ThemedView>
     );
@@ -129,7 +102,6 @@ export default function LogDetailsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
     },
     centerContainer: {
         flex: 1,
