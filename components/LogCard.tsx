@@ -59,16 +59,17 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   };
 
   const handleProfilePress = (e: any) => {
-    // e.stopPropagation();
-    // router.push({
-    //   pathname: '/(tabs)/profile/[id]',
-    //   params: { id: log.profile.id }
-    // });
-    console.log(log.profile);
-    router.push({
-      pathname: '/profile/[id]',
-      params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
-    });
+    if (log.profile.id === profile.id) {
+      router.push({
+        pathname: '/profile',
+        params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
+      });
+    } else {
+      router.push({
+        pathname: '/profile/[id]',
+        params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
+      });
+    }
   };
 
   return (
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderRadius: 12,
-    boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
   },
   header: {
     flexDirection: 'row',

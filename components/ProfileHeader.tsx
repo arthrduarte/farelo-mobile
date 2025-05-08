@@ -22,7 +22,6 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
           <View style={styles.info}>
             <View style={styles.nameContainer}>
               <Text style={styles.name}>{profile?.first_name} {profile?.last_name}</Text>
-              <Text style={styles.username}>@{profile?.username}</Text>
             </View>
               <View style={styles.stats}>
                   <View>
@@ -113,10 +112,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#793206',
-  },
-  username: {
-    fontSize: 16,
     color: '#793206',
   },
   stats: {
