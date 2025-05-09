@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, Image, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, Text, Image, TouchableOpacity, Platform, FlatList } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import ProfileHeader from '@/components/ProfileHeader';
@@ -7,14 +7,38 @@ import { useLogs } from '@/hooks/useLogs';
 import { LogCard } from '@/components/LogCard';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LogLoader } from '@/components/log/LogLoader';
 
 export default function ProfileScreen() {
   const { profile } = useAuth();
-  const { profileLogs } = useLogs(profile?.id ?? '');
+  const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(profile?.id ?? '');
+
 
   if (!profile) {
     return <Text>No profile found</Text>;
   }
+
+  const LoadingComponent = () => {
+    return (
+      <>
+        <LogLoader />
+        <LogLoader />
+        <LogLoader />
+      </>
+    );
+  };
+
+  const HeaderComponent = () => {
+    return (
+      <ProfileHeader profile={profile} logs={profileLogs} />
+    );
+  };
+  
+  const EmptyStateComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>This user hasn't posted any logs yet.</Text>
+    </View>
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -29,14 +53,28 @@ export default function ProfileScreen() {
             <Text style={{ color: '#793206' }}>Edit Profile</Text>
           </TouchableOpacity>
         }
-        />
+      />
 
-      <ScrollView>
-        <ProfileHeader profile={profile} logs={profileLogs} />
-        {profileLogs.map((log) => (
-          <LogCard key={log.id} log={log} />
-        ))}
-      </ScrollView>
+      <FlatList
+        style={styles.list}
+        data={profileLogs} 
+        renderItem={({ item }) => (
+          <LogCard key={item.id} log={item} />
+        )}
+        ListHeaderComponent={HeaderComponent}
+        ListEmptyComponent={() => {
+          if (profileLogsLoading) {
+            return <LoadingComponent />;
+          }
+          if (profileLogs.length === 0) {
+            return <EmptyStateComponent />;
+          }
+          return null; 
+        }}
+        showsVerticalScrollIndicator={false}
+        onRefresh={refreshProfileLogs}
+        refreshing={profileLogsLoading}
+      />
     </ThemedView>
   );
 }
@@ -45,7 +83,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-    headerContainer: {
+  list: {
+    flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    marginTop: 50, // Adjust as needed to be below the header
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#793206',
+  },
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

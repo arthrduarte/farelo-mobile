@@ -7,10 +7,11 @@ import { useLogs } from '@/hooks/useLogs';
 import { useRecipes } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LogLoader } from '@/components/log/LogLoader';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, profileLogs, loading, refresh } = useLogs(profile?.id ?? '');
+  const { feed, profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
 
   const EmptyFeedComponent = () => (
@@ -35,6 +36,14 @@ export default function HomeScreen() {
     </View>
   );
 
+  const LoadingComponent = () => (
+    <>
+      <LogLoader />
+      <LogLoader />
+      <LogLoader />
+    </>
+  );
+
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader title="Home" 
@@ -43,7 +52,7 @@ export default function HomeScreen() {
             <Feather name="search" size={24} color="#793206" />
           </TouchableOpacity>
         }
-        />
+      />
 
       <FlatList 
         style={styles.scrollView}
@@ -55,9 +64,9 @@ export default function HomeScreen() {
             log={item}
           />
         )}
-        onRefresh={refresh}
-        refreshing={loading}
-        ListEmptyComponent={!loading ? EmptyFeedComponent : null}
+        onRefresh={refreshProfileLogs}
+        refreshing={profileLogsLoading}
+        ListEmptyComponent={profileLogsLoading ? LoadingComponent : EmptyFeedComponent}
       />
     </ThemedView>
   );
