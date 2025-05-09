@@ -14,14 +14,15 @@ const LOG_KEYS = {
 
 export function useLogs(profile_id: string, pageSize: number = 20) {
     const [feed, setFeed] = useState<EnhancedLog[]>([])
-    const [loading, setLoading] = useState(true)
-    const [profileLogs, setprofileLogs] = useState<EnhancedLog[]>([])
+    const [feedLoading, setFeedLoading] = useState(true)
+    const [profileLogs, setProfileLogs] = useState<EnhancedLog[]>([])
+    const [profileLogsLoading, setProfileLogsLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
 
-    // 1️⃣ load cached logs on mount
+    // 1️⃣ load cached logs on mount (for feed)
     useEffect(() => {
         if (!profile_id) {
-            setLoading(false)
+            setFeedLoading(false)
             return
         }
         let active = true
@@ -31,7 +32,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 if (raw) setFeed(JSON.parse(raw))
             })
             .finally(() => {
-                if (active) setLoading(false)
+                if (active) setFeedLoading(false)
             })
         return () => { active = false }
     }, [profile_id])
@@ -39,7 +40,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     // 2️⃣ fetch both following and own logs
     const fetchFeed = useCallback(async () => {
         if (!profile_id) return
-        setLoading(true)
+        setFeedLoading(true)
         try {
             // 2a) get list of who this user follows
             const { data: follows, error: followErr } = await supabase
@@ -66,7 +67,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             if (!logs) {
                 setFeed([]); // Ensure feed is empty if no logs
                 await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify([]));
-                setLoading(false);
+                setFeedLoading(false);
                 return;
             }
 
@@ -106,14 +107,13 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         } catch (err) {
             console.error('useFeed › fetchFeed error', err)
         } finally {
-            setLoading(false)
+            setFeedLoading(false)
         }
     }, [profile_id, pageSize])
 
     const fetchProfileLogs = useCallback(async () => {
         if (!profile_id) return
-        // Keep loading state associated with the feed for simplicity now
-        // setLoading(true); 
+        setProfileLogsLoading(true);
         try {
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
@@ -126,11 +126,12 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
 
-            if (logErr) throw logErr
+            if (logErr) {
+                throw logErr;
+            }
             if (!logs || logs.length === 0) {
-                setprofileLogs([]); // Set empty if no logs found
-                // setLoading(false);
-                return;
+                setProfileLogs([]);
+                return; // Return early, finally will set loading to false
             }
 
             const logIds = logs.map((log) => log.id);
@@ -164,13 +165,13 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 }
             });
 
-            setprofileLogs(profileLogsWithData as EnhancedLog[]);
+            setProfileLogs(profileLogsWithData as EnhancedLog[]);
 
         } catch (err) {
             console.error('useLogs › fetchProfileLogs error', err)
-            setprofileLogs([]); // Set empty on error
+            setProfileLogs([]);
         } finally {
-            // setLoading(false) // Handled by fetchFeed loading
+            setProfileLogsLoading(false)
         }
     }, [profile_id, pageSize])
 
@@ -178,16 +179,22 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     // 3️⃣ run fetch after we've loaded cache
     useEffect(() => {
         if (profile_id) {
+            setFeedLoading(true);
+            setProfileLogsLoading(true);
             fetchFeed()
             fetchProfileLogs()
         }
-    }, [fetchFeed, profile_id])
+    }, [profile_id]);
 
     // Listen for profile updates and refetch logs
     useEffect(() => {
         const handleProfileUpdate = () => {
-            fetchFeed()
-            fetchProfileLogs()
+            if (profile_id) {
+                setFeedLoading(true);
+                setProfileLogsLoading(true);
+                fetchFeed()
+                fetchProfileLogs()
+            }
         }
 
         profileUpdateEmitter.on(PROFILE_UPDATED, handleProfileUpdate)
@@ -195,9 +202,17 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         return () => {
             profileUpdateEmitter.off(PROFILE_UPDATED, handleProfileUpdate)
         }
-    }, [fetchFeed, fetchProfileLogs])
+    }, [profile_id, fetchFeed, fetchProfileLogs])
 
-    return { feed, loading, refresh: fetchFeed, profileLogs, error }
+    return {
+        feed,
+        feedLoading,
+        refresh: fetchFeed,
+        profileLogs,
+        profileLogsLoading,
+        refreshProfileLogs: fetchProfileLogs,
+        error
+    }
 }
 
 export const useLog = (id: string | undefined) => {
