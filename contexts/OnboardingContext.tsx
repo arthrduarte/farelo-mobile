@@ -1,106 +1,118 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter, useSegments } from 'expo-router';
+import { useRouter, useSegments, usePathname } from 'expo-router';
 import { useAuth } from './AuthContext';
 
 type OnboardingContextType = {
-  isOnboarded: boolean;
-  setIsOnboarded: (value: boolean) => void;
+  hasCompletedOnboardingFlow: boolean;
+  setHasCompletedOnboardingFlow: (value: boolean) => void;
+  isOnboardingLoading: boolean; // Expose loading state
 };
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'hasCompletedOnboarding';
+const STORAGE_KEY = 'hasCompletedInitialOnboardingFlow';
 
-export function OnboardingProvider({ children }: { children: React.ReactNode }) {
-  const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+export function OnboardingProvider({ children }: { children: ReactNode }) {
+  // null: initial state before AsyncStorage is checked
+  // true: user has completed the flow
+  // false: user has not completed the flow
+  const [hasCompletedOnboardingFlow, setHasCompletedOnboardingFlowState] = useState<boolean | null>(null);
+  const [isOnboardingLoading, setIsOnboardingLoading] = useState(true); // Loading state for AsyncStorage check
+
   const segments = useSegments();
+  const pathname = usePathname(); // Get current pathname
   const router = useRouter();
-  const { loading: authLoading, onAuthStateChange } = useAuth();
+  const { user, loading: authLoading, session } = useAuth(); // Get user and session
 
-  // Handle setting onboarded status safely
-  const handleSetIsOnboarded = useCallback(async (value: boolean) => {
+  // Function to update onboarding status in AsyncStorage and state
+  const setHasCompletedOnboardingFlow = useCallback(async (value: boolean) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, String(value));
-      setIsOnboarded(value);
+      setHasCompletedOnboardingFlowState(value);
     } catch (error) {
-      console.error('[OnboardingContext] Error setting onboarding status:', error);
+      console.error('[OnboardingContext] Error setting onboarding flow status:', error);
     }
   }, []);
 
   // Check onboarding status from storage on mount
   useEffect(() => {
     const checkOnboardingStatus = async () => {
+      setIsOnboardingLoading(true);
       try {
         const value = await AsyncStorage.getItem(STORAGE_KEY);
-        setIsOnboarded(value === 'true');
+        setHasCompletedOnboardingFlowState(value === 'true');
       } catch (error) {
-        console.error('[OnboardingDebug] Error checking onboarding status:', error);
-        setIsOnboarded(false);
+        console.error('[OnboardingContext] Error checking onboarding status from AsyncStorage:', error);
+        setHasCompletedOnboardingFlowState(false); // Default to not completed on error
+      } finally {
+        setIsOnboardingLoading(false);
       }
     };
-    
+
     checkOnboardingStatus();
   }, []);
 
-  // Register auth state change listener - with cleanup
-  useEffect(() => {
-    
-    const unsubscribe = onAuthStateChange((isAuth) => {
-      setIsAuthenticated(isAuth);
-    });
-    
-    return () => {
-      unsubscribe();
-    };
-  }, [onAuthStateChange]);
-
   // Handle navigation based on auth and onboarding state
   useEffect(() => {
-    // Skip navigation during loading states
-    if (authLoading || isOnboarded === null) {
-      console.log('[OnboardingDebug] Skipping navigation - Loading:', {
-        authLoading,
-        isOnboarded,
-        segments
-      });
+    // Wait for both auth and onboarding status to be loaded
+    if (authLoading || isOnboardingLoading) {
+      console.log('[OnboardingContext] Skipping navigation - Loading:', { authLoading, isOnboardingLoading, segments });
       return;
     }
-    
+
     const inOnboardingGroup = segments[0] === 'onboarding';
-        
-    // Authenticated users should be considered onboarded
-    if (isAuthenticated && !isOnboarded) {
-      handleSetIsOnboarded(true);
-      return; // Wait for state update before navigation
-    }
-    
-    // Navigate to proper screen
-    if (isAuthenticated) {
-      // Authenticated users always go to main app
-      if (inOnboardingGroup) {
-        router.replace('/');
-      }
-    } else {
-      // Non-authenticated users need onboarding
-      if (!isOnboarded && !inOnboardingGroup) {
+    const isExactlyOnboardingRoot = pathname === '/onboarding';
+
+    console.log('[OnboardingContext] Navigation check:', {
+      hasCompletedOnboardingFlow,
+      user: !!user,
+      session: !!session,
+      inOnboardingGroup,
+      pathname,
+      segments,
+    });
+
+    // Scenario 1: User has NOT completed the onboarding flow
+    if (hasCompletedOnboardingFlow === false) {
+      if (!inOnboardingGroup) {
+        console.log('[OnboardingContext] Redirecting to /onboarding (flow not completed).');
         router.replace('/onboarding');
-      } else if (isOnboarded && !inOnboardingGroup) {
-        router.replace('/onboarding/login');
-      } else if (isOnboarded && inOnboardingGroup) {
-        // They've completed onboarding before but aren't logged in 
-        // Let them stay in onboarding for login/register screens
+      }
+      // User stays within /onboarding/* routes until flow is completed.
+      // If they are at /onboarding/login or /onboarding/register, they should stay there.
+      // If they somehow land on /onboarding root and have not completed, they stay.
+      return;
+    }
+
+    // Scenario 2: User HAS completed the onboarding flow
+    if (hasCompletedOnboardingFlow === true) {
+      if (!user) { // Not authenticated
+        // If user is in a non-onboarding path OR on the root of onboarding (e.g. carousel), redirect to login.
+        // Allow them to be on /onboarding/register.
+        if (!inOnboardingGroup || isExactlyOnboardingRoot) {
+           if (pathname !== '/onboarding/login' && pathname !== '/onboarding/register') {
+            console.log('[OnboardingContext] Redirecting to /onboarding/login (flow completed, not authenticated).');
+            router.replace('/onboarding/login');
+           }
+        }
+      } else { // Authenticated
+        if (inOnboardingGroup) {
+          console.log('[OnboardingContext] Redirecting to / (flow completed, authenticated, in onboarding group).');
+          router.replace('/');
+        }
       }
     }
-  }, [isOnboarded, isAuthenticated, segments, authLoading, router, handleSetIsOnboarded]);
+  }, [hasCompletedOnboardingFlow, user, session, authLoading, isOnboardingLoading, segments, router, pathname]);
 
   return (
     <OnboardingContext.Provider
       value={{
-        isOnboarded: isOnboarded ?? false,
-        setIsOnboarded: handleSetIsOnboarded,
-      }}>
+        hasCompletedOnboardingFlow: hasCompletedOnboardingFlow ?? false, // Default to false if null
+        setHasCompletedOnboardingFlow,
+        isOnboardingLoading,
+      }}
+    >
       {children}
     </OnboardingContext.Provider>
   );

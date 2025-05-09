@@ -18,7 +18,6 @@ import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
 import { SUPERWALL_TRIGGERS } from '@/config/superwall'
 import { useSuperwall } from '@/hooks/useSuperwall';
-import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const { width } = Dimensions.get('window')
 
@@ -30,7 +29,6 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const { showPaywall } = useSuperwall();
-  const { setIsOnboarded } = useOnboarding();
 
   async function signUpWithEmail() {
     try {
@@ -56,8 +54,6 @@ export default function RegisterScreen() {
       
       console.log("[Register] Sign up successful")
       await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
-      
-      setIsOnboarded(true);
       
       // To avoid circular navigation, delay the redirection slightly
       setTimeout(async () => {

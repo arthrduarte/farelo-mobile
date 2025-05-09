@@ -18,7 +18,6 @@ import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
 import { SUPERWALL_TRIGGERS } from '@/config/superwall'
 import { useSuperwall } from '@/hooks/useSuperwall';
-import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const { width } = Dimensions.get('window')
 
@@ -28,7 +27,6 @@ export default function Logincreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const { showPaywall } = useSuperwall();
-  const { setIsOnboarded } = useOnboarding();
 
   async function signInWithEmail() {
     try {
@@ -49,14 +47,6 @@ export default function Logincreen() {
       console.log("[Login] Sign in successful")
       await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
       
-      // Authentication state will be handled by the context
-      // Note: setIsOnboarded may not be needed anymore since it's handled by the auth state
-      setIsOnboarded(true);
-      
-      // To avoid circular navigation, delay the redirection slightly
-      setTimeout(() => {
-        router.replace('/')
-      }, 100)
     } catch (err) {
       console.error("[Login] Unexpected error:", err)
       Alert.alert("An unexpected error occurred")
