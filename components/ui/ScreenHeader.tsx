@@ -64,17 +64,19 @@ const styles = StyleSheet.create({
     height: Platform.OS === 'ios' ? 70 : 60, // Adjust height as needed
   },
   headerItem: {
-    width: '33%',
     justifyContent: 'center',
   },
   leftItemContainer: {
     alignItems: 'flex-start',
+    width: '25%',
   },
   centerItemContainer: {
     alignItems: 'center',
+    width: '50%',
   },
   rightItemContainer: {
     alignItems: 'flex-end',
+    width: '25%',
   },
   titleText: {
     fontSize: 16,

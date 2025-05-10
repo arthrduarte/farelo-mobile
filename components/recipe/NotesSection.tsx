@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import Feather from '@expo/vector-icons/Feather';
 
 interface NotesSectionProps {
     notes?: string;
@@ -9,7 +9,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({ notes }) => {
     return (
         <View>
             <View style={styles.sectionHeader}>
-                <IconSymbol name="book" color="#793206" size={24} />
+                <Feather name="edit-2" color="#793206" size={24} />
                 <Text style={styles.sectionTitle}>Notes</Text>
             </View>
             <View style={styles.notesContainer}>
