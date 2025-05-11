@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Animated } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Animated, Alert } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
@@ -8,7 +8,7 @@ import { InstructionsSection } from "@/components/recipe/InstructionsSection";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ImagesSection } from "@/components/recipe/RecipeImage";
 import { TagsSection } from "@/components/recipe/TagsSection";
-import { useLog } from "@/hooks/useLogs";
+import { useLog, useLogs } from "@/hooks/useLogs";
 import { useCopyRecipe } from "@/hooks/useRecipes";
 import { useAuth } from "@/contexts/AuthContext";
 import { Divider } from "@/components/Divider";
@@ -20,9 +20,9 @@ export default function LogDetailsScreen() {
     const { data, isLoading } = useLog(logId as string);
     const { profile } = useAuth();
     const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
-
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const drawerAnimation = useRef(new Animated.Value(0)).current;
+    const { deleteLog, isDeleting } = useLogs(profile?.id || '');
 
     const toggleDrawer = () => {
         const toValue = isDrawerOpen ? 0 : 1;
@@ -52,15 +52,41 @@ export default function LogDetailsScreen() {
         toggleDrawer();
     };
 
-    const handleDeleteLog = () => {
-        console.log("Delete log action triggered for log ID:", log.id);
-        
-
+    const handleDeleteLog = async () => {
+        if (!log || !log.id) return;
         toggleDrawer();
+        Alert.alert(
+            "Confirm Delete",
+            "Are you sure you want to delete this log? This action cannot be undone.",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await deleteLog(log.id);
+                            Alert.alert("Log Deleted", "The log has been successfully deleted.", [
+                                { text: "OK", onPress: () => {
+                                    console.log('[LogDetailsScreen] handleDeleteLog: Navigating back after OK on success alert.');
+                                    router.back();
+                                }}
+                            ]);
+                        } catch (error) {
+                            console.error("[LogDetailsScreen] Failed to delete log:", error);
+                            Alert.alert("Error", "Could not delete the log. Please try again.");
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const handleReportLog = () => {
-        console.log("Report log action triggered for log ID:", log.id);
+        console.log("[LogDetailsScreen] Report log action triggered for log ID:", log.id);
         toggleDrawer();
     };
 
@@ -68,8 +94,9 @@ export default function LogDetailsScreen() {
         ? [
             {
                 icon: 'delete' as keyof typeof MaterialIcons.glyphMap,
-                text: 'Delete Log',
+                text: isDeleting ? 'Deleting...' : 'Delete Log',
                 onPress: handleDeleteLog,
+                disabled: isDeleting,
             },
           ]
         : [
