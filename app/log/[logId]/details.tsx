@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Animated } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
@@ -12,12 +12,28 @@ import { useLog } from "@/hooks/useLogs";
 import { useCopyRecipe } from "@/hooks/useRecipes";
 import { useAuth } from "@/contexts/AuthContext";
 import { Divider } from "@/components/Divider";
+import Drawer from "@/components/ui/Drawer";
+import { useState, useRef } from "react";
 
 export default function LogDetailsScreen() {
     const { logId } = useLocalSearchParams();
     const { data, isLoading } = useLog(logId as string);
     const { profile } = useAuth();
     const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
+
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const drawerAnimation = useRef(new Animated.Value(0)).current;
+
+    const toggleDrawer = () => {
+        const toValue = isDrawerOpen ? 0 : 1;
+        Animated.spring(drawerAnimation, {
+            toValue,
+            useNativeDriver: true,
+            tension: 65,
+            friction: 11
+        }).start();
+        setIsDrawerOpen(!isDrawerOpen);
+    };
 
     if (isLoading || !data || !profile) {
         return (
@@ -33,11 +49,53 @@ export default function LogDetailsScreen() {
     const handleCopyRecipe = () => {
         if (isOwnRecipe) return;
         copyRecipe({ recipeIdToCopy: log.recipe.id });
+        toggleDrawer();
     };
+
+    const handleDeleteLog = () => {
+        console.log("Delete log action triggered for log ID:", log.id);
+        
+
+        toggleDrawer();
+    };
+
+    const handleReportLog = () => {
+        console.log("Report log action triggered for log ID:", log.id);
+        toggleDrawer();
+    };
+
+    const drawerOptions = isOwnRecipe
+        ? [
+            {
+                icon: 'delete' as keyof typeof MaterialIcons.glyphMap,
+                text: 'Delete Log',
+                onPress: handleDeleteLog,
+            },
+          ]
+        : [
+            {
+                icon: 'report' as keyof typeof MaterialIcons.glyphMap,
+                text: 'Report Log',
+                onPress: handleReportLog,
+            },
+            {
+                icon: 'save-alt' as keyof typeof MaterialIcons.glyphMap,
+                text: 'Save Recipe',
+                onPress: handleCopyRecipe,
+            },
+          ];
 
     return (
         <ThemedView style={styles.container}>
-            <ScreenHeader title="Details" showBackButton={true} />
+            <ScreenHeader 
+                title="Details" 
+                showBackButton={true} 
+                rightItem={
+                    <TouchableOpacity onPress={toggleDrawer} style={{ padding: 8 }}>
+                        <MaterialIcons name="more-vert" size={24} color="#793206" />
+                    </TouchableOpacity>
+                }
+            />
 
             <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
                 {/* Profile Header */}
@@ -95,6 +153,13 @@ export default function LogDetailsScreen() {
 
                 <Divider />
             </ScrollView>
+            <Drawer
+                isDrawerOpen={isDrawerOpen}
+                toggleDrawer={toggleDrawer}
+                drawerAnimation={drawerAnimation}
+                options={drawerOptions}
+                title="Options"
+            />
         </ThemedView>
     );
 }
