@@ -44,8 +44,6 @@ export default function EditProfile() {
       const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg';
       const contentType = `image/${fileExt}`;
       const fileName = `${profile?.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      
-      console.log(`Uploading ${fileName} (Content-Type: ${contentType})`);
 
       // Upload the decoded base64 content
       const { error: uploadError } = await supabase.storage
@@ -62,7 +60,6 @@ export default function EditProfile() {
         .from('avatar.images')
         .getPublicUrl(fileName);
         
-      console.log(`Uploaded image to storage: ${publicUrl}`);
       return publicUrl;
 
     } catch (error) {

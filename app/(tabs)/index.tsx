@@ -19,11 +19,9 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (profile?.id) {
-        console.log('[HomeScreen] Screen focused, refreshing feed.');
         refreshFeed();
       }
       return () => {
-        console.log('[HomeScreen] Screen blurred/unfocused.');
       };
     }, [profile?.id, refreshFeed])
   );

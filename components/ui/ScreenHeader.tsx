@@ -17,7 +17,6 @@ export function ScreenHeader({ title, leftItem, rightItem, showBackButton }: Scr
     } else {
       // Fallback if no back route is available, e.g., navigate to a default screen
       // router.replace('/(tabs)/'); // Example fallback
-      console.log("Cannot go back");
     }
   };
 

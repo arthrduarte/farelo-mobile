@@ -59,7 +59,6 @@ export default function SelectGallery() {
         } as any);
       });
 
-      console.log('Uploading images to server');
       const response = await fetch('https://usefarelo.com/api/recipes/import/images', {
         method: 'POST',
         body: formData,
@@ -76,14 +75,12 @@ export default function SelectGallery() {
       }
 
       const { recipeId, success } = await response.json();
-      console.log('Successfully imported recipe:', { recipeId, success });
 
       if (!success || !recipeId) {
         throw new Error('Failed to import recipe: Invalid response from server');
       }
 
       // Fetch the full recipe data from Supabase
-      console.log('Fetching full recipe data from Supabase');
       const { data: recipe, error: fetchError } = await supabase
         .from('recipes')
         .select('*')
@@ -95,11 +92,9 @@ export default function SelectGallery() {
         throw new Error('Failed to fetch imported recipe details');
       }
 
-      console.log('Full recipe data fetched:', recipe);
       return recipe as Recipe;
     },
     onSuccess: (newRecipe) => {
-      console.log('Mutation succeeded, updating cache with recipe:', newRecipe);
       // Update the recipes list cache
       queryClient.setQueryData<Recipe[]>(
         RECIPE_KEYS.list(newRecipe.profile_id),
@@ -110,7 +105,6 @@ export default function SelectGallery() {
       );
 
       // Navigate to the recipe details
-      console.log('Navigating to recipe details with ID:', newRecipe.id);
       router.replace(`/recipe/${newRecipe.id}/details`);
     },
     onError: (error: Error) => {

@@ -31,7 +31,6 @@ export default function Logincreen() {
   async function signInWithEmail() {
     try {
       setLoading(true)
-      console.log("[Login] Attempting to sign in:", { email })
       
       const { error } = await supabase.auth.signInWithPassword({
         email: email,
@@ -44,7 +43,6 @@ export default function Logincreen() {
         return
       }
       
-      console.log("[Login] Sign in successful")
       await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
       
     } catch (err) {

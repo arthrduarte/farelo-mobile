@@ -25,8 +25,6 @@ export default function RecipeDetailsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
 
-  console.log(recipe);
-
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
       await deleteRecipeMutation.mutateAsync(recipeToDelete);

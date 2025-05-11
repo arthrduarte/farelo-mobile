@@ -52,7 +52,6 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   
   const handleCopyRecipe = () => {
     if (log.recipe.profile_id === profile.id) {
-      console.log("Cannot copy your own recipe from a log.");
       return;
     }
     copyRecipe({ recipeIdToCopy: log.recipe_id });

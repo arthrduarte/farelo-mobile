@@ -57,26 +57,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Wait for both auth and onboarding status to be loaded
     if (authLoading || isOnboardingLoading) {
-      console.log('[OnboardingContext] Skipping navigation - Loading:', { authLoading, isOnboardingLoading, segments });
       return;
     }
 
     const inOnboardingGroup = segments[0] === 'onboarding';
     const isExactlyOnboardingRoot = pathname === '/onboarding';
 
-    console.log('[OnboardingContext] Navigation check:', {
-      hasCompletedOnboardingFlow,
-      user: !!user,
-      session: !!session,
-      inOnboardingGroup,
-      pathname,
-      segments,
-    });
-
     // Scenario 1: User has NOT completed the onboarding flow
     if (hasCompletedOnboardingFlow === false) {
       if (!inOnboardingGroup) {
-        console.log('[OnboardingContext] Redirecting to /onboarding (flow not completed).');
         router.replace('/onboarding');
       }
       // User stays within /onboarding/* routes until flow is completed.
@@ -92,13 +81,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         // Allow them to be on /onboarding/register.
         if (!inOnboardingGroup || isExactlyOnboardingRoot) {
            if (pathname !== '/onboarding/login' && pathname !== '/onboarding/register') {
-            console.log('[OnboardingContext] Redirecting to /onboarding/login (flow completed, not authenticated).');
             router.replace('/onboarding/login');
            }
         }
       } else { // Authenticated
         if (inOnboardingGroup) {
-          console.log('[OnboardingContext] Redirecting to / (flow completed, authenticated, in onboarding group).');
           router.replace('/');
         }
       }

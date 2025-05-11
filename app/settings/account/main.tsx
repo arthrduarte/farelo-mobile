@@ -10,7 +10,6 @@ export default function AccountSettings() {
     Alert.alert("Delete Account", "Are you sure you want to delete your account?", [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => {
-        console.log("Delete Account");
       } },
     ]);
   };

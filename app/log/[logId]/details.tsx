@@ -71,7 +71,6 @@ export default function LogDetailsScreen() {
                             await deleteLog(log.id);
                             Alert.alert("Log Deleted", "The log has been successfully deleted.", [
                                 { text: "OK", onPress: () => {
-                                    console.log('[LogDetailsScreen] handleDeleteLog: Navigating back after OK on success alert.');
                                     router.back();
                                 }}
                             ]);
@@ -86,7 +85,6 @@ export default function LogDetailsScreen() {
     };
 
     const handleReportLog = () => {
-        console.log("[LogDetailsScreen] Report log action triggered for log ID:", log.id);
         toggleDrawer();
     };
 
@@ -118,7 +116,7 @@ export default function LogDetailsScreen() {
                 title="Details" 
                 showBackButton={true} 
                 rightItem={
-                    <TouchableOpacity onPress={toggleDrawer} style={{ padding: 8 }}>
+                    <TouchableOpacity onPress={toggleDrawer}>
                         <MaterialIcons name="more-vert" size={24} color="#793206" />
                     </TouchableOpacity>
                 }

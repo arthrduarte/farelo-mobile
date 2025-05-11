@@ -33,7 +33,6 @@ export default function RegisterScreen() {
   async function signUpWithEmail() {
     try {
       setLoading(true)
-      console.log("[Register] Attempting to sign up:", { email })
       
       const { error } = await supabase.auth.signUp({
         email: email,
@@ -52,7 +51,6 @@ export default function RegisterScreen() {
         return
       }
       
-      console.log("[Register] Sign up successful")
       await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
       
       // To avoid circular navigation, delay the redirection slightly
@@ -68,7 +66,6 @@ export default function RegisterScreen() {
           return
         }
 
-        console.log("[Register] Sign in successful")
         router.replace('/')
       }, 100)
     } catch (err) {

@@ -52,8 +52,6 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
     mutationFn: async (url: string) => {
       if (!profile) throw new Error('User not authenticated');
 
-      console.log('Starting recipe import for URL:', url);
-
       // Check for unsupported domains
       const urlObj = new URL(url);
       const domain = urlObj.hostname.replace('www.', '');
@@ -61,7 +59,6 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
         throw new Error(`We currently don't support importing recipes from ${domain}. Try taking a screenshot of the caption and uploading it here instead!`);
       }
 
-      console.log('Making API request to import recipe');
       const response = await fetch('https://usefarelo.com/api/recipes/import', {
         method: 'POST',
         headers: {
@@ -81,14 +78,12 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
       }
 
       const { recipeId, success } = await response.json();
-      console.log('Successfully imported recipe:', { recipeId, success });
 
       if (!success || !recipeId) {
         throw new Error('Failed to import recipe: Invalid response from server');
       }
 
       // Fetch the full recipe data from Supabase
-      console.log('Fetching full recipe data from Supabase');
       const { data: recipe, error: fetchError } = await supabase
         .from('recipes')
         .select('*')
@@ -100,11 +95,9 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
         throw new Error('Failed to fetch imported recipe details');
       }
 
-      console.log('Full recipe data fetched:', recipe);
       return recipe as Recipe;
     },
     onSuccess: (newRecipe) => {
-      console.log('Mutation succeeded, updating cache with recipe:', newRecipe);
       // Update the recipes list cache
       queryClient.setQueryData<Recipe[]>(
         RECIPE_KEYS.list(newRecipe.profile_id),
@@ -115,7 +108,6 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
       );
 
       // Navigate to the recipe details
-      console.log('Navigating to recipe details with ID:', newRecipe.id);
       router.replace({
         pathname: '/recipe/[recipeId]/details',
         params: { recipeId: newRecipe.id }
@@ -128,15 +120,13 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
   });
 
   const handleUrlSubmit = async () => {
-    console.log('handleUrlSubmit called with URL:', recipeUrl);
-    if (!recipeUrl.trim()) {
+      if (!recipeUrl.trim()) {
       Alert.alert('Error', 'Please enter a recipe URL');
       return;
     }
 
     try {
       setIsImporting(true);
-      console.log('Starting import mutation');
       await importRecipeMutation.mutateAsync(recipeUrl);
     } catch (error) {
       // Error is handled by the mutation's onError
