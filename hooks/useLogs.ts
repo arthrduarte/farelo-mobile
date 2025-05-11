@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
 import { Log, Log_Comment, Log_Like, Profile, Recipe } from '../types/db'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { EnhancedLog } from '@/types/types'
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext'
 
@@ -18,6 +18,9 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     const [profileLogs, setProfileLogs] = useState<EnhancedLog[]>([])
     const [profileLogsLoading, setProfileLogsLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const queryClient = useQueryClient();
 
     // 1️⃣ load cached logs on mount (for feed)
     useEffect(() => {
@@ -204,6 +207,59 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         }
     }, [profile_id, fetchFeed, fetchProfileLogs])
 
+    const deleteLog = async (logIdToDelete: string) => {
+        if (!profile_id) {
+            console.error("deleteLog: profile_id is missing.");
+            setError(new Error("User profile ID is missing."));
+            return;
+        }
+        setIsDeleting(true);
+        setError(null);
+        try {
+            // Delete from Supabase
+            const { error: deleteError } = await supabase
+                .from('logs')
+                .delete()
+                .eq('id', logIdToDelete);
+
+            if (deleteError) {
+                throw deleteError;
+            }
+
+            // Update local state immediately for responsive UI
+            setFeed(prevFeed => prevFeed.filter(log => log.id !== logIdToDelete));
+            setProfileLogs(prevProfileLogs => prevProfileLogs.filter(log => log.id !== logIdToDelete));
+
+            // Update AsyncStorage for feed
+            try {
+                const rawCachedFeed = await AsyncStorage.getItem(CACHE_KEY(profile_id));
+                if (rawCachedFeed) {
+                    const cachedFeedArray: EnhancedLog[] = JSON.parse(rawCachedFeed);
+                    const updatedCachedFeedArray = cachedFeedArray.filter(log => log.id !== logIdToDelete);
+                    await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(updatedCachedFeedArray));
+                }
+            } catch (cacheError) {
+                console.warn("deleteLog: Failed to update feed cache after deletion:", cacheError);
+                // Non-fatal, proceed with server refresh
+            }
+
+            // Invalidate React Query cache for the detailed log view
+            queryClient.invalidateQueries({ queryKey: LOG_KEYS.detail(logIdToDelete) });
+
+            // Refresh feed and profile logs from the server
+            // This ensures consistency and updates based on server state.
+            await fetchFeed();
+            await fetchProfileLogs();
+
+        } catch (err) {
+            console.error('deleteLog error', err);
+            setError(err as Error);
+            throw err; // Rethrow for the component to handle if needed
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return {
         feed,
         feedLoading,
@@ -211,7 +267,9 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         profileLogs,
         profileLogsLoading,
         refreshProfileLogs: fetchProfileLogs,
-        error
+        error,
+        deleteLog,
+        isDeleting,
     }
 }
 
