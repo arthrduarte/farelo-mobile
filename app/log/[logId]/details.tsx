@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Divider } from "@/components/Divider";
 import Drawer from "@/components/ui/Drawer";
 import { useState, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function LogDetailsScreen() {
     const { logId } = useLocalSearchParams();
@@ -85,7 +86,38 @@ export default function LogDetailsScreen() {
     };
 
     const handleReportLog = () => {
+        if (!log || !log.id) return;
         toggleDrawer();
+        Alert.alert(
+            "Report Log",
+            "Are you sure you want to report this log? This action cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                { text: "Report", style: "destructive", onPress: async () => {
+                    try {
+                        const { data, error } = await supabase
+                        .from('reports')
+                        .insert({
+                            who_reported: profile.id,
+                            log_reported: log.id
+                        });
+
+                        if (error) {
+                            throw error;
+                        }
+
+                        Alert.alert("Log Reported", "The log has been successfully reported.", [
+                            { text: "OK", onPress: () => {
+                                router.back();
+                            }}
+                        ]);
+                    } catch (error) {
+                        console.error("[LogDetailsScreen] Failed to report log:", error);
+                        Alert.alert("Error", "Could not report the log. Please try again.");
+                    }
+                }}
+            ]
+        );
     };
 
     const drawerOptions = isOwnRecipe
