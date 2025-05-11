@@ -8,11 +8,25 @@ import { useRecipes } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(profile?.id ?? '');
+  const { feed, profileLogs, profileLogsLoading, refreshProfileLogs, refresh: refreshFeed } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
+
+  useFocusEffect(
+    useCallback(() => {
+      if (profile?.id) {
+        console.log('[HomeScreen] Screen focused, refreshing feed.');
+        refreshFeed();
+      }
+      return () => {
+        console.log('[HomeScreen] Screen blurred/unfocused.');
+      };
+    }, [profile?.id, refreshFeed])
+  );
 
   const EmptyFeedComponent = () => (
     <View style={styles.emptyContainer}>
@@ -64,7 +78,7 @@ export default function HomeScreen() {
             log={item}
           />
         )}
-        onRefresh={refreshProfileLogs}
+        onRefresh={refreshFeed}
         refreshing={profileLogsLoading}
         ListEmptyComponent={profileLogsLoading ? LoadingComponent : EmptyFeedComponent}
       />
