@@ -16,7 +16,12 @@
       }
     },
     "preview": {
-      "distribution": "internal",
+      "ios": {
+        "distribution": "store"
+      },
+      "android": {
+        "distribution": "internal"
+      },
       "env": {
         "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "your_ios_api_key",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_ANDROID": "your_android_key_here"
