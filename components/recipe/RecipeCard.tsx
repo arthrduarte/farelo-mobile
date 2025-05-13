@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#79320633',
     borderRadius: 12,
-    marginBottom: 24,
+    marginVertical: 12,
     overflow: 'hidden',
   },
   recipeImage: {

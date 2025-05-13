@@ -33,7 +33,6 @@ class SuperwallService {
       const options = createSuperwallConfig();
       Superwall.configure(apiKey, options);
       this.initialized = true;
-      console.log('[Superwall] Initialized successfully');
     } catch (error) {
       console.error('[Superwall] Initialization failed:', error);
     }
@@ -41,7 +40,6 @@ class SuperwallService {
 
   async presentPaywall(triggerId: string): Promise<void> {
     try {
-      console.log('[Superwall] Presenting paywall for trigger:', triggerId);
       await Superwall.shared.register(triggerId);
     } catch (error) {
       console.error('[Superwall] Failed to present paywall:', error);
@@ -52,7 +50,6 @@ class SuperwallService {
   async getSubscriptionStatus(): Promise<SubscriptionStatus> {
     try {
       const status = await Superwall.shared.getSubscriptionStatus();
-      console.log('[Superwall] Subscription status:', status);
       return status;
     } catch (error) {
       console.error('[Superwall] Failed to get subscription status:', error);

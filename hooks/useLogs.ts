@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
 import { Log, Log_Comment, Log_Like, Profile, Recipe } from '../types/db'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { EnhancedLog } from '@/types/types'
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext'
 
@@ -14,14 +14,18 @@ const LOG_KEYS = {
 
 export function useLogs(profile_id: string, pageSize: number = 20) {
     const [feed, setFeed] = useState<EnhancedLog[]>([])
-    const [loading, setLoading] = useState(true)
-    const [profileLogs, setprofileLogs] = useState<EnhancedLog[]>([])
+    const [feedLoading, setFeedLoading] = useState(true)
+    const [profileLogs, setProfileLogs] = useState<EnhancedLog[]>([])
+    const [profileLogsLoading, setProfileLogsLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    // 1️⃣ load cached logs on mount
+    const queryClient = useQueryClient();
+
+    // 1️⃣ load cached logs on mount (for feed)
     useEffect(() => {
         if (!profile_id) {
-            setLoading(false)
+            setFeedLoading(false)
             return
         }
         let active = true
@@ -31,7 +35,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 if (raw) setFeed(JSON.parse(raw))
             })
             .finally(() => {
-                if (active) setLoading(false)
+                if (active) setFeedLoading(false)
             })
         return () => { active = false }
     }, [profile_id])
@@ -39,7 +43,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     // 2️⃣ fetch both following and own logs
     const fetchFeed = useCallback(async () => {
         if (!profile_id) return
-        setLoading(true)
+        setFeedLoading(true)
         try {
             // 2a) get list of who this user follows
             const { data: follows, error: followErr } = await supabase
@@ -66,7 +70,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             if (!logs) {
                 setFeed([]); // Ensure feed is empty if no logs
                 await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify([]));
-                setLoading(false);
+                setFeedLoading(false);
                 return;
             }
 
@@ -106,14 +110,13 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         } catch (err) {
             console.error('useFeed › fetchFeed error', err)
         } finally {
-            setLoading(false)
+            setFeedLoading(false)
         }
     }, [profile_id, pageSize])
 
     const fetchProfileLogs = useCallback(async () => {
         if (!profile_id) return
-        // Keep loading state associated with the feed for simplicity now
-        // setLoading(true); 
+        setProfileLogsLoading(true);
         try {
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
@@ -126,11 +129,12 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
 
-            if (logErr) throw logErr
+            if (logErr) {
+                throw logErr;
+            }
             if (!logs || logs.length === 0) {
-                setprofileLogs([]); // Set empty if no logs found
-                // setLoading(false);
-                return;
+                setProfileLogs([]);
+                return; // Return early, finally will set loading to false
             }
 
             const logIds = logs.map((log) => log.id);
@@ -164,13 +168,13 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 }
             });
 
-            setprofileLogs(profileLogsWithData as EnhancedLog[]);
+            setProfileLogs(profileLogsWithData as EnhancedLog[]);
 
         } catch (err) {
             console.error('useLogs › fetchProfileLogs error', err)
-            setprofileLogs([]); // Set empty on error
+            setProfileLogs([]);
         } finally {
-            // setLoading(false) // Handled by fetchFeed loading
+            setProfileLogsLoading(false)
         }
     }, [profile_id, pageSize])
 
@@ -178,16 +182,22 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     // 3️⃣ run fetch after we've loaded cache
     useEffect(() => {
         if (profile_id) {
+            setFeedLoading(true);
+            setProfileLogsLoading(true);
             fetchFeed()
             fetchProfileLogs()
         }
-    }, [fetchFeed, profile_id])
+    }, [profile_id]);
 
     // Listen for profile updates and refetch logs
     useEffect(() => {
         const handleProfileUpdate = () => {
-            fetchFeed()
-            fetchProfileLogs()
+            if (profile_id) {
+                setFeedLoading(true);
+                setProfileLogsLoading(true);
+                fetchFeed()
+                fetchProfileLogs()
+            }
         }
 
         profileUpdateEmitter.on(PROFILE_UPDATED, handleProfileUpdate)
@@ -195,9 +205,72 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         return () => {
             profileUpdateEmitter.off(PROFILE_UPDATED, handleProfileUpdate)
         }
-    }, [fetchFeed, fetchProfileLogs])
+    }, [profile_id, fetchFeed, fetchProfileLogs])
 
-    return { feed, loading, refresh: fetchFeed, profileLogs, error }
+    const deleteLog = async (logIdToDelete: string) => {
+        if (!profile_id) {
+            console.error("deleteLog: profile_id is missing.");
+            setError(new Error("User profile ID is missing."));
+            return;
+        }
+        setIsDeleting(true);
+        setError(null);
+        try {
+            // Delete from Supabase
+            const { error: deleteError } = await supabase
+                .from('logs')
+                .delete()
+                .eq('id', logIdToDelete);
+
+            if (deleteError) {
+                throw deleteError;
+            }
+
+            // Update local state immediately for responsive UI
+            setFeed(prevFeed => prevFeed.filter(log => log.id !== logIdToDelete));
+            setProfileLogs(prevProfileLogs => prevProfileLogs.filter(log => log.id !== logIdToDelete));
+
+            // Update AsyncStorage for feed
+            try {
+                const rawCachedFeed = await AsyncStorage.getItem(CACHE_KEY(profile_id));
+                if (rawCachedFeed) {
+                    const cachedFeedArray: EnhancedLog[] = JSON.parse(rawCachedFeed);
+                    const updatedCachedFeedArray = cachedFeedArray.filter(log => log.id !== logIdToDelete);
+                    await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(updatedCachedFeedArray));
+                }
+            } catch (cacheError) {
+                console.warn("deleteLog: Failed to update feed cache after deletion:", cacheError);
+                // Non-fatal, proceed with server refresh
+            }
+
+            // Invalidate React Query cache for the detailed log view
+            queryClient.invalidateQueries({ queryKey: LOG_KEYS.detail(logIdToDelete) });
+
+            // Refresh feed and profile logs from the server
+            // This ensures consistency and updates based on server state.
+            await fetchFeed();
+            await fetchProfileLogs();
+
+        } catch (err) {
+            console.error('deleteLog error', err);
+            setError(err as Error);
+            throw err; // Rethrow for the component to handle if needed
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    return {
+        feed,
+        feedLoading,
+        refresh: fetchFeed,
+        profileLogs,
+        profileLogsLoading,
+        refreshProfileLogs: fetchProfileLogs,
+        error,
+        deleteLog,
+        isDeleting,
+    }
 }
 
 export const useLog = (id: string | undefined) => {

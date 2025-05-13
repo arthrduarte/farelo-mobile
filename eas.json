@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": true
+        "simulator": false
       },
       "env": {
         "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "your_ios_api_key",
@@ -16,7 +16,12 @@
       }
     },
     "preview": {
-      "distribution": "internal",
+      "ios": {
+        "distribution": "store"
+      },
+      "android": {
+        "distribution": "internal"
+      },
       "env": {
         "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "your_ios_api_key",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_ANDROID": "your_android_key_here"
@@ -31,6 +36,15 @@
     }
   },
   "submit": {
-    "production": {}
+    "preview":{
+      "ios":{
+        "ascAppId": "6745767053"
+      }
+    },
+    "production": {
+      "ios":{
+        "ascAppId": "6745767053"
+      }
+    }
   }
 }

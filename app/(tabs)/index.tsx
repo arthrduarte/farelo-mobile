@@ -1,18 +1,30 @@
 import { StyleSheet, TouchableOpacity, Platform, View, FlatList, Text } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 import { LogCard } from '@/components/LogCard';
-import { Log } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLogs } from '@/hooks/useLogs';
 import { useRecipes } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LogLoader } from '@/components/log/LogLoader';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, profileLogs, loading, refresh } = useLogs(profile?.id ?? '');
+  const { feed, profileLogs, profileLogsLoading, refreshProfileLogs, refresh: refreshFeed } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
+
+  useFocusEffect(
+    useCallback(() => {
+      if (profile?.id) {
+        refreshFeed();
+      }
+      return () => {
+      };
+    }, [profile?.id, refreshFeed])
+  );
 
   const EmptyFeedComponent = () => (
     <View style={styles.emptyContainer}>
@@ -36,14 +48,23 @@ export default function HomeScreen() {
     </View>
   );
 
+  const LoadingComponent = () => (
+    <>
+      <LogLoader />
+      <LogLoader />
+      <LogLoader />
+    </>
+  );
+
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <View style={styles.headerTitlePlaceholder} />
-        <TouchableOpacity onPress={() => router.push('/search')} style={styles.searchIconContainer}>
-          <Feather name="search" size={24} color="#793206" />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title="Home" 
+        rightItem={
+          <TouchableOpacity onPress={() => router.push('/search')}>
+            <Feather name="search" size={24} color="#793206" />
+          </TouchableOpacity>
+        }
+      />
 
       <FlatList 
         style={styles.scrollView}
@@ -55,9 +76,9 @@ export default function HomeScreen() {
             log={item}
           />
         )}
-        onRefresh={refresh}
-        refreshing={loading}
-        ListEmptyComponent={!loading ? EmptyFeedComponent : null}
+        onRefresh={refreshFeed}
+        refreshing={profileLogsLoading}
+        ListEmptyComponent={profileLogsLoading ? LoadingComponent : EmptyFeedComponent}
       />
     </ThemedView>
   );

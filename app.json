@@ -19,8 +19,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#EDE4D2"
       },
+      "minSdkVersion": 26,
       "package": "com.arthrduarte.farelo",
       "softwareKeyboardLayoutMode": "pan"
     },
@@ -44,7 +45,14 @@
           "backgroundColor": "#EDE4D2"
         }
       ],
-      "expo-build-properties"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

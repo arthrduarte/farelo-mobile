@@ -3,9 +3,10 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { SymbolWeight } from 'expo-symbols';
+import { FontAwesome } from '@expo/vector-icons';
 import React from 'react';
 import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
-import FontAwesome5 from '@expo/vector-icons/build/FontAwesome5';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 // Add your SFSymbol to MaterialIcons mappings here.
 const MAPPING = {
@@ -15,11 +16,10 @@ const MAPPING = {
   'paperplane.fill': { component: MaterialIcons, name: 'send' },
   'chevron.left.forwardslash.chevron.right': { component: MaterialIcons, name: 'code' },
   'chevron.right': { component: MaterialIcons, name: 'chevron-right' },
-  'cookie': { component: FontAwesome6, name: 'cookie-bite' }, // 🍪 ✅ NEW ICON
   'person.fill': { component: MaterialIcons, name: 'person' },
   'checkbox-active': { component: MaterialIcons, name: 'check-box' },
   'checkbox-inactive': { component: MaterialIcons, name: 'check-box-outline-blank' },
-  'pepper': { component: FontAwesome6, name: 'pepper-hot' },
+  'pepper': { component: FontAwesome5, name: 'pepper-hot' },
   'book': { component: FontAwesome5, name: 'book' },
 } as const;
 

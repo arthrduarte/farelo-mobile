@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import Feather from '@expo/vector-icons/Feather';
 
 interface InstructionsSectionProps {
     instructions: string[];
@@ -9,7 +9,7 @@ export const InstructionsSection: React.FC<InstructionsSectionProps> = ({ instru
     return (
         <View>
             <View style={styles.sectionHeader}>
-                <IconSymbol name="book" color="#793206" size={24} />
+                <Feather name="book" color="#793206" size={24} />
                 <Text style={styles.sectionTitle}>Instructions</Text>
             </View>
             {instructions?.map((instruction: string, index: number) => (

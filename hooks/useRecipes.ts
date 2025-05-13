@@ -17,7 +17,6 @@ export const useRecipes = (profileId: string | undefined, searchTerm?: string) =
     return useQuery({
         queryKey: RECIPE_KEYS.search(searchTerm),
         queryFn: async () => {
-            console.log(`Querying recipes from supabase for profile ${profileId} with search: "${searchTerm}"`);
             let query = supabase
                 .from('recipes')
                 .select('*')
@@ -53,12 +52,10 @@ export const useRecipe = (id: string, profileId?: string) => {
             const cachedRecipe = recipes?.find(recipe => recipe.id === id);
 
             if (cachedRecipe) {
-                console.log("Using recipe from cache");
                 return cachedRecipe;
             }
 
             // If not in cache, fetch individually
-            console.log("Querying recipe from supabase");
             const { data, error } = await supabase
                 .from('recipes')
                 .select('*')
@@ -197,7 +194,6 @@ export const useCopyRecipe = () => {
         },
         onSuccess: (newRecipe) => {
             if (!profile) return; // Should not happen if mutationFn succeeded
-            console.log("Recipe copied successfully:", newRecipe);
             // Invalidate the current user's recipe list to refetch
             queryClient.invalidateQueries({
                 queryKey: RECIPE_KEYS.list(profile.id)
