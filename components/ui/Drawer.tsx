@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface DrawerOption {
@@ -23,65 +23,74 @@ export default function Drawer({
   title 
 }: DrawerProps) {
   return (
-    <>
-      {isDrawerOpen && (
-        <TouchableOpacity 
-          style={styles.overlay} 
-          activeOpacity={1} 
-          onPress={toggleDrawer}
-        />
-      )}
-      
-      <Animated.ScrollView 
-        style={[
-          styles.drawer,
-          {
-            transform: [{
-              translateY: drawerAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [300, 0] // Adjust as needed or pass as prop
-              })
-            }]
-          }
-        ]}
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={isDrawerOpen}
+      onRequestClose={toggleDrawer}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1} 
+        onPress={toggleDrawer}
       >
-        <View style={styles.drawerHeader}>
-          <Text style={styles.drawerTitle}>{title}</Text>
-          <TouchableOpacity onPress={toggleDrawer}>
-            <MaterialIcons name="close" size={24} color="#793206" />
-          </TouchableOpacity>
-        </View>
-
-        {options.map((option, index) => (
-          <TouchableOpacity 
-            key={index}
-            style={[styles.drawerOption, index === options.length - 1 && { marginBottom: 32 }]} 
-            onPress={option.onPress}
+        <View 
+          style={styles.drawerContainerWrapper}
+          onStartShouldSetResponder={() => true}
+        >
+          <Animated.ScrollView 
+            style={[
+              styles.drawerContent,
+              {
+                transform: [{
+                  translateY: drawerAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [300, 0]
+                  })
+                }]
+              }
+            ]}
           >
-            <MaterialIcons name={option.icon} size={24} color="#793206" />
-            <Text style={styles.drawerOptionText}>{option.text}</Text>
-          </TouchableOpacity>
-        ))}
-      </Animated.ScrollView>
-    </>
+            <View style={styles.drawerHeader}>
+              <Text style={styles.drawerTitle}>{title}</Text>
+              <TouchableOpacity onPress={toggleDrawer}>
+                <MaterialIcons name="close" size={24} color="#793206" />
+              </TouchableOpacity>
+            </View>
+
+            {options.map((option, index) => (
+              <TouchableOpacity 
+                key={index}
+                style={[styles.drawerOption, index === options.length - 1 && { marginBottom: 32 }]} 
+                onPress={option.onPress}
+              >
+                <MaterialIcons name={option.icon} size={24} color="#793206" />
+                <Text style={styles.drawerOptionText}>{option.text}</Text>
+              </TouchableOpacity>
+            ))}
+          </Animated.ScrollView>
+        </View>
+      </TouchableOpacity>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
+  modalOverlay: {
+    flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
-  drawer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  drawerContainerWrapper: {
+    width: '100%',
+  },
+  drawerContent: {
+    width: '100%',
     backgroundColor: '#EDE4D2',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 16,
-    height: '33%', // Consider making this dynamic or a prop
+    maxHeight: '60%',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
