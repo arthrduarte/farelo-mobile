@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated, Modal } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated, Modal, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface DrawerOption {
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 16,
-    maxHeight: '60%',
+    maxHeight: Dimensions.get('window').height * 0.6,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
