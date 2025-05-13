@@ -1,8 +1,9 @@
-import { View, StyleSheet, Text, Image, Button, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, Button, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Profile, Log } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { useFollow } from '@/hooks/useFollow';
+import Avatar from './ui/Avatar';
 
 interface ProfileHeaderProps {
   profile: Partial<Profile>
@@ -17,7 +18,11 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-              <Image source={{ uri: profile?.image }} style={styles.avatar} />
+              <Avatar 
+                imageUrl={profile?.image} 
+                firstName={profile?.first_name}
+                size={100}
+              />
           </View>
           <View style={styles.info}>
             <View style={styles.nameContainer}>
@@ -95,11 +100,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
   },
   nameContainer: {
     flexDirection: 'row',
