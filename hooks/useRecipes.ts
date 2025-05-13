@@ -10,18 +10,29 @@ export const RECIPE_KEYS = {
     list: (profileId: string) => [...RECIPE_KEYS.lists(), profileId] as const,
     details: () => [...RECIPE_KEYS.all, 'detail'] as const,
     detail: (id: string) => [...RECIPE_KEYS.details(), id] as const,
+    search: (searchTerm?: string) => [...RECIPE_KEYS.lists(), { searchTerm }] as const,
 };
 
-export const useRecipes = (profileId: string | undefined) => {
+export const useRecipes = (profileId: string | undefined, searchTerm?: string) => {
     return useQuery({
-        queryKey: RECIPE_KEYS.list(profileId || ''),
+        queryKey: RECIPE_KEYS.search(searchTerm),
         queryFn: async () => {
-            console.log("Querying recipes from supabase");
-            const { data, error } = await supabase
+            let query = supabase
                 .from('recipes')
                 .select('*')
                 .order('created_at', { ascending: false })
                 .eq('profile_id', profileId);
+
+            if (searchTerm && searchTerm.trim() !== '') {
+                const cleanedSearchTerm = searchTerm.trim();
+                // Case-insensitive search for title OR tags containing the searchTerm
+                // For tags, we need to format the search term for array containment
+                query = query.or(
+                    `title.ilike.%${cleanedSearchTerm}%,tags.cs.{${cleanedSearchTerm}}`
+                );
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             return data as Recipe[];
@@ -41,12 +52,10 @@ export const useRecipe = (id: string, profileId?: string) => {
             const cachedRecipe = recipes?.find(recipe => recipe.id === id);
 
             if (cachedRecipe) {
-                console.log("Using recipe from cache");
                 return cachedRecipe;
             }
 
             // If not in cache, fetch individually
-            console.log("Querying recipe from supabase");
             const { data, error } = await supabase
                 .from('recipes')
                 .select('*')
@@ -164,6 +173,7 @@ export const useCopyRecipe = () => {
                 tags: originalRecipe.tags,
                 source_url: originalRecipe.source_url, // Keep original source URL
                 user_image_url: null, // Reset user image
+                user_images_url: null, // Reset user images
                 notes: '', // Reset notes
                 chat: null, // Reset chat
             };
@@ -184,7 +194,6 @@ export const useCopyRecipe = () => {
         },
         onSuccess: (newRecipe) => {
             if (!profile) return; // Should not happen if mutationFn succeeded
-            console.log("Recipe copied successfully:", newRecipe);
             // Invalidate the current user's recipe list to refetch
             queryClient.invalidateQueries({
                 queryKey: RECIPE_KEYS.list(profile.id)

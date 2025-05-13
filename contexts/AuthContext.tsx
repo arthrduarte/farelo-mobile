@@ -19,6 +19,7 @@ import { EventEmitter } from 'events';
 
 // Global event emitter for profile updates
 export const profileUpdateEmitter = new EventEmitter();
+profileUpdateEmitter.setMaxListeners(25);
 export const PROFILE_UPDATED = 'PROFILE_UPDATED';
 
 type AuthContextType = {

@@ -1,22 +1,40 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Animated, Alert } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
 import { IngredientsSection } from "@/components/recipe/IngredientsSection";
 import { InstructionsSection } from "@/components/recipe/InstructionsSection";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ImagesSection } from "@/components/recipe/RecipeImage";
 import { TagsSection } from "@/components/recipe/TagsSection";
-import { useLog } from "@/hooks/useLogs";
+import { useLog, useLogs } from "@/hooks/useLogs";
 import { useCopyRecipe } from "@/hooks/useRecipes";
 import { useAuth } from "@/contexts/AuthContext";
 import { Divider } from "@/components/Divider";
+import Drawer from "@/components/ui/Drawer";
+import { useState, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function LogDetailsScreen() {
     const { logId } = useLocalSearchParams();
     const { data, isLoading } = useLog(logId as string);
     const { profile } = useAuth();
     const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const drawerAnimation = useRef(new Animated.Value(0)).current;
+    const { deleteLog, isDeleting } = useLogs(profile?.id || '');
+
+    const toggleDrawer = () => {
+        const toValue = isDrawerOpen ? 0 : 1;
+        Animated.spring(drawerAnimation, {
+            toValue,
+            useNativeDriver: true,
+            tension: 65,
+            friction: 11
+        }).start();
+        setIsDrawerOpen(!isDrawerOpen);
+    };
 
     if (isLoading || !data || !profile) {
         return (
@@ -32,16 +50,111 @@ export default function LogDetailsScreen() {
     const handleCopyRecipe = () => {
         if (isOwnRecipe) return;
         copyRecipe({ recipeIdToCopy: log.recipe.id });
+        toggleDrawer();
     };
+
+    const handleDeleteLog = async () => {
+        if (!log || !log.id) return;
+        toggleDrawer();
+        Alert.alert(
+            "Confirm Delete",
+            "Are you sure you want to delete this log? This action cannot be undone.",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await deleteLog(log.id);
+                            Alert.alert("Log Deleted", "The log has been successfully deleted.", [
+                                { text: "OK", onPress: () => {
+                                    router.back();
+                                }}
+                            ]);
+                        } catch (error) {
+                            console.error("[LogDetailsScreen] Failed to delete log:", error);
+                            Alert.alert("Error", "Could not delete the log. Please try again.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleReportLog = () => {
+        if (!log || !log.id) return;
+        toggleDrawer();
+        Alert.alert(
+            "Report Log",
+            "Are you sure you want to report this log? This action cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                { text: "Report", style: "destructive", onPress: async () => {
+                    try {
+                        const { data, error } = await supabase
+                        .from('reports')
+                        .insert({
+                            who_reported: profile.id,
+                            log_reported: log.id
+                        });
+
+                        if (error) {
+                            throw error;
+                        }
+
+                        Alert.alert("Log Reported", "The log has been successfully reported.", [
+                            { text: "OK", onPress: () => {
+                                router.back();
+                            }}
+                        ]);
+                    } catch (error) {
+                        console.error("[LogDetailsScreen] Failed to report log:", error);
+                        Alert.alert("Error", "Could not report the log. Please try again.");
+                    }
+                }}
+            ]
+        );
+    };
+
+    const drawerOptions = isOwnRecipe
+        ? [
+            {
+                icon: 'delete' as keyof typeof MaterialIcons.glyphMap,
+                text: isDeleting ? 'Deleting...' : 'Delete Log',
+                onPress: handleDeleteLog,
+                disabled: isDeleting,
+            },
+          ]
+        : [
+            {
+                icon: 'report' as keyof typeof MaterialIcons.glyphMap,
+                text: 'Report Log',
+                onPress: handleReportLog,
+            },
+            {
+                icon: 'save-alt' as keyof typeof MaterialIcons.glyphMap,
+                text: 'Save Recipe',
+                onPress: handleCopyRecipe,
+            },
+          ];
 
     return (
         <ThemedView style={styles.container}>
-        
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <MaterialIcons name="arrow-back" size={24} color="#793206" />
-            </TouchableOpacity>
+            <ScreenHeader 
+                title="Details" 
+                showBackButton={true} 
+                rightItem={
+                    <TouchableOpacity onPress={toggleDrawer}>
+                        <MaterialIcons name="more-vert" size={24} color="#793206" />
+                    </TouchableOpacity>
+                }
+            />
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
                 {/* Profile Header */}
                 <View style={styles.header}>
                     <Image 
@@ -96,32 +209,14 @@ export default function LogDetailsScreen() {
                 <InstructionsSection instructions={log.recipe.instructions} />
 
                 <Divider />
-
-                {/* Comments Section */}
-                <View>
-                    <View style={styles.sectionHeader}>
-                        <MaterialIcons name="comment" size={24} color="#793206" />
-                        <Text style={styles.sectionTitle}>Comments</Text>
-                    </View>
-                    {comments.map((comment, index) => (
-                        <View 
-                            key={comment.id}
-                            style={[
-                                styles.comment,
-                                index % 2 === 0 ? styles.commentBrown : styles.commentBeige,
-                            ]}
-                        >
-                            <Text style={[
-                                styles.commentText,
-                                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                            ]}>{comment.content}</Text>
-                            <Text style={styles.commentTime}>
-                                {formatTimeAgo(comment.created_at)}
-                            </Text>
-                        </View>
-                    ))}
-                </View>
             </ScrollView>
+            <Drawer
+                isDrawerOpen={isDrawerOpen}
+                toggleDrawer={toggleDrawer}
+                drawerAnimation={drawerAnimation}
+                options={drawerOptions}
+                title="Options"
+            />
         </ThemedView>
     );
 }
@@ -129,7 +224,6 @@ export default function LogDetailsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
     },
     centerContainer: {
         flex: 1,

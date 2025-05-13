@@ -59,3 +59,9 @@ export type Follow = {
     created_at: string; // timestamptz
 };
 
+export type Reports = {
+    id: string; 
+    who_reported: string;
+    log_reported: string; 
+    created_at: string;
+}

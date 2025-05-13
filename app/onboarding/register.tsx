@@ -18,7 +18,6 @@ import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
 import { SUPERWALL_TRIGGERS } from '@/config/superwall'
 import { useSuperwall } from '@/hooks/useSuperwall';
-import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const { width } = Dimensions.get('window')
 
@@ -30,12 +29,10 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const { showPaywall } = useSuperwall();
-  const { setIsOnboarded } = useOnboarding();
 
   async function signUpWithEmail() {
     try {
       setLoading(true)
-      console.log("[Register] Attempting to sign up:", { email })
       
       const { error } = await supabase.auth.signUp({
         email: email,
@@ -54,15 +51,21 @@ export default function RegisterScreen() {
         return
       }
       
-      console.log("[Register] Sign up successful")
       await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
       
-      // Authentication state will be handled by the context
-      // Note: setIsOnboarded may not be needed anymore since it's handled by the auth state
-      setIsOnboarded(true);
-      
       // To avoid circular navigation, delay the redirection slightly
-      setTimeout(() => {
+      setTimeout(async () => {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        })
+
+        if (error) {
+          console.error("[Register] Sign in error:", error.message)
+          Alert.alert(error.message)
+          return
+        }
+
         router.replace('/')
       }, 100)
     } catch (err) {

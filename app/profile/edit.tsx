@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, SafeAreaView, Alert } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import * as ImagePicker from 'expo-image-picker';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import * as FileSystem from 'expo-file-system';
@@ -43,8 +44,6 @@ export default function EditProfile() {
       const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg';
       const contentType = `image/${fileExt}`;
       const fileName = `${profile?.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      
-      console.log(`Uploading ${fileName} (Content-Type: ${contentType})`);
 
       // Upload the decoded base64 content
       const { error: uploadError } = await supabase.storage
@@ -61,7 +60,6 @@ export default function EditProfile() {
         .from('avatar.images')
         .getPublicUrl(fileName);
         
-      console.log(`Uploaded image to storage: ${publicUrl}`);
       return publicUrl;
 
     } catch (error) {
@@ -111,12 +109,7 @@ export default function EditProfile() {
 
   return (
     <ThemedView style={styles.safeArea}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#793206" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-      </View>
+      <ScreenHeader title="Edit Profile" showBackButton={true} />
 
       <ThemedView style={styles.container}>
         <View style={styles.imageSection}>

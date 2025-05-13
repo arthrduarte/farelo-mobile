@@ -10,7 +10,7 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
-  const { profile: currentProfile } = useAuth();
+  const { profile: currentProfile, signOut } = useAuth();
   const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(profile?.id || '');
 
   return (
@@ -22,7 +22,6 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
           <View style={styles.info}>
             <View style={styles.nameContainer}>
               <Text style={styles.name}>{profile?.first_name} {profile?.last_name}</Text>
-              <Text style={styles.username}>@{profile?.username}</Text>
             </View>
               <View style={styles.stats}>
                   <View>
@@ -41,11 +40,7 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
           </View>
         </View>
         <View style={styles.headerBottom}>
-            {currentProfile?.id === profile?.id ? (
-              <TouchableOpacity style={styles.followButton} onPress={() => router.push('/profile/edit')}>
-                <Text style={styles.followButtonText}>Edit Profile</Text>
-              </TouchableOpacity>
-            ) : (
+            {currentProfile?.id != profile?.id && (
               <TouchableOpacity 
                 style={[styles.followButton, isFollowing && styles.followingButton]} 
                 onPress={toggleFollow}
@@ -117,10 +112,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#793206',
-  },
-  username: {
-    fontSize: 16,
     color: '#793206',
   },
   stats: {

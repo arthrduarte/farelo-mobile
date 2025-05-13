@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
 
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -37,7 +39,7 @@ export default function TabLayout() {
         name="recipes"
         options={{
           title: 'Recipes',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cookie" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome5 name="cookie-bite" size={28} color={color} />,
         }}
       />
       <Tabs.Screen

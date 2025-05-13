@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Divider } from '@/components/Divider';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -33,8 +34,6 @@ export default function FinishRecipeScreen() {
       quality: 1,
     });
 
-    console.log(result);
-
     if (!result.canceled) {
       setImages([...(images || []), result.assets[0].uri]);
     }
@@ -53,10 +52,8 @@ export default function FinishRecipeScreen() {
       // 1. Upload images to storage if they exist
       let uploadedImageUrls: string[] = [];
       if (images && images.length > 0) {
-        console.log("Starting to upload images:", images);
         const uploadPromises = images.map(async (uri) => {
           try {
-            console.log(`Processing image URI: ${uri}`);
             
             // Read the file content as base64
             const base64 = await FileSystem.readAsStringAsync(uri, {
@@ -68,7 +65,6 @@ export default function FinishRecipeScreen() {
             const contentType = `image/${fileExt}`; // Basic content type mapping
             const fileName = `${profile.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`; 
             
-            console.log(`Uploading ${fileName} (Content-Type: ${contentType})`);
 
             // Upload the decoded base64 content
             const { data: uploadData, error: uploadError } = await supabase.storage
@@ -85,7 +81,6 @@ export default function FinishRecipeScreen() {
               .from('log.images')
               .getPublicUrl(fileName);
               
-            console.log(`Uploaded image to storage: ${publicUrl}`);
             return publicUrl;
 
           } catch (fileProcessingError) {
@@ -95,12 +90,10 @@ export default function FinishRecipeScreen() {
         });
 
         uploadedImageUrls = await Promise.all(uploadPromises);
-        console.log("All images uploaded successfully:", uploadedImageUrls);
       }
 
       // 2. Update recipe with new user images (Consider if this is still needed if log has images)
       // Maybe only update if there were pre-existing images or notes change?
-      console.log("Updating recipe notes (if provided)");
       const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes; // Combine notes if existing ones
       // Only update user_images_url on the recipe if it makes sense in your data model
       // For now, let's assume the log images are sufficient and we only update notes
@@ -109,11 +102,9 @@ export default function FinishRecipeScreen() {
         notes: notes ? updatedNotes : recipe.notes, // Update notes only if new notes were added
         // user_images_url: uploadedImageUrls.length > 0 ? uploadedImageUrls : recipe.user_images_url, // Decide if recipe needs user_images_url
       });
-      console.log("Recipe notes updated.");
 
 
       // 3. Create new log
-      console.log("Creating new log entry");
       const { error: logError } = await supabase
         .from('logs')
         .insert({
@@ -127,7 +118,6 @@ export default function FinishRecipeScreen() {
         console.error("Supabase Insert Log Error:", logError);
         throw new Error(logError.message); // Use new Error for consistency
       }
-      console.log("Log entry created successfully.");
 
       // Use replace to prevent going back to the form
       router.replace('/(tabs)');
@@ -161,12 +151,9 @@ export default function FinishRecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back" size={24} color="#793206" />
-      </TouchableOpacity>
+      <ScreenHeader title="Finish Recipe" showBackButton={true} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
         {/* Header */}
         <Text style={styles.title}>{recipe.title}</Text>
 
@@ -266,7 +253,6 @@ export default function FinishRecipeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   centerContainer: {
     flex: 1,

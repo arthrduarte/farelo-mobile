@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
@@ -7,8 +7,8 @@ import { useLog } from "@/hooks/useLogs";
 import { useAuth } from "@/contexts/AuthContext";
 import React, { useState, useCallback } from 'react';
 import { supabase } from "@/lib/supabase";
-import { KeyboardAvoidingView, Platform } from 'react-native';
 import { Divider } from "@/components/Divider";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 
 export default function LogCommentsScreen() {
     const { logId } = useLocalSearchParams();
@@ -48,48 +48,50 @@ export default function LogCommentsScreen() {
 
     return (
         <ThemedView style={styles.container}>
+            <ScreenHeader title="Comments" showBackButton={true} />
             <KeyboardAvoidingView 
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.keyboardAvoidingContainer}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
             >
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <MaterialIcons name="arrow-back" size={24} color="#793206" />
-                </TouchableOpacity>
-
-                <View style={styles.logHeader}>
-                    <Image 
-                        source={{ uri: log.profile.image }}
-                        style={styles.avatar}
-                    />
-                    <View style={styles.headerText}>
-                        <Text style={styles.name}>
-                            {log.profile.first_name} {log.profile.last_name}
-                        </Text>
-                        <Text style={styles.time}>
-                            {formatTimeAgo(log.created_at)}
-                        </Text>
+                <View style={styles.topContentContainer}>
+                    <View style={styles.logHeader}>
+                        <Image 
+                            source={{ uri: log.profile.image }}
+                            style={styles.avatar}
+                        />
+                        <View style={styles.headerText}>
+                            <Text style={styles.name}>
+                                {log.profile.first_name} {log.profile.last_name}
+                            </Text>
+                            <Text style={styles.time}>
+                                {formatTimeAgo(log.created_at)}
+                            </Text>
+                        </View>
                     </View>
+                    <TouchableOpacity style={styles.recipeContainer} onPress={() => router.push({
+                        pathname: '/log/[logId]/details',
+                        params: { logId: log.id }
+                    })}>
+                        <View style={styles.recipeDetailsContainer}>
+                            <Text style={styles.recipeName}>{log.recipe.title}</Text>
+                            {log.description && (
+                                <Text style={styles.description} numberOfLines={2}>{log.description}</Text>
+                            )}
+                        </View>
+                        <View style={styles.recipeArrowContainer}>
+                            <MaterialIcons name="arrow-forward" size={24} color="#793206" />
+                        </View>
+                    </TouchableOpacity>
+                    <Divider />
                 </View>
-                <TouchableOpacity style={styles.recipeContainer} onPress={() => router.push({
-                    pathname: '/log/[logId]/details',
-                    params: { logId: log.id }
-                })}>
-                    <View style={styles.recipeDetailsContainer}>
-                        <Text style={styles.recipeName}>{log.recipe.title}</Text>
-                        {log.description && (
-                            <Text style={styles.description}>{log.description}</Text>
-                        )}
-                    </View>
-                    <View style={styles.recipeArrowContainer}>
-                        <MaterialIcons name="arrow-forward" size={24} color="#793206" />
-                    </View>
-                </TouchableOpacity>
 
-                <Divider />
-
-                <ScrollView style={styles.commentsScrollView}>
-                    {comments.map((comment, index) => (
+                <ScrollView 
+                    style={styles.commentsScrollView}
+                    contentContainerStyle={styles.commentsScrollContentContainer}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    {comments.map((comment) => (
                         <View 
                             key={comment.id}
                             style={styles.commentContainer}
@@ -112,7 +114,9 @@ export default function LogCommentsScreen() {
                         </View>
                     ))}
                     {comments.length === 0 && (
-                        <Text style={styles.noCommentsText}>No comments yet. Be the first!</Text>
+                        <View style={styles.noCommentsContainer}>
+                            <Text style={styles.noCommentsText}>No comments yet. Be the first!</Text>
+                        </View>
                     )}
                 </ScrollView>
 
@@ -141,26 +145,23 @@ export default function LogCommentsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
+        backgroundColor: '#EDE4D2',
     },
-     keyboardAvoidingContainer: {
+    keyboardAvoidingContainer: {
         flex: 1,
+        paddingHorizontal: 16,
     },
     centerContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    backButton: {
-        marginBottom: 16,
-        height: 40,
-        borderRadius: 20,
-        alignItems: 'flex-start',
-        justifyContent: 'center',
+    topContentContainer: {
     },
     logHeader: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingTop: 16,
         marginBottom: 16,
     },
     avatar: {
@@ -184,75 +185,85 @@ const styles = StyleSheet.create({
     recipeContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 16,
     },
     recipeDetailsContainer: {
         flex: 1,
     },
     recipeArrowContainer: {
-        padding: 16,
+        paddingLeft: 16,
     },
     recipeName: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '600',
         color: '#793206',
         marginBottom: 4,
     },
     description: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#793206',
+        opacity: 0.8,
     },
     commentsScrollView: {
         flex: 1,
     },
+    commentsScrollContentContainer: {
+        paddingBottom: 16,
+    },
     commentContainer: {
         flexDirection: 'row',
-        borderRadius: 8,
-        marginBottom: 8,
+        marginBottom: 12,
         alignItems: 'flex-start',
     },
     commentAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 12,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        marginRight: 10,
+        marginTop: 2,
     },
     commentContent: {
         flex: 1,
-    },
-    commentBrown: {
-        backgroundColor: '#79320633',
-    },
-    commentBeige: {
-        backgroundColor: '#EDE4D2',
+        backgroundColor: '#FFFFFF',
+        padding: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#7932061A',
     },
     commentName: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
+        color: '#793206',
+        marginBottom: 2,
     },
     commentText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '400',
-        marginBottom: 4,
+        color: '#333333',
+        lineHeight: 18,
     },
     commentTime: {
-        fontSize: 12,
+        fontSize: 10,
         color: '#79320680',
+        marginTop: 4,
+        textAlign: 'right',
     },
-    textOnBrown: {
-        color: '#793206',
-    },
-    textOnBeige: {
-        color: '#793206',
+    noCommentsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 50,
     },
     noCommentsText: {
         textAlign: 'center',
-        marginTop: 20,
         color: '#79320680',
+        fontSize: 14,
         fontStyle: 'italic',
     },
     inputContainer: {
         flexDirection: 'row',
-        padding: 16,
+        paddingVertical: 10,
+        paddingHorizontal: 0,
         borderTopWidth: 1,
         borderTopColor: '#79320633',
         backgroundColor: '#EDE4D2',
@@ -265,7 +276,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         borderRadius: 20,
         paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingVertical: Platform.OS === 'ios' ? 10 : 8,
         fontSize: 16,
         color: '#793206',
         marginRight: 12,

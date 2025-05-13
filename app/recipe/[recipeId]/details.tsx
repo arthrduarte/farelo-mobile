@@ -6,16 +6,16 @@ import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import DeleteModal from '@/components/recipe/DeleteModal';
 import RemixModal from '@/components/recipe/RemixModal';
-import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { IngredientsSection } from '@/components/recipe/IngredientsSection';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { InstructionsSection } from '@/components/recipe/InstructionsSection';
 import { ImagesSection } from '@/components/recipe/RecipeImage';
 import { NotesSection } from '@/components/recipe/NotesSection';
 import { TagsSection } from '@/components/recipe/TagsSection';
 import { Divider } from '@/components/Divider';
+
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
@@ -25,22 +25,12 @@ export default function RecipeDetailsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
 
-  console.log(recipe);
-
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
       await deleteRecipeMutation.mutateAsync(recipeToDelete);
       router.back();
     } catch (err) {
       console.error('Error deleting recipe:', err);
-    }
-  };
-
-  const handleRecipeUpdate = async (updatedRecipe: Recipe) => {
-    try {
-      await updateRecipeMutation.mutateAsync(updatedRecipe);
-    } catch (err) {
-      console.error('Error updating recipe:', err);
     }
   };
 
@@ -81,12 +71,9 @@ export default function RecipeDetailsScreen() {
         recipe={recipe}
       />
 
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back" size={24} color="#793206" />
-      </TouchableOpacity>
+      <ScreenHeader title="Recipe Details" showBackButton={true} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Text style={styles.title}>{recipe.title}</Text>
 
@@ -175,19 +162,11 @@ export default function RecipeDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backButton: {
-    marginBottom: 16,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 24,

@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import Feather from '@expo/vector-icons/Feather';
 
 interface IngredientsSectionProps {
     ingredients: string[];
@@ -9,7 +10,7 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({ ingredie
     return (
         <View>
             <View style={styles.sectionHeader}>
-                <IconSymbol name="pepper" color="#793206" size={24} />
+                <Feather name="coffee" color="#793206" size={24} />
                 <Text style={styles.sectionTitle}>Ingredients</Text>
             </View>
             {ingredients?.map((ingredient: string, index: number) => (

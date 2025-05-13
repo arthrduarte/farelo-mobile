@@ -5,7 +5,8 @@ import { useRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useState } from 'react';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { useState, useEffect } from 'react';
 import { Divider } from '@/components/Divider';
 import { ImagesSection } from '@/components/recipe/RecipeImage';
 
@@ -15,6 +16,28 @@ export default function StartRecipeScreen() {
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
   const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>([]);
   const [checkedInstructions, setCheckedInstructions] = useState<boolean[]>([]);
+  const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Timer functionality - starts automatically
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+
+    // Cleanup on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   // Initialize checked states when recipe is loaded
   if (recipe && checkedIngredients.length === 0) {
@@ -59,12 +82,27 @@ export default function StartRecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back" size={24} color="#793206" />
-      </TouchableOpacity>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScreenHeader title="Start Recipe" 
+        leftItem={
+          <View style={styles.timerContainer}>
+            <MaterialIcons name="timer" size={24} color="#793206" />
+            <Text style={styles.timerText}>{formatTime(elapsedTime)}</Text>
+          </View>
+        }
+        rightItem={
+        // FINISH
+        <TouchableOpacity 
+          style={styles.finishButton}
+          onPress={() => router.push({
+            pathname: '/recipe/[recipeId]/finish',
+            params: { recipeId: recipe.id }
+          })}
+        >
+          <Text style={styles.finishButtonText}>Finish</Text>
+        </TouchableOpacity>
+        }
+      />
+      <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Text style={styles.title}>{recipe.title}</Text>
 
@@ -184,16 +222,6 @@ export default function StartRecipeScreen() {
         </View>
 
         <Divider />
-
-        <TouchableOpacity 
-          style={styles.finishButton} 
-          onPress={() => router.push({
-            pathname: '/recipe/[recipeId]/finish',
-            params: { recipeId: recipe.id }
-          })}
-        >
-          <Text style={styles.finishButtonText}>Finish</Text>
-        </TouchableOpacity>
       </ScrollView>
     </ThemedView>
   );
@@ -202,19 +230,21 @@ export default function StartRecipeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
-    marginBottom: 16,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  timerText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#793206',
   },
   title: {
     fontSize: 24,
@@ -323,15 +353,12 @@ const styles = StyleSheet.create({
   },
   finishButton: {
     backgroundColor: '#793206',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
   },
   finishButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
   notesContainer: {
     padding: 12,

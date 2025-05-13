@@ -9,6 +9,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Divider } from '@/components/Divider';
 import { ImagesSection } from '@/components/recipe/RecipeImage';
 interface Recipe extends BaseRecipe {
@@ -109,12 +110,9 @@ export default function EditRecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back" size={24} color="#793206" />
-      </TouchableOpacity>
+      <ScreenHeader title="Edit Recipe" showBackButton={true} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
         {/* Header */}
         {isEditing.title ? (
           <TextInput
@@ -392,19 +390,11 @@ export default function EditRecipeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backButton: {
-    marginBottom: 16,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 24,

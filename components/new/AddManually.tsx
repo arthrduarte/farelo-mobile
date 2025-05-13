@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import { useCreateRecipe } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
+import { Divider } from '@/components/Divider';
 
 // Define a type for the manual form data, omitting fields not manually entered
 type ManualRecipeFormData = Pick<
@@ -41,7 +42,6 @@ export default function AddManually() {
     const finalIngredients = manualFormData.ingredients.filter(item => item.trim() !== '');
     const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
     const isValid = !!(manualFormData.title.trim() && manualFormData.time > 0 && manualFormData.servings > 0 && finalIngredients.length > 0 && finalInstructions.length > 0);
-    console.log('isValid', isValid);
   }, [manualFormData]);
 
   const handleManualFormChange = (field: keyof Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags'>, value: string | number) => {
@@ -90,7 +90,6 @@ export default function AddManually() {
 
       // Submit to Supabase
       const newRecipe = await createRecipeMutation.mutateAsync(finalData);
-      console.log('Recipe created successfully:', newRecipe);
 
       // Navigate to the recipe details
       router.replace({
@@ -278,6 +277,8 @@ export default function AddManually() {
           {isSubmitting ? 'Creating Recipe...' : 'Submit'}
         </Text>
       </TouchableOpacity>
+      
+      <Divider/>
     </View>
   );
 }
@@ -285,7 +286,6 @@ export default function AddManually() {
 // Styles moved from the parent component
 const styles = StyleSheet.create({
   manualFormContainer: {
-    paddingHorizontal: 16,
     marginBottom: 24,
   },
   input: {
