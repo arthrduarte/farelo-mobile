@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { debounce } from 'lodash'; // Using lodash debounce
+import Avatar from '@/components/ui/Avatar';
 
 export default function SearchScreen() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -61,7 +62,7 @@ export default function SearchScreen() {
 
     const renderItem = ({ item }: { item: Profile }) => (
         <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectUser(item)}>
-            <Image source={{ uri: item.image }} style={styles.avatar} />
+            <Avatar imageUrl={item.image} firstName={item.first_name} size={40} />
             <View>
                 <Text style={styles.name}>{item.first_name} {item.last_name}</Text>
                 <Text style={styles.username}>@{item.username}</Text>
@@ -149,21 +150,16 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#7932061A', // Lighter separator
     },
-    avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 12,
-        backgroundColor: '#79320633',
-    },
     name: {
         fontSize: 16,
         color: '#793206',
         fontWeight: '600',
+        marginLeft: 12,
     },
     username: {
         fontSize: 14,
         color: '#79320680',
+        marginLeft: 12,
     },
     noResultsText: {
         textAlign: 'center',
