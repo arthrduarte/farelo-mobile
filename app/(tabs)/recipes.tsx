@@ -7,7 +7,8 @@ import { Link, router } from 'expo-router';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce } from 'lodash';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
+import Drawer from '@/components/ui/Drawer';
 
 export default function RecipesScreen() {
   const { profile } = useAuth();
@@ -16,8 +17,50 @@ export default function RecipesScreen() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const searchBarHeight = useRef(new Animated.Value(0)).current;
   const searchBarOpacity = useRef(new Animated.Value(0)).current;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const drawerAnimation = useRef(new Animated.Value(0)).current;
 
   const { data: recipes, isLoading, isError, error, refetch } = useRecipes(profile?.id, debouncedSearchTerm);
+
+  const toggleDrawer = () => {
+    const toValue = isDrawerOpen ? 0 : 1;
+    
+    Animated.spring(drawerAnimation, {
+      toValue,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 11
+    }).start();
+
+    setIsDrawerOpen(!isDrawerOpen);
+  };
+
+  const drawerOptions = [
+    {
+      icon: 'link' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Import Link',
+      onPress: () => {
+        router.push({ pathname: '/new-recipe', params: { importMethod: 'link' } });
+        toggleDrawer();
+      },
+    },
+    {
+      icon: 'photo-library' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Select from Gallery',
+      onPress: () => {
+        router.push({ pathname: '/new-recipe', params: { importMethod: 'image' } });
+        toggleDrawer();
+      },
+    },
+    {
+      icon: 'edit-note' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Add Manually',
+      onPress: () => {
+        router.push({ pathname: '/new-recipe', params: { importMethod: 'manual' } });
+        toggleDrawer();
+      },
+    },
+  ];
 
   const toggleSearch = () => {
     const toValue = isSearchVisible ? 0 : 1;
@@ -37,7 +80,6 @@ export default function RecipesScreen() {
     ]).start();
 
     if (isSearchVisible) {
-      // When closing search, clear the search query
       setSearchQuery('');
       setDebouncedSearchTerm('');
     }
@@ -98,14 +140,13 @@ export default function RecipesScreen() {
           </TouchableOpacity>
         }
         leftItem={
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/new-recipe')}>
+          <TouchableOpacity style={styles.addButton} onPress={toggleDrawer}>
             <Feather name="plus" size={16} color="white" />
             <Text style={styles.addButtonText}>Add New</Text>
           </TouchableOpacity>
         }
       />
       
-      {/* Animated Search Header */}
       <Animated.View style={[
         styles.searchContainer,
         {
@@ -129,7 +170,6 @@ export default function RecipesScreen() {
         </View>
       </Animated.View>
 
-      {/* Content */}
       {isLoading ? (
         <LoadingComponent />
       ) : isError ? (
@@ -150,6 +190,13 @@ export default function RecipesScreen() {
           onRefresh={refetch}
         />
       )}
+      <Drawer 
+        isDrawerOpen={isDrawerOpen}
+        toggleDrawer={toggleDrawer}
+        drawerAnimation={drawerAnimation}
+        options={drawerOptions}
+        title="Import Options"
+      />
     </ThemedView>
   );
 }
@@ -160,7 +207,6 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    // paddingBottom: 16,
   },
   addButton: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
 import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db'; // Import Recipe type
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -21,9 +21,15 @@ type ManualRecipeFormData = Pick<
 export default function NewRecipeModal() {
   const [recipeUrl, setRecipeUrl] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [importMethod, setImportMethod] = useState<ImportMethod>('manual');
+  const params = useLocalSearchParams<{ importMethod?: ImportMethod }>();
+  const [importMethod, setImportMethod] = useState<ImportMethod>(params.importMethod || 'manual');
   const drawerAnimation = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    if (params.importMethod && params.importMethod !== importMethod) {
+      setImportMethod(params.importMethod);
+    }
+  }, [params.importMethod]);
 
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
