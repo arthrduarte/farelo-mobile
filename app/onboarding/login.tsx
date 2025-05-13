@@ -9,6 +9,7 @@ import {
   Dimensions,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -29,6 +30,22 @@ export default function Logincreen() {
   const { showPaywall } = useSuperwall();
 
   async function signInWithEmail() {
+    // Input Validations
+    if (!email.trim()) {
+      Alert.alert('Validation Error', 'Email cannot be empty.');
+      return;
+    }
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      return;
+    }
+    if (!password) { // No trim() for password
+      Alert.alert('Validation Error', 'Password cannot be empty.');
+      return;
+    }
+
     try {
       setLoading(true)
       
@@ -44,6 +61,7 @@ export default function Logincreen() {
       }
       
       await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
+      router.replace('/');
       
     } catch (err) {
       console.error("[Login] Unexpected error:", err)
@@ -80,7 +98,14 @@ export default function Logincreen() {
             onChangeText={setPassword}
           />
 
-          <TouchableOpacity style={styles.button} onPress={signInWithEmail}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={signInWithEmail}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ede4d2" style={{ marginRight: 10 }} />
+            ) : null}
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>
               Login
             </ThemedText>
@@ -145,6 +170,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   buttonText: {
     color: '#ede4d2',
