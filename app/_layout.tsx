@@ -71,6 +71,7 @@ export default function RootLayout() {
               <Stack.Screen name="settings/main"/>
               <Stack.Screen name="settings/account/email"/>
               <Stack.Screen name="settings/account/password"/>
+              <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'fade_from_bottom' }}/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>

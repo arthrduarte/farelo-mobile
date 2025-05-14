@@ -36,7 +36,7 @@ export default function Settings() {
               <Feather name="chevron-right" size={24} color="#793206" />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.card} onPress={() => showPaywall(SUPERWALL_TRIGGERS.ONBOARDING)}>
+          <TouchableOpacity style={styles.card} onPress={() => router.push('/paywall')}>
             <View style={styles.cardContent}>
               <Feather name="star" size={24} color="#793206" />
               <Text style={styles.cardTitle}>Upgrade to Pro</Text>
