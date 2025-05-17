@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { Easing, Platform } from 'react-native';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Purchases from 'react-native-purchases';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
@@ -15,6 +16,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+// Ensure you have these in your .env file and are using react-native-dotenv or similar
+const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS;
+const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID;
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -36,6 +41,13 @@ export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS !== 'web') {
       // superwallService.initialize(); // Superwall removed
+      if (Platform.OS === 'ios' && REVENUECAT_IOS_API_KEY) {
+        Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY });
+      } else if (Platform.OS === 'android' && REVENUECAT_ANDROID_API_KEY) {
+        Purchases.configure({ apiKey: REVENUECAT_ANDROID_API_KEY });
+      }
+      // Optional: Enable debug logs
+      Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
     }
   }, []);
 

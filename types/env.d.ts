@@ -1,4 +1,6 @@
 declare module '@env' {
+  export const EXPO_PUBLIC_REVENUECAT_API_KEY_IOS: string;
+  export const EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID: string;
   // ... existing code ...
 }
 // ... existing code ... 
