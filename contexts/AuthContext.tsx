@@ -15,12 +15,13 @@ import {
 } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { Profile } from '../types/db'
-import { EventEmitter } from 'events';
+// import { EventEmitter } from 'events'; // Replaced Node.js events
+import EventEmitter from 'eventemitter3'; // Using eventemitter3
 import Purchases, { CustomerInfo, PurchasesEntitlementInfo } from 'react-native-purchases';
 
 // Global event emitter for profile updates
 export const profileUpdateEmitter = new EventEmitter();
-profileUpdateEmitter.setMaxListeners(25);
+// profileUpdateEmitter.setMaxListeners(25); // setMaxListeners is not typically used with eventemitter3
 export const PROFILE_UPDATED = 'PROFILE_UPDATED';
 
 // Define your primary entitlement ID from RevenueCat
