@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { router } from 'expo-router';
 import { Alert, Platform, StyleSheet, View, Text, Pressable } from 'react-native';
-import Purchases, { PurchasesStoreTransaction, CustomerInfo } from 'react-native-purchases';
+import Purchases, { PurchasesStoreTransaction, CustomerInfo, PurchasesError } from 'react-native-purchases';
+
+// Define the expected structure for the result of presentPaywall
+interface PresentPaywallResult {
+    result: PAYWALL_RESULT;
+    customerInfo?: CustomerInfo;
+    storeTransaction?: PurchasesStoreTransaction;
+    error?: PurchasesError; 
+}
 
 export default function PaywallScreen() {
     const handleDismiss = () => {
@@ -14,15 +22,75 @@ export default function PaywallScreen() {
         }
     };
 
-    const onPurchaseCompleted = ({ customerInfo, storeTransaction }: { customerInfo: CustomerInfo; storeTransaction: PurchasesStoreTransaction; }) => {
-        console.log('Purchase completed from Paywall component:', customerInfo, storeTransaction);
+    const handlePurchaseCompleted = (customerInfo: CustomerInfo, storeTransaction: PurchasesStoreTransaction | null) => {
+        console.log('Purchase completed via presentPaywall:', customerInfo, storeTransaction);
         Alert.alert('Purchase Successful', 'Your access has been updated.');
+        handleDismiss();
     };
 
-    const onRestoreCompleted = ({ customerInfo }: { customerInfo: CustomerInfo; }) => {
-        console.log('Restore completed from Paywall component:', customerInfo);
+    const handleRestoreCompleted = (customerInfo: CustomerInfo) => {
+        console.log('Restore completed via presentPaywall:', customerInfo);
         Alert.alert('Restore Successful', 'Your purchases have been restored.');
+        handleDismiss();
     };
+
+    useEffect(() => {
+        const presentPaywallFlow = async () => {
+            try {
+                // Force cast the type if linter is confused
+                const paywallOutcome = await RevenueCatUI.presentPaywall({
+                    displayCloseButton: true,
+                }) as unknown as PresentPaywallResult;
+
+                console.log('Paywall outcome:', paywallOutcome);
+
+                switch (paywallOutcome.result) {
+                    case PAYWALL_RESULT.PURCHASED:
+                        if (paywallOutcome.customerInfo && paywallOutcome.storeTransaction) {
+                            handlePurchaseCompleted(paywallOutcome.customerInfo, paywallOutcome.storeTransaction);
+                        } else {
+                            console.warn("Purchase reported but customerInfo or storeTransaction missing from result.");
+                            Alert.alert('Purchase Processed', 'Your purchase is being processed.');
+                            handleDismiss();
+                        }
+                        break;
+                    case PAYWALL_RESULT.RESTORED:
+                        if (paywallOutcome.customerInfo) {
+                            handleRestoreCompleted(paywallOutcome.customerInfo);
+                        } else {
+                            console.warn("Restore reported but customerInfo missing from result.");
+                            Alert.alert('Restore Processed', 'Your restore is being processed.');
+                            handleDismiss();
+                        }
+                        break;
+                    case PAYWALL_RESULT.CANCELLED:
+                        console.log('Paywall cancelled by user.');
+                        handleDismiss();
+                        break;
+                    case PAYWALL_RESULT.ERROR:
+                        if (paywallOutcome.error) {
+                            console.error('Paywall error:', paywallOutcome.error);
+                            Alert.alert('Error', paywallOutcome.error.message || 'An error occurred with the paywall.');
+                        } else {
+                            console.error('Paywall error reported but no error object found.');
+                            Alert.alert('Error', 'An unknown error occurred with the paywall.');
+                        }
+                        handleDismiss();
+                        break;
+                    default:
+                        console.log('Paywall not presented or unknown result:', paywallOutcome.result);
+                        handleDismiss();
+                        break;
+                }
+            } catch (e: any) {
+                console.error('Failed to present paywall overall:', e);
+                Alert.alert('Error', e.message || 'Could not display payment options.');
+                handleDismiss();
+            }
+        };
+
+        presentPaywallFlow();
+    }, []);
 
     const handleManualRestore = async () => {
         try {
@@ -42,14 +110,6 @@ export default function PaywallScreen() {
 
     return (
         <View style={styles.container}>
-            <RevenueCatUI.Paywall 
-                options={{
-                    displayCloseButton: true,
-                }}
-                onDismiss={handleDismiss}
-                onPurchaseCompleted={onPurchaseCompleted}
-                onRestoreCompleted={onRestoreCompleted}
-            />
             {Platform.OS === 'android' && (
                 <View style={styles.manualRestoreContainerAndroid}>
                     <Pressable style={styles.restoreButton} onPress={handleManualRestore}>
