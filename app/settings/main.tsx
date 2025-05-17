@@ -4,12 +4,9 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-import { SUPERWALL_TRIGGERS } from '@/config/superwall'
-import { useSuperwall } from '@/hooks/useSuperwall';
 
 export default function Settings() {
   const { signOut } = useAuth();
-  const { showPaywall } = useSuperwall();
 
   return (
     <ThemedView style={styles.container}>
@@ -31,15 +28,6 @@ export default function Settings() {
             <View style={styles.cardContent}>
               <Feather name="lock" size={24} color="#793206" />
               <Text style={styles.cardTitle}>Account</Text>
-            </View>
-            <View>
-              <Feather name="chevron-right" size={24} color="#793206" />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.card} onPress={() => showPaywall(SUPERWALL_TRIGGERS.FEATURE_UNLOCK)}>
-            <View style={styles.cardContent}>
-              <Feather name="star" size={24} color="#793206" />
-              <Text style={styles.cardTitle}>Upgrade to Pro</Text>
             </View>
             <View>
               <Feather name="chevron-right" size={24} color="#793206" />

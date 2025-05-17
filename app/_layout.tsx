@@ -8,7 +8,6 @@ import { Easing, Platform } from 'react-native';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { superwallService } from '@/lib/superwall';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -26,7 +25,7 @@ export default function RootLayout() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        // keep data “fresh” for 5 minutes
+        // keep data "fresh" for 5 minutes
         staleTime: 1000 * 60 * 5,
         // retry failed requests twice
         retry: 2,
@@ -36,7 +35,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      superwallService.initialize();
+      // superwallService.initialize(); // Superwall removed
     }
   }, []);
 

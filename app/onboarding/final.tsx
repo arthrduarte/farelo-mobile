@@ -2,23 +2,19 @@ import { StyleSheet, View, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { useSuperwall } from '@/hooks/useSuperwall';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { SUPERWALL_TRIGGERS } from '@/config/superwall';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { MaterialCommunityIcons as IconType } from '@expo/vector-icons';
 
 export default function FinalScreen() {
-  const { showPaywall } = useSuperwall();
   const { setIsOnboarded } = useOnboarding();
 
   const handleGetStarted = async () => {
     try {
-      await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
       setIsOnboarded(true);
     } catch (error) {
-      console.error('Failed to show paywall:', error);
+      console.error('Failed to set onboarding status:', error);
     }
   };
 
