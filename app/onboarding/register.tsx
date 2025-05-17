@@ -95,7 +95,7 @@ export default function RegisterScreen() {
           return
         }
 
-        router.replace('/')
+        router.replace('/paywall')
       }, 100)
     } catch (err) {
       console.error("[Register] Unexpected error:", err)

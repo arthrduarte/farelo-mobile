@@ -57,7 +57,7 @@ export default function Logincreen() {
         return
       }
       
-      router.replace('/');
+      router.replace('/paywall');
       
     } catch (err) {
       console.error("[Login] Unexpected error:", err)
