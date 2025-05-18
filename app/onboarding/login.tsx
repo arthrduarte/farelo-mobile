@@ -17,8 +17,6 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
-import { SUPERWALL_TRIGGERS } from '@/config/superwall'
-import { useSuperwall } from '@/hooks/useSuperwall';
 
 const { width } = Dimensions.get('window')
 
@@ -27,7 +25,6 @@ export default function Logincreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const { showPaywall } = useSuperwall();
 
   async function signInWithEmail() {
     // Input Validations
@@ -60,8 +57,7 @@ export default function Logincreen() {
         return
       }
       
-      await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
-      router.replace('/');
+      router.replace('/paywall');
       
     } catch (err) {
       console.error("[Login] Unexpected error:", err)

@@ -17,8 +17,6 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
-import { SUPERWALL_TRIGGERS } from '@/config/superwall'
-import { useSuperwall } from '@/hooks/useSuperwall';
 
 const { width } = Dimensions.get('window')
 
@@ -30,7 +28,6 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const { showPaywall } = useSuperwall();
 
   async function signUpWithEmail() {
     // Input Validations
@@ -85,8 +82,6 @@ export default function RegisterScreen() {
         return
       }
       
-      await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
-      
       // To avoid circular navigation, delay the redirection slightly
       setTimeout(async () => {
         const { error } = await supabase.auth.signInWithPassword({
@@ -100,7 +95,7 @@ export default function RegisterScreen() {
           return
         }
 
-        router.replace('/')
+        router.replace('/paywall')
       }, 100)
     } catch (err) {
       console.error("[Register] Unexpected error:", err)

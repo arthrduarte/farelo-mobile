@@ -1,6 +1,6 @@
 # Welcome to jack's Expo React Native free boilerplate 👋
 
-This is an [Expo](https://expo.dev) template project with Superwall libraries ready to use and a simple onboarding sequence for first time users.
+This is an [Expo](https://expo.dev) template project with a simple onboarding sequence for first time users.
 
 This free boilerplate is sponsored by [post bridge](https://post-bridge.com) - a super simple and affordable social media scheduling tool for small teams and founders.
 
@@ -24,7 +24,6 @@ Or
    ```bash
     npx expo start
    ```
--- you will need to make a development build or run in development mode as Superwall does not work in Expo GO
 
 In the output, you'll find options to open the app in a
 

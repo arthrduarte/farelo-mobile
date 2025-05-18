@@ -8,9 +8,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { RECIPE_KEYS } from '@/hooks/useRecipes';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
+import Purchases from 'react-native-purchases';
+
+const PREMIUM_ENTITLEMENT_ID = 'pro';
 
 export default function SelectGallery() {
-  const { profile } = useAuth();
+  const { profile, refreshCustomerInfo } = useAuth();
   const queryClient = useQueryClient();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -119,11 +122,26 @@ export default function SelectGallery() {
       return;
     }
 
+    if (!profile) {
+      Alert.alert('Error', 'You must be logged in to upload images.');
+      return;
+    }
+
+    setIsUploading(true);
+
     try {
-      setIsUploading(true);
-      await importRecipeMutation.mutateAsync(selectedImages);
+      await refreshCustomerInfo();
+      const currentCustomerInfo = await Purchases.getCustomerInfo();
+      const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
+
+      if (!hasActiveEntitlement) {
+        router.push('/paywall');
+      } else {
+        await importRecipeMutation.mutateAsync(selectedImages);
+      }
     } catch (error) {
       // Error is handled by the mutation's onError
+      console.error('Error in handleSubmission:', error);
     } finally {
       setIsUploading(false);
     }
