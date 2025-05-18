@@ -3,6 +3,7 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { router } from 'expo-router';
 import { Alert, Platform, StyleSheet, View, Text, Pressable } from 'react-native';
 import Purchases, { PurchasesStoreTransaction, CustomerInfo, PurchasesError } from 'react-native-purchases';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Define the expected structure for the result of presentPaywall
 interface PresentPaywallResult {
@@ -13,6 +14,8 @@ interface PresentPaywallResult {
 }
 
 export default function PaywallScreen() {
+    const { refreshCustomerInfo } = useAuth();
+
     const handleDismiss = () => {
         console.log('Paywall dismissed');
         if (router.canGoBack()) {
@@ -22,15 +25,31 @@ export default function PaywallScreen() {
         }
     };
 
-    const handlePurchaseCompleted = (customerInfo: CustomerInfo, storeTransaction: PurchasesStoreTransaction | null) => {
+    const handlePurchaseCompleted = async (customerInfo: CustomerInfo, storeTransaction: PurchasesStoreTransaction | null) => {
         console.log('Purchase completed via presentPaywall:', customerInfo, storeTransaction);
         Alert.alert('Purchase Successful', 'Your access has been updated.');
+        
+        try {
+            await refreshCustomerInfo();
+            console.log('[PaywallScreen] CustomerInfo refreshed after purchase.');
+        } catch (error) {
+            console.error('[PaywallScreen] Error refreshing customerInfo after purchase:', error);
+        }
+        
         handleDismiss();
     };
 
-    const handleRestoreCompleted = (customerInfo: CustomerInfo) => {
+    const handleRestoreCompleted = async (customerInfo: CustomerInfo) => {
         console.log('Restore completed via presentPaywall:', customerInfo);
         Alert.alert('Restore Successful', 'Your purchases have been restored.');
+        
+        try {
+            await refreshCustomerInfo();
+            console.log('[PaywallScreen] CustomerInfo refreshed after restore.');
+        } catch (error) {
+            console.error('[PaywallScreen] Error refreshing customerInfo after restore:', error);
+        }
+
         handleDismiss();
     };
 
@@ -47,7 +66,7 @@ export default function PaywallScreen() {
                 switch (paywallOutcome.result) {
                     case PAYWALL_RESULT.PURCHASED:
                         if (paywallOutcome.customerInfo && paywallOutcome.storeTransaction) {
-                            handlePurchaseCompleted(paywallOutcome.customerInfo, paywallOutcome.storeTransaction);
+                            await handlePurchaseCompleted(paywallOutcome.customerInfo, paywallOutcome.storeTransaction);
                         } else {
                             console.warn("Purchase reported but customerInfo or storeTransaction missing from result.");
                             Alert.alert('Purchase Processed', 'Your purchase is being processed.');
@@ -56,7 +75,7 @@ export default function PaywallScreen() {
                         break;
                     case PAYWALL_RESULT.RESTORED:
                         if (paywallOutcome.customerInfo) {
-                            handleRestoreCompleted(paywallOutcome.customerInfo);
+                            await handleRestoreCompleted(paywallOutcome.customerInfo);
                         } else {
                             console.warn("Restore reported but customerInfo missing from result.");
                             Alert.alert('Restore Processed', 'Your restore is being processed.');
