@@ -5,54 +5,82 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native';
 import { Profile } from '@/types/db';
+import { LogLoader } from '@/components/log/LogLoader';
 
 export default function ProfileScreen() {
   const { id, profile: profileParam } = useLocalSearchParams();
-  const { profileLogs } = useLogs(id as string);
+  const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(id as string);
 
   const profile = JSON.parse(profileParam as string) as Profile;
-
-  const renderContent = () => {
-    if(profileLogs.length === 0) {
-      return <Text style={styles.noLogsText}>This user has no logs</Text>;
-    }
-
-    return (
-      <>
-        {profileLogs.map((log) => (
-          <LogCard key={log.id} log={log} />
-        ))}
-      </>
-    );
-  };
 
   if (!profile) {
     return (
       <ThemedView style={styles.container}>
-        <ScrollView>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <MaterialIcons name="arrow-back" size={24} color="#793206" />
-          </TouchableOpacity>
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </ScrollView>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={24} color="#793206" />
+        </TouchableOpacity>
+        <Text style={styles.loadingText}>Loading profile...</Text>
       </ThemedView>
     );
   }
+
+  const LoadingComponent = () => {
+    return (
+      <>
+        <LogLoader />
+        <LogLoader />
+        <LogLoader />
+      </>
+    );
+  };
+
+  const HeaderComponent = () => {
+    return (
+      <ProfileHeader profile={profile} logs={profileLogs} />
+    );
+  };
+  
+  const EmptyStateComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>This user hasn't posted any logs yet.</Text>
+    </View>
+  );
 
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader title={profile.username} showBackButton={true} />
 
-      <ProfileHeader profile={profile} logs={profileLogs} />
-      {renderContent()}
+      <FlatList
+        style={styles.list}
+        data={profileLogs}
+        renderItem={({ item }) => (
+          <LogCard key={item.id} log={item} />
+        )}
+        ListHeaderComponent={HeaderComponent}
+        ListEmptyComponent={() => {
+          if (profileLogsLoading) {
+            return <LoadingComponent />;
+          }
+          if (!profileLogsLoading && profileLogs.length === 0) {
+            return <EmptyStateComponent />;
+          }
+          return null; 
+        }}
+        showsVerticalScrollIndicator={false}
+        onRefresh={refreshProfileLogs}
+        refreshing={profileLogsLoading}
+      />
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  list: {
     flex: 1,
   },
   backButton: {
@@ -81,10 +109,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 24
   },
-  noLogsText: {
+  emptyContainer: { 
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    marginTop: 20,
+  },
+  emptyText: {
     textAlign: 'center',
     marginTop: 20,
-    color: '#79320680',
+    color: '#793206',
     fontSize: 16,
   },
   loadingText: {

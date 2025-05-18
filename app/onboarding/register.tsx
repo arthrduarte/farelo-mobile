@@ -9,6 +9,7 @@ import {
   Dimensions,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -16,21 +17,51 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
-import { SUPERWALL_TRIGGERS } from '@/config/superwall'
-import { useSuperwall } from '@/hooks/useSuperwall';
 
 const { width } = Dimensions.get('window')
 
 export default function RegisterScreen() {
   const router = useRouter()
-  const [fullName, setFullName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const { showPaywall } = useSuperwall();
 
   async function signUpWithEmail() {
+    // Input Validations
+    if (!firstName.trim()) {
+      Alert.alert('Validation Error', 'First name cannot be empty.');
+      return;
+    }
+    if (!lastName.trim()) {
+      Alert.alert('Validation Error', 'Last name cannot be empty.');
+      return;
+    }
+    if (!email.trim()) {
+      Alert.alert('Validation Error', 'Email cannot be empty.');
+      return;
+    }
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      return;
+    }
+    if (!password) { // No trim() for password, as spaces might be intentional
+      Alert.alert('Validation Error', 'Password cannot be empty.');
+      return;
+    }
+    if (password.length < 8) {
+      Alert.alert('Validation Error', 'Password must be at least 8 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Validation Error', 'Passwords do not match.');
+      return;
+    }
+
     try {
       setLoading(true)
       
@@ -39,8 +70,8 @@ export default function RegisterScreen() {
         password: password,
         options: {
           data: {
-            first_name: fullName.split(' ')[0],
-            last_name: fullName.split(' ')[1],
+            first_name: firstName,
+            last_name: lastName,
           },
         },
       })
@@ -50,8 +81,6 @@ export default function RegisterScreen() {
         Alert.alert(error.message)
         return
       }
-      
-      await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
       
       // To avoid circular navigation, delay the redirection slightly
       setTimeout(async () => {
@@ -66,7 +95,7 @@ export default function RegisterScreen() {
           return
         }
 
-        router.replace('/')
+        router.replace('/paywall')
       }, 100)
     } catch (err) {
       console.error("[Register] Unexpected error:", err)
@@ -88,10 +117,18 @@ export default function RegisterScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Full Name"
+            placeholder="First Name"
             placeholderTextColor="#793206"
-            value={fullName}
-            onChangeText={setFullName}
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Last Name"
+            placeholderTextColor="#793206"
+            value={lastName}
+            onChangeText={setLastName}
           />
 
           <TextInput
@@ -122,7 +159,14 @@ export default function RegisterScreen() {
             onChangeText={setConfirmPassword}
           />
 
-          <TouchableOpacity style={styles.button} onPress={signUpWithEmail}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={signUpWithEmail}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ede4d2" style={{ marginRight: 10 }} />
+            ) : null}
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>
               Register
             </ThemedText>
@@ -187,6 +231,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   buttonText: {
     color: '#ede4d2',

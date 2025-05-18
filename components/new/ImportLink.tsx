@@ -6,6 +6,7 @@ import { RECIPE_KEYS } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
 import { Recipe } from '@/types/db';
 import { supabase } from '@/lib/supabase';
+import Purchases from 'react-native-purchases';
 
 interface ImportLinkProps {
   recipeUrl: string;
@@ -20,8 +21,11 @@ const UNSUPPORTED_DOMAINS = [
   'facebook.com'
 ];
 
+// Assuming this is defined in your AuthContext or elsewhere, using the one found
+const PREMIUM_ENTITLEMENT_ID = 'pro';
+
 export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps) {
-  const { profile } = useAuth();
+  const { profile, refreshCustomerInfo } = useAuth();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -125,14 +129,31 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
       return;
     }
 
+    if (!profile) {
+      Alert.alert('Error', 'You must be logged in to import recipes.');
+      return;
+    }
+
+    setIsImporting(true);
+
     try {
-      setIsImporting(true);
-      await importRecipeMutation.mutateAsync(recipeUrl);
+      // Refresh customer info to get the latest subscription status
+      await refreshCustomerInfo();
+      
+      const currentCustomerInfo = await Purchases.getCustomerInfo();
+      const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
+
+      if (!hasActiveEntitlement) {
+        router.push('/paywall'); 
+      } else {
+        // If user has active entitlement, proceed with import
+        await importRecipeMutation.mutateAsync(recipeUrl);
+      }
     } catch (error) {
-      // Error is handled by the mutation's onError
       console.error('Error in handleUrlSubmit:', error);
+      // Alert.alert('Error', 'An unexpected error occurred.'); // Error is handled by the mutation's onError
     } finally {
-      setIsImporting(false);
+      setIsImporting(false); // This will run regardless of success or paywall navigation
     }
   };
 

@@ -7,8 +7,8 @@ import { useEffect } from 'react';
 import { Easing, Platform } from 'react-native';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Purchases from 'react-native-purchases';
 
-import { superwallService } from '@/lib/superwall';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -16,6 +16,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+// Ensure you have these in your .env file and are using react-native-dotenv or similar
+const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS;
+const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID;
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -26,7 +30,7 @@ export default function RootLayout() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        // keep data “fresh” for 5 minutes
+        // keep data "fresh" for 5 minutes
         staleTime: 1000 * 60 * 5,
         // retry failed requests twice
         retry: 2,
@@ -36,7 +40,14 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      superwallService.initialize();
+      // superwallService.initialize(); // Superwall removed
+      if (Platform.OS === 'ios' && REVENUECAT_IOS_API_KEY) {
+        Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY });
+      } else if (Platform.OS === 'android' && REVENUECAT_ANDROID_API_KEY) {
+        Purchases.configure({ apiKey: REVENUECAT_ANDROID_API_KEY });
+      }
+      // Optional: Enable debug logs
+      Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
     }
   }, []);
 
@@ -71,6 +82,7 @@ export default function RootLayout() {
               <Stack.Screen name="settings/main"/>
               <Stack.Screen name="settings/account/email"/>
               <Stack.Screen name="settings/account/password"/>
+              <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'fade_from_bottom' }}/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>

@@ -12,6 +12,7 @@ import { EnhancedLog } from '@/types/types';
 import { LogImage } from './log/LogImage';
 import { Log } from '@/types/db';
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
+import Avatar from './ui/Avatar';
 
 type LogCardProps = {
   log: EnhancedLog;
@@ -75,9 +76,10 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
     <View style={styles.container}>
       <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.8}>
         <View style={styles.header}>
-          <Image 
-            source={{ uri: profileData?.image }}
-            style={styles.avatar}
+          <Avatar 
+            imageUrl={profileData?.image}
+            firstName={profileData?.first_name}
+            size={40}
           />
           <View style={styles.headerText}>
             <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
@@ -173,14 +175,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
   headerText: {
     flex: 1,
+    marginLeft: 12,
   },
   time: {
     fontSize: 12,
