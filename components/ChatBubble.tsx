@@ -3,11 +3,15 @@ import { TouchableOpacity, StyleSheet, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-const ChatBubble = () => {
+type ChatBubbleProps = {
+  recipeId: string;
+};
+
+const ChatBubble = ({ recipeId }: ChatBubbleProps) => {
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => router.push('/chat' as any)}
+      onPress={() => router.push(`/recipe/${recipeId}/chat` as any)}
       activeOpacity={0.8}
     >
       <MaterialIcons name="chat" size={28} color="#EDE4D2" />

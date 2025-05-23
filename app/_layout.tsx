@@ -74,6 +74,7 @@ export default function RootLayout() {
               <Stack.Screen name="recipe/[recipeId]/edit"/>
               <Stack.Screen name="recipe/[recipeId]/start"/>
               <Stack.Screen name="recipe/[recipeId]/finish"/>
+              <Stack.Screen name="recipe/[recipeId]/chat"/>
               <Stack.Screen name="log/[logId]/details"/>
               <Stack.Screen name="log/[logId]/comments"/>
               <Stack.Screen name="search"/>
@@ -83,7 +84,6 @@ export default function RootLayout() {
               <Stack.Screen name="settings/account/email"/>
               <Stack.Screen name="settings/account/password"/>
               <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'fade_from_bottom' }}/>
-              <Stack.Screen name="chat"/>
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>

@@ -156,7 +156,7 @@ export default function RecipeDetailsScreen() {
 
         <Divider />
       </ScrollView>
-      <ChatBubble />
+      <ChatBubble recipeId={recipe.id} />
     </ThemedView>
   );
 }
