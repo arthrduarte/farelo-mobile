@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, ActivityIndicator, Alert, Animated } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,6 +12,55 @@ type ChatMessage = {
   role: 'user' | 'ai';
   message: string;
   timestamp: string;
+};
+
+// Add floating dots component
+const FloatingDots = () => {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const createAnimation = (animatedValue: Animated.Value, delay: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(animatedValue, {
+            toValue: -8,
+            duration: 400,
+            delay,
+            useNativeDriver: true,
+          }),
+          Animated.timing(animatedValue, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+    };
+
+    const animation1 = createAnimation(dot1, 0);
+    const animation2 = createAnimation(dot2, 100);
+    const animation3 = createAnimation(dot3, 200);
+
+    animation1.start();
+    animation2.start();
+    animation3.start();
+
+    return () => {
+      animation1.stop();
+      animation2.stop();
+      animation3.stop();
+    };
+  }, []);
+
+  return (
+    <View style={styles.dotsContainer}>
+      <Animated.View style={[styles.dot, { transform: [{ translateY: dot1 }] }]} />
+      <Animated.View style={[styles.dot, { transform: [{ translateY: dot2 }] }]} />
+      <Animated.View style={[styles.dot, { transform: [{ translateY: dot3 }] }]} />
+    </View>
+  );
 };
 
 export default function ChatScreen() {
@@ -93,7 +142,7 @@ export default function ChatScreen() {
       // Update the recipe in the database with the new chat
       const updatedRecipe = {
         ...recipe,
-        chat: finalMessages,
+        chat: finalMessages as unknown as JSON,
       };
 
       await updateRecipeMutation.mutateAsync(updatedRecipe);
@@ -152,7 +201,7 @@ export default function ChatScreen() {
             <View style={styles.emptyStateContainer}>
               <Image source={require('@/assets/images/jacquin-full.png')} style={styles.emptyStateImage} />
               <Text style={styles.emptyStateTitle}>Hey there!</Text>
-              <Text style={styles.emptyStateSubtitle}>I'm Jacquin, your cooking assistant. Ask me anything about your recipe!</Text>
+              <Text style={styles.emptyStateSubtitle}>I'm Jacquin, your cooking assistant. Ask me anything about {recipe.title}!</Text>
             </View>
           ) : (
             messages.map((msg, index) => {
@@ -165,9 +214,10 @@ export default function ChatScreen() {
                     isUser ? styles.userMessage : styles.otherMessage,
                   ]}
                 >
-                  <Text style={isUser ? styles.userMessageText : styles.otherMessageText}>
+                  {/* <Text style={isUser ? styles.userMessageText : styles.otherMessageText}>
                     {msg.message}
-                  </Text>
+                  </Text> */}
+                  <FloatingDots />
                 </View>
               );
 
@@ -205,8 +255,7 @@ export default function ChatScreen() {
             <View style={[styles.messageRow, styles.otherMessageRow]}>
               <Image source={require('@/assets/images/jacquin-full.png')} style={styles.avatarImage} />
               <View style={[styles.messageBubble, styles.otherMessage, styles.typingIndicator]}>
-                <ActivityIndicator size="small" color="#793206" />
-                <Text style={[styles.otherMessageText, { marginLeft: 8 }]}>Typing...</Text>
+                <FloatingDots />
               </View>
             </View>
           )}
@@ -351,6 +400,21 @@ const styles = StyleSheet.create({
   typingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 4,
+    backgroundColor: '#793206',
+    marginHorizontal: 2,
   },
   userMessageText: {
     color: '#EDE4D2',
@@ -374,14 +438,14 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 40,
     maxHeight: 100,
-    borderColor: '#793206',
-    borderWidth: 1,
+    // borderColor: '#793206',
+    // borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginRight: 10,
     color: '#793206',
-    backgroundColor: '#FFFFFF',
+    // backgroundColor: '#FFFFFF',
     fontSize: 16,
     textAlignVertical: 'top',
   },
