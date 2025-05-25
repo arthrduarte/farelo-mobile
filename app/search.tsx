@@ -12,8 +12,37 @@ import Avatar from '@/components/ui/Avatar';
 export default function SearchScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [results, setResults] = useState<Profile[]>([]);
+    const [suggestedUsers, setSuggestedUsers] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
     const { profile: currentUser } = useAuth();
+
+    // Fetch suggested users on component mount
+    useEffect(() => {
+        const fetchSuggestedUsers = async () => {
+            if (!currentUser) return;
+            
+            setIsLoadingSuggestions(true);
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .neq('id', currentUser.id) // Exclude current user
+                    .order('created_at', { ascending: false }) // Show newer users first
+                    .limit(8); // Get 8 suggested users
+
+                if (error) throw error;
+                setSuggestedUsers(data || []);
+            } catch (error) {
+                console.error("Error fetching suggested users:", error);
+                setSuggestedUsers([]);
+            } finally {
+                setIsLoadingSuggestions(false);
+            }
+        };
+
+        fetchSuggestedUsers();
+    }, [currentUser]);
 
     // Debounced search function
     const searchUsers = useCallback(debounce(async (query: string) => {
@@ -70,6 +99,10 @@ export default function SearchScreen() {
         </TouchableOpacity>
     );
 
+    // Determine what to display
+    const displayData = searchQuery ? results : suggestedUsers;
+    const showLoader = searchQuery ? isLoading : isLoadingSuggestions;
+
     return (
         <ThemedView style={styles.container}>
             {/* Back Button and Search Input Header */}
@@ -89,17 +122,28 @@ export default function SearchScreen() {
                 />
             </View>
 
+            {/* Section Title */}
+            {!searchQuery && (
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Suggested People</Text>
+                </View>
+            )}
+
             {/* Results List */}
-            {isLoading && searchQuery ? (
+            {showLoader ? (
                 <ActivityIndicator style={styles.loader} size="large" color="#793206" />
             ) : (
                 <FlatList
-                    data={results}
+                    data={displayData}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}
-                    ListEmptyComponent={() => (
-                        searchQuery ? <Text style={styles.noResultsText}>No users found for "{searchQuery}"</Text> : null
-                    )}
+                    ListEmptyComponent={() => {
+                        if (searchQuery) {
+                            return <Text style={styles.noResultsText}>No users found for "{searchQuery}"</Text>;
+                        } else {
+                            return <Text style={styles.noResultsText}>No suggested users available</Text>;
+                        }
+                    }}
                     contentContainerStyle={styles.listContentContainer}
                 />
             )}
@@ -130,7 +174,7 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         backgroundColor: '#FFFFFF',
-        borderRadius: 20,
+        borderRadius: 12,
         paddingHorizontal: 16,
         fontSize: 16,
         color: '#793206',
@@ -166,5 +210,16 @@ const styles = StyleSheet.create({
         marginTop: 20,
         color: '#79320680',
         fontSize: 16,
+    },
+    sectionHeader: {
+        padding: 16,
+        backgroundColor: '#EDE4D2',
+        borderBottomWidth: 1,
+        borderBottomColor: '#79320633',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#793206',
     },
 });
