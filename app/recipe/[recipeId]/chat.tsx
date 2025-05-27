@@ -1,66 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, ActivityIndicator, Alert, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, ActivityIndicator, Alert } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useLocalSearchParams } from 'expo-router';
+import { MessageItem } from '@/components/chat/MessageItem';
 
 // Define the message type based on the database schema
 type ChatMessage = {
   role: 'user' | 'ai';
   message: string;
   timestamp: string;
-};
-
-// Add floating dots component
-const FloatingDots = () => {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const createAnimation = (animatedValue: Animated.Value, delay: number) => {
-      return Animated.loop(
-        Animated.sequence([
-          Animated.timing(animatedValue, {
-            toValue: -8,
-            duration: 400,
-            delay,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animatedValue, {
-            toValue: 0,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-    };
-
-    const animation1 = createAnimation(dot1, 0);
-    const animation2 = createAnimation(dot2, 100);
-    const animation3 = createAnimation(dot3, 200);
-
-    animation1.start();
-    animation2.start();
-    animation3.start();
-
-    return () => {
-      animation1.stop();
-      animation2.stop();
-      animation3.stop();
-    };
-  }, []);
-
-  return (
-    <View style={styles.dotsContainer}>
-      <Animated.View style={[styles.dot, { transform: [{ translateY: dot1 }] }]} />
-      <Animated.View style={[styles.dot, { transform: [{ translateY: dot2 }] }]} />
-      <Animated.View style={[styles.dot, { transform: [{ translateY: dot3 }] }]} />
-    </View>
-  );
 };
 
 export default function ChatScreen() {
@@ -204,57 +156,20 @@ export default function ChatScreen() {
               <Text style={styles.emptyStateSubtitle}>I'm Jacquin, your cooking assistant. Ask me anything about {recipe.title}!</Text>
             </View>
           ) : (
-            messages.map((msg, index) => {
-              const isUser = msg.role === 'user';
-
-              const bubble = (
-                <View
-                  style={[
-                    styles.messageBubble,
-                    isUser ? styles.userMessage : styles.otherMessage,
-                  ]}
-                >
-                  <Text style={isUser ? styles.userMessageText : styles.otherMessageText}>
-                    {msg.message}
-                  </Text>
-                </View>
-              );
-
-              const userAvatar = profile?.image 
-                ? <Image source={{ uri: profile.image }} style={styles.avatarImage} /> 
-                : <View style={[styles.avatarImage, styles.avatarPlaceholder]}><MaterialIcons name="person" size={24} color="#793206" /></View>;
-                
-              const otherAvatar = <Image source={require('@/assets/images/jacquin-full.png')} style={styles.avatarImage} />;
-              
-              return (
-                <View 
-                  key={`${msg.timestamp}-${index}`}
-                  style={[
-                    styles.messageRow, 
-                    isUser ? styles.userMessageRow : styles.otherMessageRow
-                  ]}
-                >
-                  {isUser ? (
-                    <>
-                      {bubble}
-                      {userAvatar}
-                    </>
-                  ) : (
-                    <>
-                      {otherAvatar}
-                      {bubble}
-                    </>
-                  )}
-                </View>
-              );
-            })
+            messages.map((msg, index) => (
+              <MessageItem 
+                key={`${msg.timestamp}-${index}`}
+                message={msg}
+                userAvatar={profile?.image}
+              />
+            ))
           )}
           
           {isLoadingMessage && (
             <View style={[styles.messageRow, styles.otherMessageRow]}>
               <Image source={require('@/assets/images/jacquin-full.png')} style={styles.avatarImage} />
               <View style={[styles.messageBubble, styles.otherMessage, styles.typingIndicator]}>
-                <FloatingDots />
+                <ActivityIndicator size={20} color="#793206" />
               </View>
             </View>
           )}
@@ -354,9 +269,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: 20,
   },
-  userMessageRow: {
-    justifyContent: 'flex-end',
-  },
   otherMessageRow: {
     justifyContent: 'flex-start',
   },
@@ -367,24 +279,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     backgroundColor: '#EDE4D2',
   },
-  avatarPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#79320633',
-  },
   messageBubble: {
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 15,
     maxWidth: '75%',
-  },
-  userMessage: {
-    backgroundColor: '#793206',
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 5,
-    borderTopRightRadius: 15,
-    borderBottomLeftRadius: 15,
-    borderTopLeftRadius: 15,
   },
   otherMessage: {
     backgroundColor: '#FFFFFF',
@@ -403,28 +302,6 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
   },
-  dotsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 4,
-    backgroundColor: '#793206',
-    marginHorizontal: 2,
-  },
-  userMessageText: {
-    color: '#EDE4D2',
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  otherMessageText: {
-    color: '#793206',
-    fontSize: 15,
-    lineHeight: 20,
-  },
   inputContainer: {
     flexDirection: 'row',
     padding: 10,
@@ -437,14 +314,11 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 40,
     maxHeight: 100,
-    // borderColor: '#793206',
-    // borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginRight: 10,
     color: '#793206',
-    // backgroundColor: '#FFFFFF',
     fontSize: 16,
     textAlignVertical: 'top',
   },
