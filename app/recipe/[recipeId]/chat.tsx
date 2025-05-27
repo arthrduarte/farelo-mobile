@@ -214,10 +214,9 @@ export default function ChatScreen() {
                     isUser ? styles.userMessage : styles.otherMessage,
                   ]}
                 >
-                  {/* <Text style={isUser ? styles.userMessageText : styles.otherMessageText}>
+                  <Text style={isUser ? styles.userMessageText : styles.otherMessageText}>
                     {msg.message}
-                  </Text> */}
-                  <FloatingDots />
+                  </Text>
                 </View>
               );
 
