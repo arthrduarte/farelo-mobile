@@ -33,8 +33,36 @@ export default function ChatScreen() {
   }, [recipe]);
 
   const handleSendMessage = async (message: string) => {
-    // TODO: Implement message sending logic
-    console.log('Message sent:', message);
+    // Immediately add user message to the list
+    const userMessage: ChatMessage = {
+      role: 'user',
+      message: message,
+      timestamp: new Date().toISOString(),
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoadingMessage(true);
+    
+    // Scroll to bottom after adding user message
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
+
+  const handleAIResponse = (aiMessage: string) => {
+    const aiResponse: ChatMessage = {
+      role: 'ai',
+      message: aiMessage,
+      timestamp: new Date().toISOString(),
+    };
+    
+    setMessages(prev => [...prev, aiResponse]);
+    setIsLoadingMessage(false);
+    
+    // Scroll to bottom after adding AI message
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   if (isError || !recipe) {
@@ -66,6 +94,7 @@ export default function ChatScreen() {
 
         <ChatInput 
           onSendMessage={handleSendMessage} 
+          onAIResponse={handleAIResponse}
           isLoading={isLoadingMessage}
           recipeContext={{
             title: recipe?.title || '',
