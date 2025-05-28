@@ -5,16 +5,51 @@ import { MaterialIcons } from '@expo/vector-icons';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
+  recipeContext: {
+    title: string;
+    ingredients: string[];
+    instructions: string[];
+  };
+  recipeId: string;
+  profileId: string;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading = false }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ 
+  onSendMessage, 
+  isLoading = false, 
+  recipeContext, 
+  recipeId, 
+  profileId 
+}) => {
   const [inputText, setInputText] = useState('');
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (inputText.trim()) {
-      onSendMessage(inputText.trim());
+      const message = inputText.trim();
       setInputText('');
       Keyboard.dismiss();
+
+      try {
+        const response = await fetch('https://usefarelo.com/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message,
+            recipeContext,
+            recipeId,
+            profile_id: profileId,
+          }),
+        });
+
+        const result = await response.json();
+        console.log(result);
+        
+        onSendMessage(message);
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     }
   };
 

@@ -64,7 +64,17 @@ export default function ChatScreen() {
           ref={flatListRef}
         />
 
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoadingMessage} />
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isLoadingMessage}
+          recipeContext={{
+            title: recipe?.title || '',
+            ingredients: recipe?.ingredients || [],
+            instructions: recipe?.instructions || [],
+          }}
+          recipeId={recipeId as string}
+          profileId={profile?.id || ''}
+        />
       </KeyboardAvoidingView>
     </ThemedView>
   );
