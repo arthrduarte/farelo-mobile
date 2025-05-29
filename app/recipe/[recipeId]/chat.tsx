@@ -3,10 +3,11 @@ import { View, Text, FlatList, KeyboardAvoidingView, Platform, Image, ActivityIn
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
 import { useLocalSearchParams } from 'expo-router';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { ChatInput } from '@/components/chat/ChatInput';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Define the message type based on the database schema
 type ChatMessage = {
@@ -18,8 +19,8 @@ type ChatMessage = {
 export default function ChatScreen() {
   const { profile } = useAuth();
   const { recipeId } = useLocalSearchParams();
-  const { data: recipe, isLoading: recipeLoading, isError } = useRecipe(recipeId as string, profile?.id);
-  const updateRecipeMutation = useUpdateRecipe();
+  const { data: recipe, isError } = useRecipe(recipeId as string, profile?.id);
+  const queryClient = useQueryClient();
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingMessage, setIsLoadingMessage] = useState(false);
@@ -28,41 +29,42 @@ export default function ChatScreen() {
   // Load existing chat messages when recipe is loaded
   useEffect(() => {
     if (recipe?.chat && Array.isArray(recipe.chat)) {
-      setMessages(recipe.chat as ChatMessage[]);
+      if (messages.length === 0) {
+        setMessages(recipe.chat as ChatMessage[]);
+      }
     }
   }, [recipe]);
 
   const handleSendMessage = async (message: string) => {
-    // Immediately add user message to the list
+    
     const userMessage: ChatMessage = {
       role: 'user',
       message: message,
       timestamp: new Date().toISOString(),
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [userMessage, ...messages];
+    setMessages(updatedMessages);
     setIsLoadingMessage(true);
-    
-    // Scroll to bottom after adding user message
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
   };
 
   const handleAIResponse = (aiMessage: string) => {
+    
     const aiResponse: ChatMessage = {
       role: 'ai',
       message: aiMessage,
       timestamp: new Date().toISOString(),
     };
     
-    setMessages(prev => [...prev, aiResponse]);
+    setMessages(prev => {
+      const newMessages = [aiResponse, ...prev];
+      return newMessages;
+    });
     setIsLoadingMessage(false);
-    
-    // Scroll to bottom after adding AI message
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+
+    queryClient.invalidateQueries({
+      queryKey: RECIPE_KEYS.detail(recipeId as string)
+    });
   };
 
   if (isError || !recipe) {
@@ -90,6 +92,7 @@ export default function ChatScreen() {
           contentContainerStyle={styles.messagesContainer}
           keyExtractor={(item, index) => `${item.timestamp}-${index}`}
           ref={flatListRef}
+          inverted
         />
 
         <ChatInput 

@@ -35,28 +35,28 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       onSendMessage(message);
 
       try {
+        const requestBody = {
+          message,
+          recipeContext,
+          recipeId,
+          profile_id: profileId,
+        };
+        
         const response = await fetch('https://usefarelo.com/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            message,
-            recipeContext,
-            recipeId,
-            profile_id: profileId,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         const result = await response.json();
-        console.log(result);
         
         // Call onAIResponse with the AI's response
         if (result.message) {
           onAIResponse(result.message);
         }
       } catch (error) {
-        console.error('Error sending message:', error);
         onAIResponse('Sorry, I encountered an error. Please try again.');
       }
     }
