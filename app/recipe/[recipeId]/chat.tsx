@@ -7,6 +7,7 @@ import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
 import { useLocalSearchParams } from 'expo-router';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { ChatInput } from '@/components/chat/ChatInput';
+import { EmptyChat } from '@/components/chat/EmptyChat';
 import { useQueryClient } from '@tanstack/react-query';
 
 // Define the message type based on the database schema
@@ -86,14 +87,18 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
-        <FlatList
-          data={messages}
-          renderItem={({ item }) => <MessageItem message={item} userAvatar={profile?.image} />}
-          contentContainerStyle={styles.messagesContainer}
-          keyExtractor={(item, index) => `${item.timestamp}-${index}`}
-          ref={flatListRef}
-          inverted
-        />
+        {messages.length > 0 ? (
+          <FlatList
+            data={messages}
+            renderItem={({ item }) => <MessageItem message={item} userAvatar={profile?.image} />}
+            contentContainerStyle={styles.messagesContainer}
+            keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+            ref={flatListRef}
+            inverted
+          />
+        ) : (
+          <EmptyChat recipeName={recipe?.title || 'this recipe'} />
+        )}
 
         <ChatInput 
           onSendMessage={handleSendMessage} 

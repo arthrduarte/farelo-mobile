@@ -1,6 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { TouchableOpacity, StyleSheet, View, Image } from 'react-native';
 import { router } from 'expo-router';
 
 type ChatBubbleProps = {
@@ -14,7 +13,7 @@ const ChatBubble = ({ recipeId }: ChatBubbleProps) => {
       onPress={() => router.push(`/recipe/${recipeId}/chat` as any)}
       activeOpacity={0.8}
     >
-      <MaterialIcons name="chat" size={28} color="#EDE4D2" />
+      <Image source={require('@/assets/images/jacquin-full.png')} style={styles.image} />
     </TouchableOpacity>
   );
 };
@@ -27,7 +26,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#793206', // BROWN
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -38,6 +36,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
   },
 });
 
