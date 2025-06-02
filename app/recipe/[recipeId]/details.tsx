@@ -15,6 +15,7 @@ import { ImagesSection } from '@/components/recipe/RecipeImage';
 import { NotesSection } from '@/components/recipe/NotesSection';
 import { TagsSection } from '@/components/recipe/TagsSection';
 import { Divider } from '@/components/Divider';
+import ChatBubble from '@/components/ChatBubble';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -155,6 +156,7 @@ export default function RecipeDetailsScreen() {
 
         <Divider />
       </ScrollView>
+      <ChatBubble recipeId={recipe.id} />
     </ThemedView>
   );
 }

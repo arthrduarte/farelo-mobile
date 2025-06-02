@@ -9,6 +9,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useState, useEffect } from 'react';
 import { Divider } from '@/components/Divider';
 import { ImagesSection } from '@/components/recipe/RecipeImage';
+import ChatBubble from '@/components/ChatBubble';
 
 export default function StartRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -223,6 +224,7 @@ export default function StartRecipeScreen() {
 
         <Divider />
       </ScrollView>
+      <ChatBubble />
     </ThemedView>
   );
 }
