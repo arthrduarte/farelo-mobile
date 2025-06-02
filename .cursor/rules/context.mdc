@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## About the app
+Farelo is a mobile app that allows users to save and share recipes. To save recipes the user has 3 options: 
+1. Import manually, where the user inputs all ingredients, instructions, time, tags, pictures, etc (all fields in [db.ts](mdc:types/db.ts))
+2. Import via link, where the user enters a link and we use OpenAI gpt-4o to first extract the info from the website and save to their profile
+3. Import via picture, where the user enters an image and we use OpenAI gpt-4o to analyze the image and extract the recipe
+
+
+All the recipes are displayed in cards under /recipes, and when you click to see the details of a recipe you are redirected to the details screen, where you can edit the recipe, delete it, or remix - remix allows you to say "make it spicier" and we use gpt-4o to generate a new recipe with the new requirements. On the details page there's also the "Start" button, which serves as a way of starting to cook and displays checkboxes for you to check as you cook. After finishing the recipe you click "Finish" and it'll take you to the finish screen, where you add a description, notes for yourself, and a picture of the food you just made in order to save a new log. 
+
+
+
+In the home page we display all logs from the user's friends, and for each log you can like, comment or save your friend's recipe to your own cookbook.

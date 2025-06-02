@@ -5,6 +5,8 @@ alwaysApply: true
 ---
 For titles use font size 20.
 
+For every component you must create a skeleton loader. Don't use placeholders or spinners. Always create a skeleton loader of that component 
+
 BROWN - Main color: #793206
 BEIGE - Secondary color: #EDE4D2
 

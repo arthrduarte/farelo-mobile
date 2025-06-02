@@ -14,6 +14,26 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
   const { profile: currentProfile, signOut } = useAuth();
   const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(profile?.id || '');
 
+  const handleFollowersPress = () => {
+    router.push({
+      pathname: '/profile/followers',
+      params: { 
+        profileId: profile?.id,
+        profileName: profile?.first_name 
+      }
+    });
+  };
+
+  const handleFollowingPress = () => {
+    router.push({
+      pathname: '/profile/following',
+      params: { 
+        profileId: profile?.id,
+        profileName: profile?.first_name 
+      }
+    });
+  };
+
   return (
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -33,14 +53,14 @@ export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
                       <Text>Meals</Text>
                       <Text style={styles.statValue}>{logs.length}</Text>
                   </View>
-                  <View>
+                  <TouchableOpacity onPress={handleFollowersPress}>
                       <Text>Followers</Text>
                       <Text style={styles.statValue}>{followersCount}</Text>
-                  </View>
-                  <View>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleFollowingPress}>
                       <Text>Following</Text>
                       <Text style={styles.statValue}>{followingCount}</Text>
-                  </View>
+                  </TouchableOpacity>
               </View>
           </View>
         </View>

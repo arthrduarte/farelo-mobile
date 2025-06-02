@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
@@ -9,6 +9,7 @@ import React, { useState, useCallback } from 'react';
 import { supabase } from "@/lib/supabase";
 import { Divider } from "@/components/Divider";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { CommentEntry } from "@/components/log/CommentEntry";
 
 export default function LogCommentsScreen() {
     const { logId } = useLocalSearchParams();
@@ -51,8 +52,8 @@ export default function LogCommentsScreen() {
             <ScreenHeader title="Comments" showBackButton={true} />
             <KeyboardAvoidingView 
                 style={styles.keyboardAvoidingContainer}
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
             >
                 <View style={styles.topContentContainer}>
                     <View style={styles.logHeader}>
@@ -86,39 +87,20 @@ export default function LogCommentsScreen() {
                     <Divider />
                 </View>
 
-                <ScrollView 
-                    style={styles.commentsScrollView}
-                    contentContainerStyle={styles.commentsScrollContentContainer}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    {comments.map((comment) => (
-                        <View 
-                            key={comment.id}
-                            style={styles.commentContainer}
-                        >
-                            <Image 
-                                source={{ uri: comment.profile?.image }}
-                                style={styles.commentAvatar}
-                            />
-                            <View style={styles.commentContent}>
-                                <Text style={styles.commentName}>
-                                    {comment.profile?.first_name} {comment.profile?.last_name}
-                                </Text>
-                                <Text style={styles.commentText}>
-                                    {comment.content}
-                                </Text>
-                                <Text style={styles.commentTime}>
-                                    {formatTimeAgo(comment.created_at)}
-                                </Text>
-                            </View>
-                        </View>
-                    ))}
-                    {comments.length === 0 && (
-                        <View style={styles.noCommentsContainer}>
-                            <Text style={styles.noCommentsText}>No comments yet. Be the first!</Text>
-                        </View>
-                    )}
-                </ScrollView>
+                {comments.length > 0 ? (
+                    <FlatList
+                        data={comments}
+                        renderItem={({ item }) => <CommentEntry comment={item} />}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.commentsContainer}
+                        keyboardShouldPersistTaps="handled"
+                        style={styles.commentsList}
+                    />
+                ) : (
+                    <View style={styles.noCommentsContainer}>
+                        <Text style={styles.noCommentsText}>No comments yet. Be the first!</Text>
+                    </View>
+                )}
 
                 <View style={styles.inputContainer}>
                     <TextInput
@@ -204,49 +186,11 @@ const styles = StyleSheet.create({
         color: '#793206',
         opacity: 0.8,
     },
-    commentsScrollView: {
+    commentsList: {
         flex: 1,
     },
-    commentsScrollContentContainer: {
+    commentsContainer: {
         paddingBottom: 16,
-    },
-    commentContainer: {
-        flexDirection: 'row',
-        marginBottom: 12,
-        alignItems: 'flex-start',
-    },
-    commentAvatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        marginRight: 10,
-        marginTop: 2,
-    },
-    commentContent: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-        padding: 10,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#7932061A',
-    },
-    commentName: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#793206',
-        marginBottom: 2,
-    },
-    commentText: {
-        fontSize: 14,
-        fontWeight: '400',
-        color: '#333333',
-        lineHeight: 18,
-    },
-    commentTime: {
-        fontSize: 10,
-        color: '#79320680',
-        marginTop: 4,
-        textAlign: 'right',
     },
     noCommentsContainer: {
         flex: 1,
