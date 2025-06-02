@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, Text } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Divider } from '@/components/Divider';
 
@@ -75,6 +75,9 @@ export const LogLoader = () => {
         <SkeletonItem style={styles.actionButton} />
         <SkeletonItem style={styles.actionButton} />
       </View>
+
+      <Text style={styles.errorText}>If your app is stuck on loading, please restart it. We're working on fixing this issue!</Text>
+    
     </View>
   );
 };
@@ -179,5 +182,10 @@ const styles = StyleSheet.create({
     height: 24,
     width: 24,
     borderRadius: 12,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginTop: 16,
+    color: '#79320633',
   },
 }); 
