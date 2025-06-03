@@ -173,7 +173,6 @@ export const useCopyRecipe = () => {
                 tags: originalRecipe.tags,
                 source_url: originalRecipe.source_url, // Keep original source URL
                 user_image_url: null, // Reset user image
-                user_images_url: null, // Reset user images
                 notes: '', // Reset notes
                 chat: null, // Reset chat
             };
@@ -217,15 +216,13 @@ export const useCreateRecipe = () => {
     const { profile } = useAuth();
 
     return useMutation({
-        mutationFn: async (recipeData: Omit<Recipe, 'id' | 'profile_id' | 'ai_image_url' | 'user_image_url' | 'user_images_url' | 'chat'>) => {
+        mutationFn: async (recipeData: Omit<Recipe, 'id' | 'profile_id' | 'ai_image_url' | 'chat'>) => {
             if (!profile) throw new Error("User not authenticated");
 
             const newRecipe = {
                 ...recipeData,
                 profile_id: profile.id,
                 ai_image_url: '', // This will be updated later if AI generates an image
-                user_image_url: null,
-                user_images_url: null,
                 chat: null,
             };
 

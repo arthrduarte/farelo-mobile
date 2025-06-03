@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Text, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Recipe } from '@/types/db';
 import { useCreateRecipe } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
 import { Divider } from '@/components/Divider';
+import { supabase } from '@/lib/supabase';
+import * as FileSystem from 'expo-file-system';
+import { decode } from 'base64-arraybuffer';
+import 'react-native-url-polyfill/auto';
 
 // Define a type for the manual form data, omitting fields not manually entered
 type ManualRecipeFormData = Pick<
   Recipe, 
-  'title' | 'description' | 'time' | 'servings' | 'ingredients' | 'instructions' | 'tags' | 'notes' | 'source_url'
+  'title' | 'description' | 'time' | 'servings' | 'ingredients' | 'instructions' | 'tags' | 'notes' | 'source_url' | 'user_image_url'
 >;
 
 // Final data structure for submission (includes filtered lists)
@@ -17,6 +22,7 @@ export type FinalManualRecipeData = Omit<ManualRecipeFormData, 'ingredients' | '
   ingredients: string[];
   instructions: string[];
   tags: string[];
+  user_image_url: string | null;
 };
 
 // Initial state for the manual form
@@ -30,21 +36,36 @@ const initialManualFormData: ManualRecipeFormData = {
   tags: [''],
   notes: '',
   source_url: '',
+  user_image_url: null,
 };
 
 export default function AddManually() {
   const [manualFormData, setManualFormData] = useState<ManualRecipeFormData>(initialManualFormData);
   const createRecipeMutation = useCreateRecipe();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Check form validity and notify parent
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+        }
+      }
+    })();
+  }, []);
+
+  // Check form validity (currently not used, but kept for potential future validation logic)
   useEffect(() => {
     const finalIngredients = manualFormData.ingredients.filter(item => item.trim() !== '');
     const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
-    const isValid = !!(manualFormData.title.trim() && manualFormData.time > 0 && manualFormData.servings > 0 && finalIngredients.length > 0 && finalInstructions.length > 0);
+    // const isValid = !!(manualFormData.title.trim() && manualFormData.time > 0 && manualFormData.servings > 0 && finalIngredients.length > 0 && finalInstructions.length > 0);
+    // If you need to notify a parent component or update UI based on validity, you can do it here.
+    // For example: onFormValidityChange?.(isValid);
   }, [manualFormData]);
 
-  const handleManualFormChange = (field: keyof Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags'>, value: string | number) => {
+  const handleManualFormChange = (field: keyof Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags' | 'user_image_url'>, value: string | number | string[] | null) => {
     setManualFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -80,12 +101,23 @@ export default function AddManually() {
         return;
       }
 
+      let uploadedImageUrl: string | null = null;
+      if (selectedImage) {
+        uploadedImageUrl = await uploadImage(selectedImage);
+        if (!uploadedImageUrl) {
+          // Upload failed, alert was already shown in uploadImage
+          setIsSubmitting(false); // Allow user to try again
+          return;
+        }
+      }
+
       // Prepare final data
       const finalData: FinalManualRecipeData = {
         ...manualFormData,
         ingredients: finalIngredients,
         instructions: finalInstructions,
         tags: finalTags,
+        user_image_url: uploadedImageUrl,
       };
 
       // Submit to Supabase
@@ -132,6 +164,72 @@ export default function AddManually() {
     });
   };
 
+  const pickImageAsync = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7, // Adjusted quality for faster uploads
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setSelectedImage(result.assets[0].uri);
+      // We don't set manualFormData.user_image_url here directly.
+      // It will be set after successful upload in handleSubmission.
+    }
+  };
+
+  const uploadImage = async (uri: string): Promise<string | null> => {
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg';
+      const contentType = `image/${fileExt}`;
+      // Consider adding profile_id to the path if images should be user-specific in the bucket path
+      // For now, using a simpler path similar to before, but ensuring uniqueness.
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = fileName; // Path within the bucket
+
+      let { error: uploadError, data: uploadData } = await supabase.storage
+        .from('recipe_images') // Ensure this is your correct bucket name
+        .upload(filePath, decode(base64), { 
+          contentType,
+          // upsert: false, // Default is false, set to true if you want to overwrite
+        });
+
+      if (uploadError) {
+        console.error('Supabase Upload Error:', uploadError);
+        Alert.alert('Upload Error', `Failed to upload image: ${uploadError.message}`);
+        return null;
+      }
+       
+      const { data: publicUrlData } = supabase.storage
+        .from('recipe_images')
+        .getPublicUrl(filePath);
+
+
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+          console.error('Error getting public URL: No public URL found or data is null');
+          Alert.alert('Upload Error', 'Failed to get image URL after upload.');
+          return null;
+      }
+
+      return publicUrlData.publicUrl;
+    } catch (e: any) {
+      console.error('Upload process error:', e);
+      Alert.alert('Upload Error', `An unexpected error occurred during image upload: ${e.message}`);
+      return null;
+    }
+  };
+  
+  const clearImage = () => {
+    setSelectedImage(null);
+    // Also clear it from form data if it was set
+    setManualFormData(prev => ({ ...prev, user_image_url: null }));
+  };
+
   return (
     <View style={styles.manualFormContainer}>
       {/* Title */}
@@ -154,6 +252,24 @@ export default function AddManually() {
         placeholderTextColor="#79320680"
         multiline
       />
+
+      {/* Recipe Image */}
+      <Text style={styles.formLabel}>Recipe Image</Text>
+      <View style={styles.imagePickerContainer}>
+        {selectedImage ? (
+          <View style={styles.imagePreviewContainer}>
+            <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+            <TouchableOpacity onPress={clearImage} style={styles.clearImageButton}>
+              <MaterialIcons name="close" size={24} color="#793206" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.imagePickerButton} onPress={pickImageAsync}>
+            <MaterialIcons name="add-photo-alternate" size={30} color="#793206" />
+            <Text style={styles.imagePickerButtonText}>Add Recipe Photo</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Time & Servings */}
       <View style={styles.row}>
@@ -366,5 +482,46 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.7,
+  },
+  imagePickerContainer: {
+    marginTop: 8,
+    marginBottom: 16,
+    alignItems: 'center', // Center the button or preview
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#79320633', // Low opacity brown
+    width: '100%', // Make it full width
+  },
+  imagePickerButtonText: {
+    color: '#793206',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  imagePreviewContainer: {
+    position: 'relative', // For positioning the clear button
+    alignItems: 'center',
+  },
+  imagePreview: {
+    width: 200, // Adjust as needed
+    height: 150, // Adjust as needed, maintaining aspect ratio if possible
+    borderRadius: 8,
+    marginBottom: 8, // Space before clear button (if button is outside)
+  },
+  clearImageButton: {
+    position: 'absolute',
+    top: -10, // Adjust to position correctly over the image corner
+    right: -10, // Adjust to position correctly over the image corner
+    backgroundColor: '#EDE4D2', // Beige, or use a contrasting color
+    borderRadius: 15, // Make it circular
+    padding: 5,
+    elevation: 2, // Shadow for Android
+    zIndex: 1, // Ensure it's above the image
   },
 });
