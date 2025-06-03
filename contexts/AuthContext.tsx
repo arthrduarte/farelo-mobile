@@ -86,17 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Listener for customer info updates from RevenueCat
-    const customerInfoUpdateHandler = (info: CustomerInfo) => {
-      console.log('[AuthContext] Received CustomerInfo update. Full info:', JSON.stringify(info, null, 2));
-      console.log('[AuthContext] Entitlements object:', JSON.stringify(info.entitlements, null, 2));
-      console.log('[AuthContext] Active entitlements keys:', Object.keys(info.entitlements.active));
-      console.log('[AuthContext] Checking for PREMIUM_ENTITLEMENT_ID:', PREMIUM_ENTITLEMENT_ID);
-      
+    const customerInfoUpdateHandler = (info: CustomerInfo) => {      
       const proEntitlement: PurchasesEntitlementInfo | undefined = info.entitlements.active[PREMIUM_ENTITLEMENT_ID];
-      console.log(`[AuthContext] Pro entitlement found by ID '${PREMIUM_ENTITLEMENT_ID}':`, proEntitlement ? JSON.stringify(proEntitlement, null, 2) : 'undefined');
       
       setIsProMember(!!proEntitlement);
-      console.log('[AuthContext] isProMember set to:', !!proEntitlement);
       setCustomerInfo(info); // Set customer info after logging
     };
     Purchases.addCustomerInfoUpdateListener(customerInfoUpdateHandler);
@@ -107,23 +100,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshCustomerInfo = async () => {
     if (!user) {
-      console.log('[AuthContext] refreshCustomerInfo: No user, skipping.');
       return;
     }
     try {
-      console.log('[AuthContext] Refreshing CustomerInfo...');
       const fetchedCustomerInfo = await Purchases.getCustomerInfo();
-      console.log('[AuthContext] Fetched CustomerInfo. Full info:', JSON.stringify(fetchedCustomerInfo, null, 2));
-      console.log('[AuthContext] Entitlements object from fetched info:', JSON.stringify(fetchedCustomerInfo.entitlements, null, 2));
-      console.log('[AuthContext] Active entitlements keys from fetched info:', Object.keys(fetchedCustomerInfo.entitlements.active));
-      console.log('[AuthContext] Checking for PREMIUM_ENTITLEMENT_ID in fetched info:', PREMIUM_ENTITLEMENT_ID);
-
       const proEntitlement: PurchasesEntitlementInfo | undefined = fetchedCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
-      console.log(`[AuthContext] Pro entitlement from fetched info found by ID '${PREMIUM_ENTITLEMENT_ID}':`, proEntitlement ? JSON.stringify(proEntitlement, null, 2) : 'undefined');
       
       setIsProMember(!!proEntitlement);
-      console.log('[AuthContext] CustomerInfo refreshed. isProMember set to:', !!proEntitlement);
-      setCustomerInfo(fetchedCustomerInfo); // Set customer info after logging
+      setCustomerInfo(fetchedCustomerInfo); 
     } catch (error) {
       console.error('[AuthContext] Error refreshing CustomerInfo:', error);
     }
@@ -137,8 +121,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (session?.user) {
         await fetchProfile(session.user.id)
-        // Initial fetch of customer info after user is identified
-        // logIn in fetchProfile will also attempt to get customerInfo, this is a fallback/explicit refresh
         if (await Purchases.isConfigured()) {
             await refreshCustomerInfo();
         }
@@ -147,10 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       }
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notifyCallbacks])
 
-  // Notify callbacks when profile or pro status changes
   useEffect(() => {
     if (!loading) {
       const isAuthenticated = !!session && !!profile;
@@ -202,7 +182,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (await Purchases.isConfigured()) {
         Purchases.logOut()
-            .then(() => console.log('[AuthContext] RevenueCat user logged out'))
             .catch(rcError => console.error('[AuthContext] RevenueCat logout error:', rcError));
       }
 
@@ -236,18 +215,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (await Purchases.isConfigured()) {
             Purchases.logIn(data.id)
                 .then(async (loginResult) => {
-                    console.log('[AuthContext] RevenueCat user logged in. User ID:', data.id);
-                    console.log('[AuthContext] LoginResult CustomerInfo. Full info:', JSON.stringify(loginResult.customerInfo, null, 2));
-                    console.log('[AuthContext] LoginResult Entitlements object:', JSON.stringify(loginResult.customerInfo.entitlements, null, 2));
-                    console.log('[AuthContext] LoginResult Active entitlements keys:', Object.keys(loginResult.customerInfo.entitlements.active));
-                    console.log('[AuthContext] LoginResult Checking for PREMIUM_ENTITLEMENT_ID:', PREMIUM_ENTITLEMENT_ID);
-
                     setCustomerInfo(loginResult.customerInfo);
                     const proEntitlement: PurchasesEntitlementInfo | undefined = loginResult.customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
-                    console.log(`[AuthContext] LoginResult Pro entitlement found by ID '${PREMIUM_ENTITLEMENT_ID}':`, proEntitlement ? JSON.stringify(proEntitlement, null, 2) : 'undefined');
                     
                     setIsProMember(!!proEntitlement);
-                    console.log('[AuthContext] LoginResult isProMember set to:', !!proEntitlement);
                 })
                 .catch(rcError => console.error('[AuthContext] RevenueCat login error:', rcError));
           } else {
