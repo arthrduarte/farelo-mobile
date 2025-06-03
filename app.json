@@ -14,7 +14,8 @@
       "bundleIdentifier": "com.arthrduarte.farelo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "associatedDomains": ["applinks:usefarelo.com"]
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +24,20 @@
       },
       "minSdkVersion": 26,
       "package": "com.arthrduarte.farelo",
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "usefarelo.com",
+              "pathPrefix": "/"
+            }
+          ],
+          "categories": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "androidNavigationBar": {
       "backgroundColor": "#EDE4D2",
