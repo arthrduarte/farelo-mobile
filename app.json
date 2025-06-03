@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "owner": "arthrduarte",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "farelo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
