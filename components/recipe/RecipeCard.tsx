@@ -12,10 +12,17 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   return (
     <TouchableOpacity onPress={() => router.push(`/recipe/${recipe.id}/details`)}>
       <View style={styles.recipeCard}>
-        <Image 
-          source={{ uri: recipe.ai_image_url }} 
-          style={styles.recipeImage}
-        />
+        {recipe.user_image_url ? (
+          <Image 
+            source={{ uri: recipe.user_image_url }} 
+            style={styles.recipeImage}
+          />
+        ) : (
+          <Image 
+            source={{ uri: recipe.ai_image_url }} 
+            style={styles.recipeImage}
+          />
+        )}
         <View style={styles.recipeInfo}>
           <Text style={styles.recipeTitle}>{recipe.title}</Text>
           <View style={styles.tagContainer}>
