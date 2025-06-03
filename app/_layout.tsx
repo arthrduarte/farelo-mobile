@@ -75,6 +75,7 @@ export default function RootLayout() {
               <Stack.Screen name="recipe/[recipeId]/start"/>
               <Stack.Screen name="recipe/[recipeId]/finish"/>
               <Stack.Screen name="recipe/[recipeId]/chat"/>
+              <Stack.Screen name="recipe/[recipeId]/share"/>
               <Stack.Screen name="log/[logId]/details"/>
               <Stack.Screen name="log/[logId]/comments"/>
               <Stack.Screen name="search"/>

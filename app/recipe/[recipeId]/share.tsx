@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Share } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
 import { Recipe } from '@/types/db';
@@ -17,7 +17,7 @@ import { TagsSection } from '@/components/recipe/TagsSection';
 import { Divider } from '@/components/Divider';
 import ChatBubble from '@/components/ChatBubble';
 
-export default function RecipeDetailsScreen() {
+export default function RecipeShareScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
@@ -72,7 +72,7 @@ export default function RecipeDetailsScreen() {
         recipe={recipe}
       />
 
-      <ScreenHeader title="Recipe Details" showBackButton={true} />
+      <ScreenHeader title="Shared Recipe" showBackButton={true} />
 
       <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -93,17 +93,6 @@ export default function RecipeDetailsScreen() {
           </View>
         </View>
 
-        {/* Start Recipe Button */}
-        <TouchableOpacity 
-          style={styles.startRecipeButton} 
-          onPress={() => router.push({
-            pathname: '/recipe/[recipeId]/start',
-            params: { recipeId: recipe.id }
-          })}
-        >
-          <Text style={styles.startRecipeText}>Start Recipe</Text>
-        </TouchableOpacity>
-
         {/* Recipe Image */}
         {recipe.user_image_url ? (
           <ImagesSection mainImage={recipe.user_image_url} />
@@ -113,38 +102,6 @@ export default function RecipeDetailsScreen() {
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          {/* share button should open the share modal/drawer */}
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => Share.share({
-              message: `Check out my ${recipe.title} recipe on Farelo!\n\nhttps://usefarelo.com/recipe/${recipeId}/share`,
-              url: `https://usefarelo.com/recipe/${recipeId}/share`
-            })}
-          >
-            <MaterialIcons name="share" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Share</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => setShowRemixModal(true)}
-          >
-            <MaterialIcons name="refresh" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Remix</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => router.push(`/recipe/${recipeId}/edit` as any)}
-          >
-            <MaterialIcons name="edit" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => setShowDeleteConfirm(true)}
-          >
-            <MaterialIcons name="delete" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Tags */}
