@@ -105,8 +105,8 @@ export default function RecipeDetailsScreen() {
         </TouchableOpacity>
 
         {/* Recipe Image */}
-        {recipe.user_images_url && recipe.user_images_url.length > 0 ? (
-          <ImagesSection images={recipe.user_images_url} />
+        {recipe.user_image_url ? (
+          <ImagesSection mainImage={recipe.user_image_url} />
         ) : (
           <ImagesSection mainImage={recipe.ai_image_url} />
         )}

@@ -10,7 +10,6 @@ export type Recipe = {
     tags: string[];
     source_url: string; // URL to the source of the recipe
     user_image_url: string | null; // URL to the user's image
-    user_images_url: string[] | null; // array of URLs to the user's images
     notes: string;
     profile_id: string; // UUID of the user who created the recipe
     chat: JSON | null; // JSONB array of messages [{role: 'user' | 'ai', message: string, timestamp: timestamptz}]

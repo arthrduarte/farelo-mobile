@@ -179,8 +179,8 @@ export default function EditRecipeScreen() {
         </View>
 
         {/* Recipe Image */}
-        {editedRecipe.user_images_url && editedRecipe.user_images_url.length > 0 ? (
-          <ImagesSection images={editedRecipe.user_images_url} />
+        {editedRecipe.user_image_url ? (
+          <ImagesSection mainImage={editedRecipe.user_image_url} />
         ) : (
           <ImagesSection mainImage={editedRecipe.ai_image_url} />
         )}
