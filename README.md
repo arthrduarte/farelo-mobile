@@ -1,46 +1,93 @@
-# Welcome to jack's Expo React Native free boilerplate 👋
+# 🍪 Farelo - Save & Share Recipes
 
-This is an [Expo](https://expo.dev) template project with a simple onboarding sequence for first time users.
+Farelo is a mobile app that uses AI to digitize, organize, and share personal recipes, combining social cooking logs with a smart, searchable cookbook.
 
-This free boilerplate is sponsored by [post bridge](https://post-bridge.com) - a super simple and affordable social media scheduling tool for small teams and founders.
+## ✅ Publishing Status
+- **iOS**: Trying to pass Apple's reviews
+- **Android**: Closed beta
 
-## Get started
+## ✨ Features
 
-1. Clone this repository 
+### Recipe Management
+- **Manual Import**: Add recipes with ingredients, instructions, cooking time, tags, and photos
+- **Smart Link Import**: Extract recipes from any website using AI-powered web scraping
+- **Photo Import**: Capture recipes from images using advanced AI image analysis
+- **AI Recipe Remix**: Transform existing recipes with requests like "make it spicier" or "make it vegetarian"
 
-2. Install dependencies
+### Cooking Experience
+- **Interactive Cooking Mode**: Step-by-step cooking with checkboxes to track progress
+- **Cook Logs**: Document your cooking journey with photos, notes, and personal modifications
+- **Social Sharing**: Share your cooking achievements with friends and family
 
+### Social Features
+- **Recipe Feed**: Discover what friends are cooking and their results
+- **Engage & Save**: Like, comment, and save friends' recipes to your cookbook
+- **Follow Friends**: Stay updated with your cooking community
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Expo](https://expo.dev) React Native
+- **Backend**: Express.js with TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **AI Integration**: OpenAI GPT-4o for recipe extraction and analysis
+- **State Management**: React Query (TanStack Query)
+- **Payment Processing**: RevenueCat
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or later)
+- Expo CLI
+- iOS Simulator/Android Emulator or physical device with Expo Go
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd farelo-mobile
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
-Or 
-
-  ```bash
+   
+   Or
+   
+   ```bash
    npx expo install
    ```
 
-3. Start the app
-
+3. **Start the development server**
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Run on your preferred platform**
+   - **Development build**: For full feature access
+   - **iOS Simulator**: Press `i` in the terminal
+   - **Android Emulator**: Press `a` in the terminal  
+   - **Physical Device**: Scan QR code with Expo Go app
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📁 Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+```
+farelo-mobile/
+├── app/                 # Main app directory (file-based routing)
+│   ├── (auth)/         # Authentication flow
+│   ├── (tabs)/         # Main tab navigation
+│   └── ...
+├── components/         # Reusable UI components
+├── types/              # TypeScript type definitions
+│   └── db.ts          # Database schema types
+├── contexts/           # React contexts
+├── hooks/              # Custom React hooks
+├── lib/                # Utility libraries
+├── constants/          # App constants and theme
+└── assets/             # Static assets (images, fonts)
+```
 
-## Need help?
+---
 
-Join [the discord](https://discord.gg/XuT2V5GUkA) for app founders and @jackfriks for help.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+*Built with ❤️ by Arthur*
