@@ -8,12 +8,14 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native';
 import { Profile } from '@/types/db';
 import { LogLoader } from '@/components/log/LogLoader';
+import { useFollow } from '@/hooks/useFollow';
 
 export default function ProfileScreen() {
   const { id, profile: profileParam } = useLocalSearchParams();
   const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(id as string);
-
+  const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(id as string);
   const profile = JSON.parse(profileParam as string) as Profile;
+
 
   if (!profile) {
     return (
@@ -38,7 +40,7 @@ export default function ProfileScreen() {
 
   const HeaderComponent = () => {
     return (
-      <ProfileHeader profile={profile} logs={profileLogs} />
+      <ProfileHeader profile={profile} logs={profileLogs} isFollowing={isFollowing} loading={loading} toggleFollow={toggleFollow} followersCount={followersCount} followingCount={followingCount} />
     );
   };
   

@@ -8,11 +8,12 @@ import { LogCard } from '@/components/LogCard';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
+import { useFollow } from '@/hooks/useFollow';
 
 export default function ProfileScreen() {
   const { profile } = useAuth();
   const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(profile?.id ?? '');
-
+  const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(profile?.id || '');
 
   if (!profile) {
     return <Text>No profile found</Text>;
@@ -30,7 +31,7 @@ export default function ProfileScreen() {
 
   const HeaderComponent = () => {
     return (
-      <ProfileHeader profile={profile} logs={profileLogs} />
+      <ProfileHeader profile={profile} logs={profileLogs} isFollowing={isFollowing} loading={loading} toggleFollow={toggleFollow} followersCount={followersCount} followingCount={followingCount} />
     );
   };
   

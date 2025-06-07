@@ -2,17 +2,21 @@ import { View, StyleSheet, Text, Button, TouchableOpacity, ActivityIndicator } f
 import { Profile, Log } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
-import { useFollow } from '@/hooks/useFollow';
 import Avatar from './ui/Avatar';
+import React from 'react';
 
 interface ProfileHeaderProps {
   profile: Partial<Profile>
   logs: Log[]
+  isFollowing: boolean
+  loading: boolean
+  toggleFollow: () => void
+  followersCount: number
+  followingCount: number
 }
 
-export default function ProfileHeader({ profile, logs }: ProfileHeaderProps) {
+export default function ProfileHeader({ profile, logs, isFollowing, loading, toggleFollow, followersCount, followingCount }: ProfileHeaderProps) {
   const { profile: currentProfile, signOut } = useAuth();
-  const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(profile?.id || '');
 
   const handleFollowersPress = () => {
     router.push({
