@@ -15,22 +15,22 @@ export const useFollow = (profileId: string) => {
         const fetchCounts = async () => {
             try {
                 // Get followers count
-                const { count: followers, error: followersError } = await supabase
-                    .from('follows')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('following_id', profileId);
+                const [followersResult, followingResult] = await Promise.all([
+                    supabase
+                        .from('follows')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('following_id', profileId),
+                    supabase
+                        .from('follows')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('follower_id', profileId)
+                ]);
 
-                if (followersError) throw followersError;
-                setFollowersCount(followers || 0);
+                if (followersResult.error) throw followersResult.error;
+                if (followingResult.error) throw followingResult.error;
 
-                // Get following count
-                const { count: following, error: followingError } = await supabase
-                    .from('follows')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('follower_id', profileId);
-
-                if (followingError) throw followingError;
-                setFollowingCount(following || 0);
+                setFollowersCount(followersResult.count || 0);
+                setFollowingCount(followingResult.count || 0);
             } catch (error) {
                 console.error('Error fetching follow counts:', error);
             }
