@@ -36,7 +36,6 @@ type AuthContextType = {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
-  onAuthStateChange: (callback: (isAuthenticated: boolean) => void) => () => void
   refreshProfile: () => Promise<void>
   refreshCustomerInfo: () => Promise<void>;
 }
@@ -50,7 +49,6 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => {},
   signOut: async () => {},
-  onAuthStateChange: () => () => {},
   refreshProfile: async () => {},
   refreshCustomerInfo: async () => {},
 })
@@ -62,27 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [isProMember, setIsProMember] = useState<boolean>(false);
-  const callbacksRef = useRef<((isAuthenticated: boolean) => void)[]>([])
-
-  // Register callback for auth state changes - return cleanup function
-  const onAuthStateChange = useCallback((callback: (isAuthenticated: boolean) => void) => {
-    callbacksRef.current.push(callback)
-    
-    // Initial callback with current state if not loading
-    if (!loading) {
-      callback(!!session && !!profile)
-    }
-    
-    // Return cleanup function to remove this callback
-    return () => {
-      callbacksRef.current = callbacksRef.current.filter(cb => cb !== callback)
-    }
-  }, [session, profile, loading /*isProMember*/])
-  
-  // Function to notify all registered callbacks
-  const notifyCallbacks = useCallback((isAuthenticated: boolean) => {
-    callbacksRef.current.forEach(callback => callback(isAuthenticated))
-  }, [])
 
   useEffect(() => {
     // Listener for customer info updates from RevenueCat
@@ -125,18 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await refreshCustomerInfo();
         }
       } else {
-        notifyCallbacks(false)
         setLoading(false)
       }
     })
-  }, [notifyCallbacks])
-
-  useEffect(() => {
-    if (!loading) {
-      const isAuthenticated = !!session && !!profile;
-      notifyCallbacks(isAuthenticated)
-    }
-  }, [session, profile, loading, notifyCallbacks, isProMember])
+  }, [])
 
   // 2) subscribe to any auth state change (signIn, signOut, token refresh)
   useEffect(() => {
@@ -155,13 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null)
           setCustomerInfo(null)
           setIsProMember(false)
-          notifyCallbacks(false)
         }
     })
 
     return () => listener.subscription.unsubscribe()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notifyCallbacks])
+  }, [])
 
   // 3) helpers
   const signIn = async (email: string, password: string) => {
@@ -189,8 +157,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null)
       setCustomerInfo(null)
       setIsProMember(false)
-      
-      notifyCallbacks(false)
     } catch (err) {
       console.error("[AuthContext] Unexpected error during signOut:", err)
       setLoading(false)
@@ -272,7 +238,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signIn,
         signOut,
-        onAuthStateChange,
         refreshProfile,
         refreshCustomerInfo,
       }}
