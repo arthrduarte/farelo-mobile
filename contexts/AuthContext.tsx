@@ -92,42 +92,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 1) on mount: grab current session & customer info
   useEffect(() => {
+    console.log('[1] AuthContext: Initial useEffect mounting');
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+      console.log('[2] AuthContext: getSession.then callback started');
+      // setSession(session)
+      // setUser(session?.user ?? null)
       
       if (session?.user) {
+        console.log('[3] AuthContext: User session exists, calling fetchProfile');
         await fetchProfile(session.user.id)
+        console.log('[4] AuthContext: fetchProfile completed');
         if (await Purchases.isConfigured()) {
+            console.log('[5] AuthContext: Purchases configured, calling refreshCustomerInfo');
             await refreshCustomerInfo();
+            console.log('[6] AuthContext: refreshCustomerInfo completed');
         }
       } else {
-        setLoading(false)
+        console.log('[7] AuthContext: No user session');
+        // setLoading(false)
       }
-    })
+      console.log('[8] AuthContext: getSession.then callback finished');
+    }).catch(error => {
+        console.error('[9] AuthContext: getSession promise rejected:', error);
+        setLoading(false);
+    });
   }, [])
 
   // 2) subscribe to any auth state change (signIn, signOut, token refresh)
   useEffect(() => {
+    console.log('[10] AuthContext: onAuthStateChange useEffect mounting');
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
+        console.log(`[11] AuthContext: onAuthStateChange event=${event}`);
         setSession(session)
         setUser(session?.user ?? null)
 
         if (session?.user) {
+            console.log('[12] AuthContext: onAuthStateChange user exists, calling fetchProfile');
             await fetchProfile(session.user.id);
+            console.log('[13] AuthContext: onAuthStateChange fetchProfile completed');
             // Refresh customer info on auth changes too
             if (await Purchases.isConfigured()) {
+                console.log('[14] AuthContext: onAuthStateChange Purchases configured, calling refreshCustomerInfo');
                 await refreshCustomerInfo();
+                console.log('[15] AuthContext: onAuthStateChange refreshCustomerInfo completed');
             }
         } else {
+          console.log('[16] AuthContext: onAuthStateChange no user, clearing state');
           setProfile(null)
           setCustomerInfo(null)
           setIsProMember(false)
         }
     })
 
-    return () => listener.subscription.unsubscribe()
+    return () => {
+        console.log('[17] AuthContext: onAuthStateChange listener unsubscribing');
+        listener.subscription.unsubscribe()
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -165,42 +186,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const fetchProfile = async (userId: string) => {
+    console.log(`[18] AuthContext: fetchProfile started for userId=${userId}`);
     try {
+      console.log('[19] AuthContext: Making supabase query for profile');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single()
+      
+      console.log('[20] AuthContext: Supabase query completed');
 
       if (error) {
-        console.error('[AuthContext] Error fetching profile:', error)
+        console.error('[21] AuthContext: Error fetching profile:', error)
       } else {
+        console.log('[22] AuthContext: Setting profile data');
         setProfile(data)
         // Log user into RevenueCat once profile is fetched & refresh customer info
         if (data && data.id) {
+          console.log('[23] AuthContext: Profile has ID, checking Purchases configuration');
           if (await Purchases.isConfigured()) {
+            console.log('[24] AuthContext: Purchases configured, logging in to RevenueCat');
             Purchases.logIn(data.id)
                 .then(async (loginResult) => {
+                    console.log('[25] AuthContext: RevenueCat login successful');
                     setCustomerInfo(loginResult.customerInfo);
                     const proEntitlement: PurchasesEntitlementInfo | undefined = loginResult.customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
                     
                     setIsProMember(!!proEntitlement);
+                    console.log('[26] AuthContext: Customer info and pro status updated');
                 })
-                .catch(rcError => console.error('[AuthContext] RevenueCat login error:', rcError));
+                .catch(rcError => {
+                    console.error('[27] AuthContext: RevenueCat login error:', rcError);
+                });
           } else {
-             console.warn('[AuthContext] Purchases SDK not configured, skipping logIn and customerInfo fetch.');
+             console.warn('[28] AuthContext: Purchases SDK not configured, skipping logIn');
           }
         }
       }
-      setLoading(false)
+      console.log('[29] AuthContext: About to set loading to false');
+      // setLoading(true)
     } catch (err) {
-      console.error('[AuthContext] Unexpected error fetching profile:', err)
+      console.error('[30] AuthContext: Unexpected error fetching profile:', err)
+      console.log('[31] AuthContext: Setting loading to false in catch block');
       setLoading(false)
     }
   }
 
   const refreshProfile = async () => {
     if (!user?.id) return;
+    console.log('[32] AuthContext: refreshProfile started');
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -210,19 +245,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error('[AuthContext] Error refreshing profile:', error);
+        console.error('[33] AuthContext: Error refreshing profile:', error);
       } else {
+        console.log('[34] AuthContext: Profile refreshed successfully');
         setProfile(data);
         // Emit event to notify all listeners that profile was updated
         profileUpdateEmitter.emit(PROFILE_UPDATED, data);
         // After profile refresh, also refresh customer info from RevenueCat
         if (await Purchases.isConfigured()) {
+          console.log('[35] AuthContext: Refreshing customer info after profile refresh');
           await refreshCustomerInfo();
         }
       }
     } catch (err) {
-      console.error('[AuthContext] Unexpected error refreshing profile:', err);
+      console.error('[36] AuthContext: Unexpected error refreshing profile:', err);
     } finally {
+      console.log('[37] AuthContext: refreshProfile setting loading to false');
       setLoading(false);
     }
   };
