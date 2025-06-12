@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
+import { ForgotPassword } from './ForgotPassword'
 
 const { width } = Dimensions.get('window')
 
@@ -96,6 +97,8 @@ export const LoginWithEmail = () => {
           Login
         </ThemedText>
       </TouchableOpacity>
+
+      <ForgotPassword />
     </View>
   )
 }
