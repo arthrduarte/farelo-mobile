@@ -5,8 +5,8 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Image,
   Dimensions,
+  Linking,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -15,6 +15,7 @@ import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 import { RegisterWithEmail } from '@/components/auth/RegisterWithEmail'
+import { AntDesign } from '@expo/vector-icons'
 
 const { width } = Dimensions.get('window')
 
@@ -26,38 +27,57 @@ export default function RegisterScreen() {
     <ThemedView style={styles.container}>
       <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <AntDesign name="arrowleft" size={24} color="#793206" />
+        </TouchableOpacity>
+
         <View style={styles.form}>
           <ThemedText type="title" style={styles.heading}>
-            Create Account
+            Create an account
           </ThemedText>
 
           <GoogleButton />
           
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <ThemedText style={styles.orText}>or</ThemedText>
+            <View style={styles.divider} />
+          </View>
+
           {showEmailForm ? (
             <RegisterWithEmail />
           ) : (
-            <>
-              <TouchableOpacity
-                style={styles.emailButton}
-                onPress={() => setShowEmailForm(true)}
-              >
-                <ThemedText style={styles.emailButtonText}>
-                  Or continue with email
-                </ThemedText>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {showEmailForm && (
             <TouchableOpacity
-              onPress={() => router.push('/onboarding/login')}
-              style={styles.loginLink}
+              style={styles.emailButton}
+              onPress={() => setShowEmailForm(true)}
             >
-              <ThemedText style={styles.loginText}>
-                Already have an account? Sign in
+              <ThemedText style={styles.emailButtonText}>
+                Continue with email
               </ThemedText>
             </TouchableOpacity>
           )}
+
+          <View style={styles.termsContainer}>
+            <ThemedText style={styles.termsText}>
+              By continuing you are agreeing to our{' '}
+              <ThemedText 
+                style={styles.termsLink}
+                onPress={() => Linking.openURL('https://www.usefarelo.com/terms')}
+              >
+                Terms of Service
+              </ThemedText>
+              {' '}and{' '}
+              <ThemedText 
+                style={styles.termsLink}
+                onPress={() => Linking.openURL('https://www.usefarelo.com/privacy')}
+              >
+                Privacy Policy
+              </ThemedText>
+            </ThemedText>
+          </View>
         </View>
       </SafeAreaView>
     </ThemedView>
@@ -71,44 +91,59 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingHorizontal: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
   form: {
     flex: 1,
-    justifyContent: 'center',
   },
   heading: {
-    fontSize: 32,
+    fontSize: 24,
     color: '#793206',
-    textAlign: 'center',
-    marginBottom: 24,
+    marginVertical: 24,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#79320633',
+  },
+  orText: {
+    color: '#793206',
+    paddingHorizontal: 16,
+    fontSize: 14,
   },
   emailButton: {
-    marginTop: 24,
+    backgroundColor: '#793206',
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: 'center',
   },
   emailButtonText: {
-    color: '#793206',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    color: '#ede4d2',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  backButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#793206',
-    fontSize: 14,
-    textDecorationLine: 'underline',
-  },
-  loginLink: {
+  termsContainer: {
     marginTop: 24,
     alignItems: 'center',
   },
-  loginText: {
+  termsText: {
     color: '#793206',
-    fontSize: 14,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  termsLink: {
+    color: '#793206',
+    fontSize: 12,
     textDecorationLine: 'underline',
   },
 })
