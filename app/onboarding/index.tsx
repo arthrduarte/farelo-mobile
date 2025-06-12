@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { ThemedText } from '@/components/ThemedText'
-import { useOnboarding } from '@/contexts/OnboardingContext'
 
 const { width, height } = Dimensions.get('window')
 const IMAGE_HEIGHT = height * 0.35
@@ -43,7 +42,6 @@ export default function OnboardingCarousel() {
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const { setHasCompletedOnboardingFlow } = useOnboarding()
 
   const onMomentumScrollEnd = (e: any) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width)
@@ -54,7 +52,6 @@ export default function OnboardingCarousel() {
     if (currentIndex < slides.length - 1) {
       scrollRef.current?.scrollTo({ x: width * (currentIndex + 1), animated: true })
     } else {
-      setHasCompletedOnboardingFlow(true)
       router.push('/onboarding/register')
     }
   }
