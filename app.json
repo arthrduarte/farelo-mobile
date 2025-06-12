@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/icon_android.png",
         "backgroundColor": "#EDE4D2"
       },
       "minSdkVersion": 26,
