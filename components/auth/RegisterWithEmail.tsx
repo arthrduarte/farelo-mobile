@@ -7,6 +7,7 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
+  Text,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { ThemedText } from '@/components/ThemedText'
@@ -100,6 +101,7 @@ export const RegisterWithEmail = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.orText}>Or</Text>
       <TextInput
         style={styles.input}
         placeholder="First Name"
@@ -163,6 +165,11 @@ export const RegisterWithEmail = () => {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+  },
+  orText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginVertical: 12,
   },
   input: {
     width: width - 48,

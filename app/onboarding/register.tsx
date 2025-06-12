@@ -27,22 +27,22 @@ export default function RegisterScreen() {
       <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.form}>
-          <Image source={require('@/assets/images/Logo.png')} style={styles.logo} />
           <ThemedText type="title" style={styles.heading}>
             Create Account
           </ThemedText>
 
+          <GoogleButton />
+          
           {showEmailForm ? (
             <RegisterWithEmail />
           ) : (
             <>
-              <GoogleButton />
               <TouchableOpacity
                 style={styles.emailButton}
                 onPress={() => setShowEmailForm(true)}
               >
                 <ThemedText style={styles.emailButtonText}>
-                  Register with email
+                  Or continue with email
                 </ThemedText>
               </TouchableOpacity>
             </>
@@ -50,23 +50,14 @@ export default function RegisterScreen() {
 
           {showEmailForm && (
             <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setShowEmailForm(false)}
+              onPress={() => router.push('/onboarding/login')}
+              style={styles.loginLink}
             >
-              <ThemedText style={styles.backButtonText}>
-                Back to sign in options
+              <ThemedText style={styles.loginText}>
+                Already have an account? Sign in
               </ThemedText>
             </TouchableOpacity>
           )}
-
-          <TouchableOpacity
-            onPress={() => router.push('/onboarding/login')}
-            style={styles.loginLink}
-          >
-            <ThemedText style={styles.loginText}>
-              Already have an account? Log in
-            </ThemedText>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </ThemedView>
@@ -87,27 +78,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  logo: {
-    width: 100,
-    height: 20,
-    resizeMode: 'contain',
-    padding: 24,
-    alignSelf: 'center',
-    marginBottom: 24,
-  },
   heading: {
     fontSize: 32,
     color: '#793206',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
   },
   emailButton: {
-    marginTop: 16,
+    marginTop: 24,
     alignItems: 'center',
   },
   emailButtonText: {
     color: '#793206',
-    fontSize: 16,
+    fontSize: 14,
     textDecorationLine: 'underline',
   },
   backButton: {
