@@ -65,7 +65,6 @@ export const LoginWithEmail = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.orText}>Or</Text>
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -106,11 +105,6 @@ export const LoginWithEmail = () => {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-  },
-  orText: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginVertical: 12,
   },
   input: {
     width: width - 48,

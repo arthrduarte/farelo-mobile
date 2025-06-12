@@ -110,9 +110,11 @@ export default function OnboardingCarousel() {
             </ThemedText>
           </TouchableOpacity>
           {currentIndex === slides.length - 1 && (
-            <ThemedText style={styles.loginText}>
-              Log in
-            </ThemedText>
+            <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/onboarding/login')}>  
+              <ThemedText style={styles.loginText}>
+                Log in
+              </ThemedText>
+            </TouchableOpacity>
           )}
         </View>
       </SafeAreaView>
@@ -189,7 +191,6 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#793206',
     paddingVertical: 14,
-    marginBottom: 16,
     borderRadius: 12,
     width: width * 0.8,
     alignItems: 'center',
@@ -201,8 +202,13 @@ const styles = StyleSheet.create({
   loginText: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 16,
     color: '#793206',
     textAlign: 'center',
+  },
+  loginButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    width: width * 0.8,
+    alignItems: 'center',
   },
 })

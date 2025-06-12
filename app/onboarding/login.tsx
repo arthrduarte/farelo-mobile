@@ -5,8 +5,8 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Image,
   Dimensions,
+  Linking,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -15,10 +15,11 @@ import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 import { LoginWithEmail } from '@/components/auth/LoginWithEmail'
+import { AntDesign } from '@expo/vector-icons'
 
 const { width } = Dimensions.get('window')
 
-export default function Logincreen() {
+export default function LoginScreen() {
   const router = useRouter()
   const [showEmailForm, setShowEmailForm] = useState(false)
 
@@ -26,40 +27,38 @@ export default function Logincreen() {
     <ThemedView style={styles.container}>
       <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <AntDesign name="arrowleft" size={24} color="#793206" />
+        </TouchableOpacity>
+
         <View style={styles.form}>
           <ThemedText type="title" style={styles.heading}>
-            Welcome Back!
+            Welcome back
           </ThemedText>
 
-          <GoogleButton redirectTo="/(tabs)" />
+          <GoogleButton />
           
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <ThemedText style={styles.orText}>or</ThemedText>
+            <View style={styles.divider} />
+          </View>
+
           {showEmailForm ? (
             <LoginWithEmail />
           ) : (
-            <>
-              <TouchableOpacity
-                style={styles.emailButton}
-                onPress={() => setShowEmailForm(true)}
-              >
-                <ThemedText style={styles.emailButtonText}>
-                  Or continue with email
-                </ThemedText>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {showEmailForm && (
             <TouchableOpacity
-              onPress={() => router.push('/onboarding/register')}
-              style={styles.loginLink}
+              style={styles.emailButton}
+              onPress={() => setShowEmailForm(true)}
             >
-              <ThemedText style={styles.loginText}>
-                Don't have an account? Register 
+              <ThemedText style={styles.emailButtonText}>
+                Continue with email
               </ThemedText>
             </TouchableOpacity>
           )}
-
-          
         </View>
       </SafeAreaView>
     </ThemedView>
@@ -73,33 +72,66 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingHorizontal: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
   form: {
     flex: 1,
-    justifyContent: 'center',
   },
   heading: {
-    fontSize: 32,
+    fontSize: 24,
     color: '#793206',
-    textAlign: 'center',
-    marginBottom: 24,
+    marginVertical: 24,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#79320633',
+  },
+  orText: {
+    color: '#793206',
+    paddingHorizontal: 16,
+    fontSize: 14,
   },
   emailButton: {
-    marginTop: 24,
+    backgroundColor: '#793206',
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: 'center',
   },
   emailButtonText: {
-    color: '#793206',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    color: '#ede4d2',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  loginLink: {
+  termsContainer: {
     marginTop: 24,
     alignItems: 'center',
   },
-  loginText: {
+  termsText: {
+    color: '#793206',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  termsLink: {
+    color: '#793206',
+    fontSize: 12,
+    textDecorationLine: 'underline',
+  },
+  registerLink: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  registerText: {
     color: '#793206',
     fontSize: 14,
     textDecorationLine: 'underline',
