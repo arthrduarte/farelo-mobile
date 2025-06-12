@@ -12,7 +12,11 @@ GoogleSignin.configure({
   webClientId: '791951088468-breaeqj6q9ghgjqulnnb2mvkurm0rmei.apps.googleusercontent.com',
 })
 
-export const GoogleButton = () => {
+interface GoogleButtonProps {
+  redirectTo?: any
+}
+
+export const GoogleButton = ({ redirectTo = '/paywall' }: GoogleButtonProps) => {
   const router = useRouter()
 
   async function signInWithGoogle() {
@@ -33,7 +37,7 @@ export const GoogleButton = () => {
           return
         }
         
-        router.replace('/paywall')
+        router.replace(redirectTo)
       } else {
         throw new Error('no ID token present!')
       }
