@@ -21,20 +21,26 @@ const slides = [
   {
     key: '1',
     image: require('@/assets/images/onboarding/onboarding-image-1.png'),
-    title: 'Your recipes made easy',
-    subtitle: 'Save and organize all your favorite recipes in one place.',
+    title: 'Make it special',
+    subtitle: 'Turn everyday cooking into moments you can share.',
   },
   {
     key: '2',
     image: require('@/assets/images/onboarding/onboarding-image-2.png'),
     title: 'Scan with AI',
-    subtitle: 'Import any recipe from a photo or URL instantly.',
+    subtitle: 'Import recipes from the web or from your camera roll',
   },
   {
     key: '3',
     image: require('@/assets/images/onboarding/onboarding-image-3.png'),
     title: 'Cook & Share',
-    subtitle: 'Track meals, log progress, and share with friends.',
+    subtitle: 'See what your friends have been up to in the kitchen.',
+  },
+  {
+    key: '4',
+    image: require('@/assets/images/onboarding/onboarding-image-3.png'),
+    title: 'Meet Jacquin',
+    subtitle: 'Your personal AI chef assistant.',
   },
 ]
 
@@ -110,10 +116,13 @@ export default function OnboardingCarousel() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1, backgroundColor: '#793206' },
-
-  // make this flex:1 so it grows above the static footer
+  container: { 
+    flex: 1
+  },
+  safeArea: {
+    flex: 1, 
+    backgroundColor: '#793206'
+  },
   carouselWrapper: {
     flex: 1,
   },
@@ -140,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     textAlign: 'center',
     marginBottom: 12,
     color: '#793206',
