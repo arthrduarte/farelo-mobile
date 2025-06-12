@@ -17,6 +17,11 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+  statusCodes,
+} from '@react-native-google-signin/google-signin'
 
 const { width } = Dimensions.get('window')
 
@@ -28,6 +33,41 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+
+  GoogleSignin.configure({
+    scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+    webClientId: '791951088468-stv8deefbe2urd231nmhrngjt7umn5t4.apps.googleusercontent.com',
+  })
+
+  async function signInWithGoogle() {
+    console.log('signInWithGoogle')
+    try {
+      console.log('hasPlayServices')
+      await GoogleSignin.hasPlayServices()
+      console.log('signIn')
+      const userInfo = await GoogleSignin.signIn()
+      console.log('userInfo', userInfo)
+      if (userInfo.data?.idToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google', 
+          token: userInfo.data.idToken,
+        })
+        console.log(error, data)
+      } else {
+        throw new Error('no ID token present!')
+      }
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled the login flow
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // operation (e.g. sign in) is in progress already
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        // play services not available or outdated
+      } else {
+        // some other error happened
+      }
+    }
+  }
 
   async function signUpWithEmail() {
     // Input Validations
@@ -114,6 +154,13 @@ export default function RegisterScreen() {
           <ThemedText type="title" style={styles.heading}>
             Create Account
           </ThemedText>
+
+          <GoogleSigninButton
+            style={{ width: '100%', height: 40 }}
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Dark}
+            onPress={signInWithGoogle}
+          />
 
           <TextInput
             style={styles.input}
