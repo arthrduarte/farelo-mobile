@@ -106,9 +106,14 @@ export default function OnboardingCarousel() {
           </View>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-              {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+              {currentIndex === slides.length - 1 ? 'Join for free' : 'Next'}
             </ThemedText>
           </TouchableOpacity>
+          {currentIndex === slides.length - 1 && (
+            <ThemedText style={styles.loginText}>
+              Log in
+            </ThemedText>
+          )}
         </View>
       </SafeAreaView>
     </View>
@@ -184,6 +189,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#793206',
     paddingVertical: 14,
+    marginBottom: 16,
     borderRadius: 12,
     width: width * 0.8,
     alignItems: 'center',
@@ -191,5 +197,12 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     color: '#fff',
+  },
+  loginText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#793206',
+    textAlign: 'center',
   },
 })
