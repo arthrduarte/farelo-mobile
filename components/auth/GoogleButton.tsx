@@ -1,9 +1,8 @@
 import React from 'react'
-import { Alert } from 'react-native'
+import { Alert, TouchableOpacity, View, Text, StyleSheet, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import {
   GoogleSignin,
-  GoogleSigninButton,
   statusCodes,
 } from '@react-native-google-signin/google-signin'
 import { supabase } from '@/lib/supabase'
@@ -53,11 +52,49 @@ export const GoogleButton = () => {
   }
 
   return (
-    <GoogleSigninButton
-      style={{ width: '100%', height: 40 }}
-      size={GoogleSigninButton.Size.Wide}
-      color={GoogleSigninButton.Color.Dark}
-      onPress={signInWithGoogle}
-    />
+    <TouchableOpacity style={styles.button} onPress={signInWithGoogle} activeOpacity={0.8}>
+      <View style={styles.iconContainer}>
+        <View style={styles.googleIcon}>
+          <View style={styles.googleLogo}>
+            <Image source={require('@/assets/images/google_logo.png')} style={styles.googleIcon} />
+          </View>
+        </View>
+      </View>
+      <Text style={styles.buttonText}>Continue with Google</Text>
+    </TouchableOpacity>
   )
-} 
+}
+
+const styles = StyleSheet.create({
+  button: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#DADCE0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  iconContainer: {
+    marginRight: 12,
+  },
+  googleIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  googleLogo: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Roboto',
+  },
+}) 
