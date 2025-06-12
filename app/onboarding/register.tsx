@@ -36,51 +36,37 @@ export default function RegisterScreen() {
 
   GoogleSignin.configure({
     scopes: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
-    webClientId: '791951088468-stv8deefbe2urd231nmhrngjt7umn5t4.apps.googleusercontent.com',
-    offlineAccess: true,
-    hostedDomain: '',
-    forceCodeForRefreshToken: true,
+    webClientId: '791951088468-breaeqj6q9ghgjqulnnb2mvkurm0rmei.apps.googleusercontent.com',
   })
 
   async function signInWithGoogle() {
-    console.log('signInWithGoogle')
     try {
-      console.log('hasPlayServices')
       await GoogleSignin.hasPlayServices()
-      console.log('signIn')
       const userInfo = await GoogleSignin.signIn()
-      console.log('userInfo', userInfo)
       
+      if (!userInfo) throw new Error('Google didn\'t return user info')
+
       if (userInfo.data?.idToken) {
-        console.log('Attempting Supabase sign in with ID token')
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google', 
           token: userInfo.data.idToken,
         })
-        console.log('Supabase response:', { error, data })
         
         if (error) {
           Alert.alert('Authentication Error', error.message)
           return
         }
         
-        // Success - redirect to paywall
         router.replace('/paywall')
       } else {
-        console.log('No ID token in userInfo:', userInfo)
         throw new Error('no ID token present!')
       }
     } catch (error: any) {
-      console.log('Google Sign-In Error:', error)
-      
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log('User cancelled the login flow')
         // user cancelled the login flow
       } else if (error.code === statusCodes.IN_PROGRESS) {
-        console.log('Sign in operation already in progress')
         // operation (e.g. sign in) is in progress already
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        console.log('Play services not available or outdated')
         Alert.alert('Error', 'Google Play Services not available')
       } else {
         console.log('Other error:', error.message)
