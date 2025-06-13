@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -10,16 +10,50 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases from 'react-native-purchases';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { OnboardingProvider } from '@/contexts/OnboardingContext';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-// Ensure you have these in your .env file and are using react-native-dotenv or similar
 const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS;
 const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID;
+
+function RootLayoutNav() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace('/onboarding');
+    } else {
+      router.replace('/');
+    }
+  }, [user, loading]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="+not-found" />
+      <Stack.Screen name="new-recipe" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="recipe/[recipeId]/details"/>
+      <Stack.Screen name="recipe/[recipeId]/edit"/>
+      <Stack.Screen name="recipe/[recipeId]/start"/>
+      <Stack.Screen name="recipe/[recipeId]/finish"/>
+      <Stack.Screen name="recipe/[recipeId]/chat"/>
+      <Stack.Screen name="recipe/[recipeId]/share"/>
+      <Stack.Screen name="log/[logId]/details"/>
+      <Stack.Screen name="log/[logId]/comments"/>
+      <Stack.Screen name="search"/>
+      <Stack.Screen name="profile/[id]"/>
+      <Stack.Screen name="profile/edit"/>
+      <Stack.Screen name="settings/main"/>
+      <Stack.Screen name="settings/account/email"/>
+      <Stack.Screen name="settings/account/password"/>
+      <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'fade_from_bottom' }}/>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -63,32 +97,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <OnboardingProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="onboarding" />
-              <Stack.Screen name="+not-found" />
-              <Stack.Screen name="new-recipe" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="recipe/[recipeId]/details"/>
-              <Stack.Screen name="recipe/[recipeId]/edit"/>
-              <Stack.Screen name="recipe/[recipeId]/start"/>
-              <Stack.Screen name="recipe/[recipeId]/finish"/>
-              <Stack.Screen name="recipe/[recipeId]/chat"/>
-              <Stack.Screen name="recipe/[recipeId]/share"/>
-              <Stack.Screen name="log/[logId]/details"/>
-              <Stack.Screen name="log/[logId]/comments"/>
-              <Stack.Screen name="search"/>
-              <Stack.Screen name="profile/[id]"/>
-              <Stack.Screen name="profile/edit"/>
-              <Stack.Screen name="settings/main"/>
-              <Stack.Screen name="settings/account/email"/>
-              <Stack.Screen name="settings/account/password"/>
-              <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'fade_from_bottom' }}/>
-            </Stack>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <RootLayoutNav />
             <StatusBar style="auto" />
           </ThemeProvider>
-          </OnboardingProvider>
         </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

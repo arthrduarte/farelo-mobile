@@ -101,7 +101,6 @@ export const RegisterWithEmail = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.orText}>Or</Text>
       <TextInput
         style={styles.input}
         placeholder="First Name"
