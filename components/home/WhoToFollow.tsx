@@ -100,7 +100,7 @@ export const WhoToFollow = () => {
 
 const styles = StyleSheet.create({
     container: {
-        marginVertical: 16,
+        marginBottom: 16,
     },
     headerContainer: {
         flexDirection: 'row',
