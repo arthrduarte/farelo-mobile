@@ -15,32 +15,32 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemedText } from '@/components/ThemedText'
 
 const { width, height } = Dimensions.get('window')
-const IMAGE_HEIGHT = height * 0.35
+const IMAGE_HEIGHT = height * 0.66
 
 const slides = [
   {
     key: '1',
-    image: require('@/assets/images/onboarding/onboarding-image-1.png'),
+    image: require('@/assets/images/onboarding/new-onboarding-image-1.png'),
     title: 'Make it special',
-    subtitle: 'Turn everyday cooking into moments you can share.',
+    subtitle: 'Turn everyday cooking into moments you can share',
   },
   {
     key: '2',
-    image: require('@/assets/images/onboarding/onboarding-image-2.png'),
+    image: require('@/assets/images/onboarding/new-onboarding-image-2.png'),
     title: 'Scan with AI',
     subtitle: 'Import recipes from the web or from your camera roll',
   },
   {
     key: '3',
-    image: require('@/assets/images/onboarding/onboarding-image-3.png'),
+    image: require('@/assets/images/onboarding/new-onboarding-image-3.png'),
     title: 'Cook & Share',
-    subtitle: 'See what your friends have been up to in the kitchen.',
+    subtitle: 'See what your friends have been up to in the kitchen',
   },
   {
     key: '4',
-    image: require('@/assets/images/onboarding/onboarding-image-3.png'),
+    image: require('@/assets/images/onboarding/new-onboarding-image-4.png'),
     title: 'Meet Jacquin',
-    subtitle: 'Your personal AI chef assistant.',
+    subtitle: 'Your personal AI chef assistant',
   },
 ]
 
@@ -148,8 +148,6 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     backgroundColor: '#ede4d2',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
     width,
     paddingHorizontal: 24,
     paddingTop: 32,
