@@ -10,6 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import { WhoToFollow } from '@/components/home/WhoToFollow';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
@@ -27,25 +28,22 @@ export default function HomeScreen() {
   );
 
   const EmptyFeedComponent = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>
-        Follow people or start a recipe to see logs in your feed.
-      </Text>
-      <View style={styles.emptyActions}>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => router.push('/search')}
-        >
-          <Text style={styles.actionButtonText}>Discover Friends</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => router.push('/new-recipe')}
-        >
-          <Text style={styles.actionButtonText}>Add Recipe</Text>
-        </TouchableOpacity>
+    <>
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>
+          Follow people or start a recipe to see logs in your feed.
+        </Text>
+        <View style={styles.emptyActions}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => router.push('/new-recipe')}
+          >
+            <Text style={styles.actionButtonText}>Add Recipe</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+      <WhoToFollow />
+    </>
   );
 
   const LoadingComponent = () => (
@@ -55,6 +53,19 @@ export default function HomeScreen() {
       <LogLoader />
     </>
   );
+
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
+    const isFirstItem = index === 0;
+    return (
+      <>
+        <LogCard 
+          key={item.id}
+          log={item}
+        />
+        {isFirstItem && <WhoToFollow />}
+      </>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -70,12 +81,7 @@ export default function HomeScreen() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         data={feed}
-        renderItem={({ item }) => (
-          <LogCard 
-            key={item.id}
-            log={item}
-          />
-        )}
+        renderItem={renderItem}
         onRefresh={refreshFeed}
         refreshing={profileLogsLoading}
         ListEmptyComponent={profileLogsLoading ? LoadingComponent : EmptyFeedComponent}
@@ -111,10 +117,9 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
-    marginTop: '50%',
+    // marginTop: '50%',
   },
   emptyText: {
     fontSize: 16,
