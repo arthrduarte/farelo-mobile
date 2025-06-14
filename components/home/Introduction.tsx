@@ -6,6 +6,7 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const INTRODUCTION_DISMISSED_KEY = 'introduction_dismissed';
 
@@ -13,6 +14,7 @@ export const Introduction = () => {
   const [arthur, setArthur] = useState<Profile | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const { profile } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const checkDismissedStatus = async () => {
@@ -42,6 +44,18 @@ export const Introduction = () => {
     setIsVisible(false);
   };
 
+  const navigateToArthurProfile = () => {
+    if (arthur) {
+      router.push({
+        pathname: "/profile/[id]",
+        params: { 
+          id: arthur.id,
+          profile: JSON.stringify(arthur) 
+        }
+      });
+    }
+  };
+
   if (!isVisible) return null;
 
   return (
@@ -68,12 +82,16 @@ export const Introduction = () => {
           </Text>
         </View>
         <View style={styles.bottomRow}>
-          <Image
-            source={{ uri: arthur?.image }}
-            style={styles.profileImage}
-          />
+          <TouchableOpacity onPress={navigateToArthurProfile}>
+            <Image
+              source={{ uri: arthur?.image }}
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
           <View style={styles.bottomRowInfo}>
-            <Text style={styles.bottomRowTextName}>Arthur Duarte</Text>
+            <TouchableOpacity onPress={navigateToArthurProfile}>
+              <Text style={styles.bottomRowTextName}>Arthur Duarte</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.followButton}>
               <Text style={styles.followButtonText}>Follow</Text>
             </TouchableOpacity>
