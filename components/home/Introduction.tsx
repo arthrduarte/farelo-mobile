@@ -4,10 +4,25 @@ import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Feather } from '@expo/vector-icons';
+
+const INTRODUCTION_DISMISSED_KEY = 'introduction_dismissed';
 
 export const Introduction = () => {
   const [arthur, setArthur] = useState<Profile | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
   const { profile } = useAuth();
+
+  useEffect(() => {
+    const checkDismissedStatus = async () => {
+      const dismissed = await AsyncStorage.getItem(INTRODUCTION_DISMISSED_KEY);
+      if (dismissed === 'true') {
+        setIsVisible(false);
+      }
+    };
+    checkDismissedStatus();
+  }, []);
 
   useEffect(() => {
     const fetchIntroduction = async () => {
@@ -22,11 +37,26 @@ export const Introduction = () => {
     fetchIntroduction();
   }, []);
 
+  const handleDismiss = async () => {
+    await AsyncStorage.setItem(INTRODUCTION_DISMISSED_KEY, 'true');
+    setIsVisible(false);
+  };
+
+  if (!isVisible) return null;
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Hey {profile?.username}! 👋</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>Hey {profile?.username}! 👋</Text>
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={handleDismiss}
+            >
+              <Feather name="x" size={16} color="#793206" />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.description}>
             I'm Arthur, the creator of Farelo. Thanks for trying out the app!
           </Text>
@@ -60,6 +90,14 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 16,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  closeButton: {
+    padding: 8,
   },
   bottomRow: {
     flexDirection: 'row',
