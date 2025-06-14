@@ -31,6 +31,8 @@ export default function HomeScreen() {
   const EmptyFeedComponent = () => (
     <>
       <Introduction refreshFeed={refreshFeed} />
+      <WhoToFollow />
+      <LogLoader />
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
           Follow people or start a recipe to see logs in your feed.
@@ -44,7 +46,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      <WhoToFollow />
     </>
   );
 

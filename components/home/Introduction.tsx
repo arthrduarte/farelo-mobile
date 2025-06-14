@@ -87,7 +87,7 @@ export const Introduction = ({ refreshFeed }: IntroductionProps) => {
             I'm Arthur, the creator of Farelo. Thanks for trying out the app!
           </Text>
           <Text style={styles.description}>
-            I'm working solo on Farelo with the goal of making it your go-to place for sharing recipes with friends and saving them all in one place. 
+            I'm working solo on Farelo with the goal of making it your go-to place for sharing recipes with friends and saving them all in one app. 
           </Text>
           <Text style={styles.description}>
             Feel free to email me at team.usefarelo@gmail.com with any feedback or feature requests - I'd love to hear from you!
