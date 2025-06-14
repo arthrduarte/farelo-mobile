@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
@@ -7,14 +7,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useFollow } from '@/hooks/useFollow';
 
 const INTRODUCTION_DISMISSED_KEY = 'introduction_dismissed';
+const ARTHUR_ID = '852f5da6-42f1-4bc7-9476-bfdabf5db7be';
 
 export const Introduction = () => {
   const [arthur, setArthur] = useState<Profile | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const { profile } = useAuth();
   const router = useRouter();
+  const { isFollowing, loading, toggleFollow } = useFollow(ARTHUR_ID);
 
   useEffect(() => {
     const checkDismissedStatus = async () => {
@@ -28,7 +31,7 @@ export const Introduction = () => {
 
   useEffect(() => {
     const fetchIntroduction = async () => {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', '852f5da6-42f1-4bc7-9476-bfdabf5db7be').single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', ARTHUR_ID).single();
     
       if (error) {
         console.error('Error fetching introduction:', error);
@@ -92,8 +95,18 @@ export const Introduction = () => {
             <TouchableOpacity onPress={navigateToArthurProfile}>
               <Text style={styles.bottomRowTextName}>Arthur Duarte</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.followButton}>
-              <Text style={styles.followButtonText}>Follow</Text>
+            <TouchableOpacity 
+              style={[styles.followButton, isFollowing && styles.followingButton]} 
+              onPress={toggleFollow}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.followButtonText}>
+                  {isFollowing ? 'Following' : 'Follow'}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -149,6 +162,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  followingButton: {
+    backgroundColor: '#79320633',
   },
   followButtonText: {
     textAlign: 'center',
