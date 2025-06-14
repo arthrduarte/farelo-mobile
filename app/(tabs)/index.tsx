@@ -11,6 +11,7 @@ import { LogLoader } from '@/components/log/LogLoader';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { WhoToFollow } from '@/components/home/WhoToFollow';
+import { Introduction } from '@/components/home/Introduction';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
@@ -29,6 +30,7 @@ export default function HomeScreen() {
 
   const EmptyFeedComponent = () => (
     <>
+      <Introduction />
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
           Follow people or start a recipe to see logs in your feed.
@@ -118,8 +120,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
-    padding: 32,
-    // marginTop: '50%',
+    padding: 16,
   },
   emptyText: {
     fontSize: 16,
