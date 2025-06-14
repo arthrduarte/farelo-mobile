@@ -30,7 +30,7 @@ export default function HomeScreen() {
 
   const EmptyFeedComponent = () => (
     <>
-      <Introduction />
+      <Introduction refreshFeed={refreshFeed} />
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
           Follow people or start a recipe to see logs in your feed.

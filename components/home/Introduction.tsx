@@ -12,12 +12,21 @@ import { useFollow } from '@/hooks/useFollow';
 const INTRODUCTION_DISMISSED_KEY = 'introduction_dismissed';
 const ARTHUR_ID = '852f5da6-42f1-4bc7-9476-bfdabf5db7be';
 
-export const Introduction = () => {
+interface IntroductionProps {
+  refreshFeed?: () => void;
+}
+
+export const Introduction = ({ refreshFeed }: IntroductionProps) => {
   const [arthur, setArthur] = useState<Profile | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const { profile } = useAuth();
   const router = useRouter();
-  const { isFollowing, loading, toggleFollow } = useFollow(ARTHUR_ID);
+  const { isFollowing, loading, toggleFollow: originalToggleFollow } = useFollow(ARTHUR_ID);
+
+  const handleToggleFollow = async () => {
+    await originalToggleFollow();
+    refreshFeed?.();
+  };
 
   useEffect(() => {
     const checkDismissedStatus = async () => {
@@ -97,7 +106,7 @@ export const Introduction = () => {
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.followButton, isFollowing && styles.followingButton]} 
-              onPress={toggleFollow}
+              onPress={handleToggleFollow}
               disabled={loading}
             >
               {loading ? (
