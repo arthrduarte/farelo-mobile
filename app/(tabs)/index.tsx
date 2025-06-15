@@ -52,6 +52,7 @@ export default function HomeScreen() {
   const LoadingComponent = () => (
     <>
       <LogLoader />
+      <Text style={styles.errorText}>If your app is stuck on loading, please restart it. We're working on fixing this issue!</Text>
       <LogLoader />
       <LogLoader />
     </>
@@ -122,6 +123,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 16,
+  },
+  errorText: {
+    margin: 16,
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#79320666',
   },
   emptyText: {
     fontSize: 16,
