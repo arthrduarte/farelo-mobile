@@ -10,6 +10,8 @@ import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import { WhoToFollow } from '@/components/home/WhoToFollow';
+import { Introduction } from '@/components/home/Introduction';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
@@ -27,34 +29,47 @@ export default function HomeScreen() {
   );
 
   const EmptyFeedComponent = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>
-        Follow people or start a recipe to see logs in your feed.
-      </Text>
-      <View style={styles.emptyActions}>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => router.push('/search')}
-        >
-          <Text style={styles.actionButtonText}>Discover Friends</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => router.push('/new-recipe')}
-        >
-          <Text style={styles.actionButtonText}>Add Recipe</Text>
-        </TouchableOpacity>
+    <>
+      <Introduction refreshFeed={refreshFeed} />
+      <WhoToFollow />
+      <LogLoader />
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>
+          Follow people or start a recipe to see logs in your feed.
+        </Text>
+        <View style={styles.emptyActions}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => router.push('/new-recipe')}
+          >
+            <Text style={styles.actionButtonText}>Add Recipe</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </>
   );
 
   const LoadingComponent = () => (
     <>
       <LogLoader />
+      <Text style={styles.errorText}>If your app is stuck on loading, please restart it. We're working on fixing this issue!</Text>
       <LogLoader />
       <LogLoader />
     </>
   );
+
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
+    const isFirstItem = index === 0;
+    return (
+      <>
+        <LogCard 
+          key={item.id}
+          log={item}
+        />
+        {isFirstItem && <WhoToFollow />}
+      </>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -70,12 +85,7 @@ export default function HomeScreen() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         data={feed}
-        renderItem={({ item }) => (
-          <LogCard 
-            key={item.id}
-            log={item}
-          />
-        )}
+        renderItem={renderItem}
         onRefresh={refreshFeed}
         refreshing={profileLogsLoading}
         ListEmptyComponent={profileLogsLoading ? LoadingComponent : EmptyFeedComponent}
@@ -111,10 +121,14 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
-    marginTop: '50%',
+    padding: 16,
+  },
+  errorText: {
+    margin: 16,
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#79320666',
   },
   emptyText: {
     fontSize: 16,
