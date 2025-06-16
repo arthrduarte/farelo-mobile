@@ -4,11 +4,11 @@ import { useRouter } from 'expo-router'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import { supabase } from '@/lib/supabase'
 
-interface iOSButtonProps {
+interface IOSButtonProps {
   redirectTo?: any
 }
 
-export const iOSButton = ({ redirectTo = '/paywall' }: iOSButtonProps) => {
+export const IOSButton = ({ redirectTo = '/paywall' }: IOSButtonProps) => {
   const router = useRouter()
 
   async function signInWithApple() {
@@ -30,6 +30,7 @@ export const iOSButton = ({ redirectTo = '/paywall' }: iOSButtonProps) => {
       })
 
       if (error) {
+        console.log('Apple Sign-in error:', error)
         Alert.alert('Authentication Error', error.message)
         return
       }

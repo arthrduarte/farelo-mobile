@@ -16,6 +16,7 @@ import { ThemedText } from '@/components/ThemedText'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 import { LoginWithEmail } from '@/components/auth/LoginWithEmail'
 import { AntDesign } from '@expo/vector-icons'
+import { IOSButton } from '@/components/auth/iOSButton' 
 
 const { width } = Dimensions.get('window')
 
@@ -39,8 +40,11 @@ export default function LoginScreen() {
             Welcome back
           </ThemedText>
 
-          <GoogleButton />
-          
+          <View style={styles.buttonContainer}>
+            <GoogleButton />
+            <IOSButton redirectTo="/paywall" />
+          </View>
+
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
             <ThemedText style={styles.orText}>or</ThemedText>
@@ -78,6 +82,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
+  },
+  buttonContainer: {
+    gap: 16,
   },
   form: {
     flex: 1,

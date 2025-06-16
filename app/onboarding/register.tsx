@@ -16,6 +16,7 @@ import { ThemedText } from '@/components/ThemedText'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 import { RegisterWithEmail } from '@/components/auth/RegisterWithEmail'
 import { AntDesign } from '@expo/vector-icons'
+import { IOSButton } from '@/components/auth/iOSButton'
 
 const { width } = Dimensions.get('window')
 
@@ -39,7 +40,11 @@ export default function RegisterScreen() {
             Create an account
           </ThemedText>
 
-          <GoogleButton />
+          <View style={styles.buttonContainer}>
+            <GoogleButton />
+
+            <IOSButton redirectTo="/paywall" />
+          </View>
           
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
@@ -97,6 +102,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
+  },
+  buttonContainer: {
+    gap: 16,
   },
   form: {
     flex: 1,
