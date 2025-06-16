@@ -15,7 +15,7 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemedText } from '@/components/ThemedText'
 
 const { width, height } = Dimensions.get('window')
-const IMAGE_HEIGHT = height * 0.66
+const IMAGE_HEIGHT = height * 0.55
 
 const slides = [
   {

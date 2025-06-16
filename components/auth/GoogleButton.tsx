@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 GoogleSignin.configure({
   scopes: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
   webClientId: '791951088468-breaeqj6q9ghgjqulnnb2mvkurm0rmei.apps.googleusercontent.com',
+  iosClientId: '791951088468-jql23hqupnu5eudogm3rrc8h634f6c8h.apps.googleusercontent.com',
 })
 
 interface GoogleButtonProps {
