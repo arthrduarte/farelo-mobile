@@ -10,6 +10,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
+      "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.arthrduarte.farelo",
       "infoPlist": {
@@ -73,7 +74,8 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.791951088468-jql23hqupnu5eudogm3rrc8h634f6c8h"
         }
-      ]
+      ],
+      ["expo-apple-authentication"]
     ],
     "experiments": {
       "typedRoutes": true
