@@ -2,14 +2,15 @@
   "expo": {
     "name": "Farelo",
     "slug": "farelo",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "orientation": "portrait",
     "owner": "arthrduarte",
     "icon": "./assets/images/icon.png",
     "scheme": "farelo",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
+      "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.arthrduarte.farelo",
       "infoPlist": {
@@ -19,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/icon_android.png",
         "backgroundColor": "#EDE4D2"
       },
       "minSdkVersion": 26,
@@ -28,6 +29,7 @@
       "intentFilters": [
         {
           "action": "VIEW",
+          "autoVerify": true,
           "data": [
             {
               "scheme": "https",
@@ -66,7 +68,14 @@
             "minSdkVersion": 26
           }
         }
-      ]
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.791951088468-jql23hqupnu5eudogm3rrc8h634f6c8h"
+        }
+      ],
+      ["expo-apple-authentication"]
     ],
     "experiments": {
       "typedRoutes": true

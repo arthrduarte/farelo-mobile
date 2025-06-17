@@ -16,7 +16,8 @@ export default function EditProfile() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : '',
+    first_name: profile?.first_name ?? '',
+    last_name: profile?.last_name ?? null,
     username: profile?.username || '',
   });
 
@@ -76,10 +77,6 @@ export default function EditProfile() {
         throw new Error('Profile not found');
       }
 
-      // Split name into first and last name
-      const [firstName = '', ...lastNameParts] = formData.name.trim().split(' ');
-      const lastName = lastNameParts.join(' ');
-
       let imageUrl = profile?.image;
       if (selectedImage) {
         imageUrl = await uploadImage(selectedImage);
@@ -88,8 +85,8 @@ export default function EditProfile() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          first_name: firstName,
-          last_name: lastName || null,
+          first_name: formData.first_name,
+          last_name: formData.last_name || null,
           username: formData.username.trim(),
           image: imageUrl,
         })
@@ -126,12 +123,23 @@ export default function EditProfile() {
           <Text style={styles.sectionTitle}>Public profile data</Text>
           
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Name</Text>
+            <Text style={styles.label}>First Name</Text>
             <TextInput
               style={styles.input}
-              value={formData.name}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-              placeholder="Your name"
+              value={formData.first_name}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, first_name: text }))}
+              placeholder="Your first name"
+              placeholderTextColor="#79320680"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Last Name (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.last_name || ''}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, last_name: text || null }))}
+              placeholder="Your last name"
               placeholderTextColor="#79320680"
             />
           </View>

@@ -13,29 +13,34 @@ import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { ThemedText } from '@/components/ThemedText'
-import { useOnboarding } from '@/contexts/OnboardingContext'
 
 const { width, height } = Dimensions.get('window')
-const IMAGE_HEIGHT = height * 0.35
+const IMAGE_HEIGHT = height * 0.55
 
 const slides = [
   {
     key: '1',
-    image: require('@/assets/images/onboarding/onboarding-image-1.png'),
-    title: 'Your recipes made easy',
-    subtitle: 'Save and organize all your favorite recipes in one place.',
+    image: require('@/assets/images/onboarding/new-onboarding-image-1.png'),
+    title: 'Make it special',
+    subtitle: 'Turn everyday cooking into moments you can share',
   },
   {
     key: '2',
-    image: require('@/assets/images/onboarding/onboarding-image-2.png'),
+    image: require('@/assets/images/onboarding/new-onboarding-image-2.png'),
     title: 'Scan with AI',
-    subtitle: 'Import any recipe from a photo or URL instantly.',
+    subtitle: 'Import recipes from the web or from your camera roll',
   },
   {
     key: '3',
-    image: require('@/assets/images/onboarding/onboarding-image-3.png'),
+    image: require('@/assets/images/onboarding/new-onboarding-image-3.png'),
     title: 'Cook & Share',
-    subtitle: 'Track meals, log progress, and share with friends.',
+    subtitle: 'See what your friends have been up to in the kitchen',
+  },
+  {
+    key: '4',
+    image: require('@/assets/images/onboarding/new-onboarding-image-4.png'),
+    title: 'Meet Jacquin',
+    subtitle: 'Your personal AI chef assistant',
   },
 ]
 
@@ -43,7 +48,6 @@ export default function OnboardingCarousel() {
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const { setHasCompletedOnboardingFlow } = useOnboarding()
 
   const onMomentumScrollEnd = (e: any) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width)
@@ -54,7 +58,6 @@ export default function OnboardingCarousel() {
     if (currentIndex < slides.length - 1) {
       scrollRef.current?.scrollTo({ x: width * (currentIndex + 1), animated: true })
     } else {
-      setHasCompletedOnboardingFlow(true)
       router.push('/onboarding/register')
     }
   }
@@ -103,9 +106,16 @@ export default function OnboardingCarousel() {
           </View>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
             <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-              {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+              {currentIndex === slides.length - 1 ? 'Join for free' : 'Next'}
             </ThemedText>
           </TouchableOpacity>
+          {currentIndex === slides.length - 1 && (
+            <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/onboarding/login')}>  
+              <ThemedText style={styles.loginText}>
+                Log in
+              </ThemedText>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
     </View>
@@ -113,10 +123,13 @@ export default function OnboardingCarousel() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1, backgroundColor: '#793206' },
-
-  // make this flex:1 so it grows above the static footer
+  container: { 
+    flex: 1
+  },
+  safeArea: {
+    flex: 1, 
+    backgroundColor: '#793206'
+  },
   carouselWrapper: {
     flex: 1,
   },
@@ -135,15 +148,13 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     backgroundColor: '#ede4d2',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
     width,
     paddingHorizontal: 24,
     paddingTop: 32,
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     textAlign: 'center',
     marginBottom: 12,
     color: '#793206',
@@ -185,5 +196,17 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     color: '#fff',
+  },
+  loginText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#793206',
+    textAlign: 'center',
+  },
+  loginButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    width: width * 0.8,
+    alignItems: 'center',
   },
 })

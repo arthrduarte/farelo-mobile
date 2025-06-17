@@ -4,182 +4,85 @@ import React, { useState } from 'react'
 import {
   StyleSheet,
   View,
-  TextInput,
   TouchableOpacity,
   Dimensions,
-  Image,
-  Alert,
-  ActivityIndicator,
+  Linking,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
-import { supabase } from '@/lib/supabase'
+import { GoogleButton } from '@/components/auth/GoogleButton'
+import { RegisterWithEmail } from '@/components/auth/RegisterWithEmail'
+import { AntDesign } from '@expo/vector-icons'
+import { IOSButton } from '@/components/auth/iOSButton'
 
 const { width } = Dimensions.get('window')
 
 export default function RegisterScreen() {
   const router = useRouter()
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function signUpWithEmail() {
-    // Input Validations
-    if (!firstName.trim()) {
-      Alert.alert('Validation Error', 'First name cannot be empty.');
-      return;
-    }
-    if (!lastName.trim()) {
-      Alert.alert('Validation Error', 'Last name cannot be empty.');
-      return;
-    }
-    if (!email.trim()) {
-      Alert.alert('Validation Error', 'Email cannot be empty.');
-      return;
-    }
-    // Basic email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address.');
-      return;
-    }
-    if (!password) { // No trim() for password, as spaces might be intentional
-      Alert.alert('Validation Error', 'Password cannot be empty.');
-      return;
-    }
-    if (password.length < 8) {
-      Alert.alert('Validation Error', 'Password must be at least 8 characters long.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Validation Error', 'Passwords do not match.');
-      return;
-    }
-
-    try {
-      setLoading(true)
-      
-      const { error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-          },
-        },
-      })
-      
-      if (error) {
-        console.error("[Register] Sign up error:", error.message)
-        Alert.alert(error.message)
-        return
-      }
-      
-      // To avoid circular navigation, delay the redirection slightly
-      setTimeout(async () => {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password,
-        })
-
-        if (error) {
-          console.error("[Register] Sign in error:", error.message)
-          Alert.alert(error.message)
-          return
-        }
-
-        router.replace('/paywall')
-      }, 100)
-    } catch (err) {
-      console.error("[Register] Unexpected error:", err)
-      Alert.alert("An unexpected error occurred")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [showEmailForm, setShowEmailForm] = useState(false)
 
   return (
     <ThemedView style={styles.container}>
       <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <AntDesign name="arrowleft" size={24} color="#793206" />
+        </TouchableOpacity>
+
         <View style={styles.form}>
-          <Image source={require('@/assets/images/Logo.png')} style={styles.logo} />
           <ThemedText type="title" style={styles.heading}>
-            Create Account
+            Create an account
           </ThemedText>
 
-          <TextInput
-            style={styles.input}
-            placeholder="First Name"
-            placeholderTextColor="#793206"
-            value={firstName}
-            onChangeText={setFirstName}
-          />
+          <View style={styles.buttonContainer}>
+            <GoogleButton />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Last Name"
-            placeholderTextColor="#793206"
-            value={lastName}
-            onChangeText={setLastName}
-          />
+            <IOSButton redirectTo="/paywall" />
+          </View>
+          
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <ThemedText style={styles.orText}>or</ThemedText>
+            <View style={styles.divider} />
+          </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email Address"
-            placeholderTextColor="#793206"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
+          {showEmailForm ? (
+            <RegisterWithEmail />
+          ) : (
+            <TouchableOpacity
+              style={styles.emailButton}
+              onPress={() => setShowEmailForm(true)}
+            >
+              <ThemedText style={styles.emailButtonText}>
+                Continue with email
+              </ThemedText>
+            </TouchableOpacity>
+          )}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#793206"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            placeholderTextColor="#793206"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={signUpWithEmail}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ede4d2" style={{ marginRight: 10 }} />
-            ) : null}
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-              Register
+          <View style={styles.termsContainer}>
+            <ThemedText style={styles.termsText}>
+              By continuing you are agreeing to our{' '}
+              <ThemedText 
+                style={styles.termsLink}
+                onPress={() => Linking.openURL('https://www.usefarelo.com/terms')}
+              >
+                Terms of Service
+              </ThemedText>
+              {' '}and{' '}
+              <ThemedText 
+                style={styles.termsLink}
+                onPress={() => Linking.openURL('https://www.usefarelo.com/privacy')}
+              >
+                Privacy Policy
+              </ThemedText>
             </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => router.push('/onboarding/login')}
-            style={styles.loginLink}
-          >
-            <ThemedText style={styles.loginText}>
-              Already have an account? Log in
-            </ThemedText>
-          </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     </ThemedView>
@@ -193,58 +96,62 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingHorizontal: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+  },
+  buttonContainer: {
+    gap: 16,
   },
   form: {
     flex: 1,
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 100,
-    height: 20,
-    resizeMode: 'contain',
-    padding: 24,
-    alignSelf: 'center',
-    marginBottom: 24,
   },
   heading: {
-    fontSize: 32,
+    fontSize: 24,
     color: '#793206',
-    textAlign: 'center',
-    marginBottom: 40,
+    marginVertical: 24,
   },
-  input: {
-    width: width - 48,
-    height: 50,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#fff',
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#79320633',
+  },
+  orText: {
+    color: '#793206',
     paddingHorizontal: 16,
-    marginBottom: 16,
-    color: '#000',
+    fontSize: 14,
   },
-  button: {
+  emailButton: {
     backgroundColor: '#793206',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 8,
-    flexDirection: 'row',
-    justifyContent: 'center',
   },
-  buttonText: {
+  emailButtonText: {
     color: '#ede4d2',
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '600',
   },
-  loginLink: {
+  termsContainer: {
     marginTop: 24,
     alignItems: 'center',
   },
-  loginText: {
+  termsText: {
     color: '#793206',
-    fontSize: 14,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  termsLink: {
+    color: '#793206',
+    fontSize: 12,
     textDecorationLine: 'underline',
   },
 })

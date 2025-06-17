@@ -15,16 +15,12 @@ import {
 } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { Profile } from '../types/db'
-// import { EventEmitter } from 'events'; // Replaced Node.js events
 import EventEmitter from 'eventemitter3'; // Using eventemitter3
 import Purchases, { CustomerInfo, PurchasesEntitlementInfo } from 'react-native-purchases';
 
-// Global event emitter for profile updates
 export const profileUpdateEmitter = new EventEmitter();
-// profileUpdateEmitter.setMaxListeners(25); // setMaxListeners is not typically used with eventemitter3
 export const PROFILE_UPDATED = 'PROFILE_UPDATED';
 
-// Define your primary entitlement ID from RevenueCat
 const PREMIUM_ENTITLEMENT_ID = 'pro';
 
 type AuthContextType = {
@@ -36,7 +32,6 @@ type AuthContextType = {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
-  onAuthStateChange: (callback: (isAuthenticated: boolean) => void) => () => void
   refreshProfile: () => Promise<void>
   refreshCustomerInfo: () => Promise<void>;
 }
@@ -50,7 +45,6 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => {},
   signOut: async () => {},
-  onAuthStateChange: () => () => {},
   refreshProfile: async () => {},
   refreshCustomerInfo: async () => {},
 })
@@ -62,27 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [isProMember, setIsProMember] = useState<boolean>(false);
-  const callbacksRef = useRef<((isAuthenticated: boolean) => void)[]>([])
-
-  // Register callback for auth state changes - return cleanup function
-  const onAuthStateChange = useCallback((callback: (isAuthenticated: boolean) => void) => {
-    callbacksRef.current.push(callback)
-    
-    // Initial callback with current state if not loading
-    if (!loading) {
-      callback(!!session && !!profile)
-    }
-    
-    // Return cleanup function to remove this callback
-    return () => {
-      callbacksRef.current = callbacksRef.current.filter(cb => cb !== callback)
-    }
-  }, [session, profile, loading /*isProMember*/])
-  
-  // Function to notify all registered callbacks
-  const notifyCallbacks = useCallback((isAuthenticated: boolean) => {
-    callbacksRef.current.forEach(callback => callback(isAuthenticated))
-  }, [])
 
   useEffect(() => {
     // Listener for customer info updates from RevenueCat
@@ -115,33 +88,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 1) on mount: grab current session & customer info
   useEffect(() => {
+    console.log('[1] Starting getSession');
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('[2] getSession completed');
       setSession(session)
       setUser(session?.user ?? null)
       
       if (session?.user) {
+        console.log('[3] User exists, calling fetchProfile');
         await fetchProfile(session.user.id)
+        console.log('[4] fetchProfile completed');
         if (await Purchases.isConfigured()) {
             await refreshCustomerInfo();
         }
       } else {
-        notifyCallbacks(false)
+        console.log('[5] No user, should set loading false');
         setLoading(false)
       }
     })
-  }, [notifyCallbacks])
-
-  useEffect(() => {
-    if (!loading) {
-      const isAuthenticated = !!session && !!profile;
-      notifyCallbacks(isAuthenticated)
-    }
-  }, [session, profile, loading, notifyCallbacks, isProMember])
+  }, [])
 
   // 2) subscribe to any auth state change (signIn, signOut, token refresh)
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
+        console.log('[6] onAuthStateChange fired');
         setSession(session)
         setUser(session?.user ?? null)
 
@@ -155,13 +126,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null)
           setCustomerInfo(null)
           setIsProMember(false)
-          notifyCallbacks(false)
         }
     })
 
     return () => listener.subscription.unsubscribe()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notifyCallbacks])
+  }, [])
 
   // 3) helpers
   const signIn = async (email: string, password: string) => {
@@ -189,8 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null)
       setCustomerInfo(null)
       setIsProMember(false)
-      
-      notifyCallbacks(false)
     } catch (err) {
       console.error("[AuthContext] Unexpected error during signOut:", err)
       setLoading(false)
@@ -199,12 +167,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const fetchProfile = async (userId: string) => {
+    console.log('[7] fetchProfile started');
     try {
+      console.log('[8] Querying supabase');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single()
+      console.log('[9] Supabase query done');
 
       if (error) {
         console.error('[AuthContext] Error fetching profile:', error)
@@ -212,7 +183,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(data)
         // Log user into RevenueCat once profile is fetched & refresh customer info
         if (data && data.id) {
+          console.log('[10] Checking Purchases.isConfigured');
           if (await Purchases.isConfigured()) {
+            console.log('[11] Logging into RevenueCat');
             Purchases.logIn(data.id)
                 .then(async (loginResult) => {
                     setCustomerInfo(loginResult.customerInfo);
@@ -226,7 +199,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       }
-      setLoading(false)
+      console.log('[12] About to set loading false');
+      setLoading(true) 
     } catch (err) {
       console.error('[AuthContext] Unexpected error fetching profile:', err)
       setLoading(false)
@@ -272,7 +246,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signIn,
         signOut,
-        onAuthStateChange,
         refreshProfile,
         refreshCustomerInfo,
       }}
