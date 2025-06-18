@@ -4,7 +4,7 @@ Farelo is a mobile app that uses AI to digitize, organize, and share personal re
 
 ## ✅ Publishing Status
 - **iOS**: Trying to pass Apple's reviews
-- **Android**: Closed beta
+- **Android**: Published. [Access Here](https://play.google.com/store/apps/details?id=com.arthrduarte.farelo)
 
 ## ✨ Features
 
