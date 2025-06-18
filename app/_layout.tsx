@@ -12,6 +12,7 @@ import Purchases from 'react-native-purchases';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PaywallProvider } from '@/contexts/PaywallContext';
 
 const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS;
 const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID;
@@ -50,7 +51,6 @@ function RootLayoutNav() {
       <Stack.Screen name="settings/main"/>
       <Stack.Screen name="settings/account/email"/>
       <Stack.Screen name="settings/account/password"/>
-      <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'fade_from_bottom' }}/>
     </Stack>
   );
 }
@@ -97,10 +97,12 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <RootLayoutNav />
-            <StatusBar style="auto" />
-          </ThemeProvider>
+          <PaywallProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <RootLayoutNav />
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </PaywallProvider>
         </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
