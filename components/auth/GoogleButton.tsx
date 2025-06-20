@@ -6,6 +6,7 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin'
 import { supabase } from '@/lib/supabase'
+import { usePaywall } from '@/contexts/PaywallContext'
 
 GoogleSignin.configure({
   scopes: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
@@ -13,12 +14,9 @@ GoogleSignin.configure({
   iosClientId: '791951088468-jql23hqupnu5eudogm3rrc8h634f6c8h.apps.googleusercontent.com',
 })
 
-interface GoogleButtonProps {
-  redirectTo?: any
-}
-
-export const GoogleButton = ({ redirectTo = '/paywall' }: GoogleButtonProps) => {
+export const GoogleButton = () => {
   const router = useRouter()
+  const { showPaywall } = usePaywall()
 
   async function signInWithGoogle() {
     try {
@@ -37,8 +35,9 @@ export const GoogleButton = ({ redirectTo = '/paywall' }: GoogleButtonProps) => 
           Alert.alert('Authentication Error', error.message)
           return
         }
-        
-        router.replace(redirectTo)
+
+        showPaywall()
+        router.replace('/')
       } else {
         throw new Error('no ID token present!')
       }

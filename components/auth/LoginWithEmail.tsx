@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
 import { ForgotPassword } from './ForgotPassword'
+import { usePaywall } from '@/contexts/PaywallContext'
 
 const { width } = Dimensions.get('window')
 
@@ -21,6 +22,7 @@ export const LoginWithEmail = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const { showPaywall } = usePaywall()
 
   async function signInWithEmail() {
     // Input Validations
@@ -52,8 +54,9 @@ export const LoginWithEmail = () => {
         Alert.alert(error.message)
         return
       }
-      
-      router.replace('/(tabs)');
+
+      showPaywall()
+      router.replace('/');
       
     } catch (err) {
       console.error("[Login] Unexpected error:", err)
