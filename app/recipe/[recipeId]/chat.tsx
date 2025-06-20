@@ -9,6 +9,8 @@ import { MessageItem } from '@/components/chat/MessageItem';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { EmptyChat } from '@/components/chat/EmptyChat';
 import { useQueryClient } from '@tanstack/react-query';
+import Purchases from 'react-native-purchases';
+import { usePaywall } from "@/contexts/PaywallContext";
 
 // Define the message type based on the database schema
 type ChatMessage = {
@@ -17,11 +19,14 @@ type ChatMessage = {
   timestamp: string;
 };
 
+const PREMIUM_ENTITLEMENT_ID = 'pro';
+
 export default function ChatScreen() {
-  const { profile } = useAuth();
+  const { profile, refreshCustomerInfo } = useAuth();
   const { recipeId } = useLocalSearchParams();
   const { data: recipe, isError } = useRecipe(recipeId as string, profile?.id);
   const queryClient = useQueryClient();
+  const { showPaywall } = usePaywall();
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingMessage, setIsLoadingMessage] = useState(false);
@@ -36,17 +41,41 @@ export default function ChatScreen() {
     }
   }, [recipe]);
 
-  const handleSendMessage = async (message: string) => {
-    
-    const userMessage: ChatMessage = {
-      role: 'user',
-      message: message,
-      timestamp: new Date().toISOString(),
-    };
-    
-    const updatedMessages = [userMessage, ...messages];
-    setMessages(updatedMessages);
-    setIsLoadingMessage(true);
+  const handleSendMessage = async (message: string): Promise<boolean> => {
+    if (!profile) {
+      Alert.alert('Error', 'You must be logged in to chat with Jacquin.');
+      return false;
+    }
+
+    try {
+      // Refresh customer info to get the latest subscription status
+      await refreshCustomerInfo();
+      
+      const currentCustomerInfo = await Purchases.getCustomerInfo();
+      const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
+
+      if (!hasActiveEntitlement) {
+        showPaywall(); 
+        return false;
+      }
+
+      // If user has active entitlement, add user message and proceed
+      const userMessage: ChatMessage = {
+        role: 'user',
+        message: message,
+        timestamp: new Date().toISOString(),
+      };
+      
+      const updatedMessages = [userMessage, ...messages];
+      setMessages(updatedMessages);
+      setIsLoadingMessage(true);
+      
+      return true;
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
+      Alert.alert('Error', 'An unexpected error occurred.');
+      return false;
+    }
   };
 
   const handleAIResponse = (aiMessage: string) => {
