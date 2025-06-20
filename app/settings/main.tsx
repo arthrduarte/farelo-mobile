@@ -4,9 +4,11 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePaywall } from "@/contexts/PaywallContext";
 
 export default function Settings() {
   const { signOut } = useAuth();
+  const { showPaywall } = usePaywall();
 
   return (
     <ThemedView style={styles.container}>
@@ -33,7 +35,7 @@ export default function Settings() {
               <Feather name="chevron-right" size={24} color="#793206" />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.card} onPress={() => router.push('/paywall')}>
+          <TouchableOpacity style={styles.card} onPress={() => showPaywall()}>
             <View style={styles.cardContent}>
               <Feather name="star" size={24} color="#793206" />
               <Text style={styles.cardTitle}>Upgrade to Pro</Text>

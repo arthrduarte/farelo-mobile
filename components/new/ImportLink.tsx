@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { Recipe } from '@/types/db';
 import { supabase } from '@/lib/supabase';
 import Purchases from 'react-native-purchases';
+import { usePaywall } from "@/contexts/PaywallContext";
 
 interface ImportLinkProps {
   recipeUrl: string;
@@ -34,6 +35,7 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
     "Formatting recipe...",
     "Creating image..."
   ];
+  const { showPaywall } = usePaywall();
 
   // Effect to handle loading step changes
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
       const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
 
       if (!hasActiveEntitlement) {
-        router.push('/paywall'); 
+        showPaywall(); 
       } else {
         // If user has active entitlement, proceed with import
         await importRecipeMutation.mutateAsync(recipeUrl);

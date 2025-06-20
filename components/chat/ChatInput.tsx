@@ -3,7 +3,7 @@ import { View, TextInput, TouchableOpacity, StyleSheet, Platform, Keyboard } fro
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface ChatInputProps {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string) => Promise<boolean>;
   onAIResponse: (response: string) => void;
   isLoading?: boolean;
   recipeContext: {
@@ -28,11 +28,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const handleSend = async () => {
     if (inputText.trim()) {
       const message = inputText.trim();
+      
+      // Call onSendMessage and wait for approval
+      const shouldProceed = await onSendMessage(message);
+      
+      if (!shouldProceed) {
+        // Don't clear input or proceed if message was blocked
+        return;
+      }
+
       setInputText('');
       Keyboard.dismiss();
-
-      // Call onSendMessage immediately to show user message
-      onSendMessage(message);
 
       try {
         const requestBody = {
