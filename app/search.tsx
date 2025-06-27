@@ -8,6 +8,7 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { debounce } from 'lodash'; // Using lodash debounce
 import Avatar from '@/components/ui/Avatar';
+import { useBlocks } from '@/hooks/useBlocks';
 
 export default function SearchScreen() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +17,7 @@ export default function SearchScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
     const { profile: currentUser } = useAuth();
+    const { getAllBlockedRelationships } = useBlocks();
 
     // Fetch suggested users on component mount
     useEffect(() => {
@@ -24,12 +26,14 @@ export default function SearchScreen() {
             
             setIsLoadingSuggestions(true);
             try {
+                const blockedUserIds = await getAllBlockedRelationships();
+
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('*')
-                    .neq('id', currentUser.id) // Exclude current user
+                    .neq('id', blockedUserIds) // Exclude blocked users
                     .order('created_at', { ascending: false }) // Show newer users first
-                    .limit(8); // Get 8 suggested users
+                    .limit(10); // Get 10 suggested users
 
                 if (error) throw error;
                 setSuggestedUsers(data || []);
@@ -53,11 +57,13 @@ export default function SearchScreen() {
         }
         setIsLoading(true);
         try {
+            const blockedUserIds = await getAllBlockedRelationships();
+            
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .ilike('username', `%${query}%`)
-                .neq('id', currentUser.id) // Exclude current user
+                .neq('id', blockedUserIds) // Exclude blocked users
                 .limit(15); // Limit results
 
             if (error) throw error;
