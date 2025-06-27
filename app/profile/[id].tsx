@@ -5,19 +5,21 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated, Alert } from 'react-native';
 import { Profile } from '@/types/db';
 import { LogLoader } from '@/components/log/LogLoader';
 import { useFollow } from '@/hooks/useFollow';
 import Drawer from '@/components/ui/Drawer';
 import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBlocks } from '@/hooks/useBlocks';
 
 export default function ProfileScreen() {
   const { id, profile: profileParam } = useLocalSearchParams();
   const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(id as string);
   const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(id as string);
   const { profile: currentUserProfile } = useAuth();
+  const { isBlocked, isBlocking, blockUser, unblockUser } = useBlocks(id as string);
   const profile = JSON.parse(profileParam as string) as Profile;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
@@ -37,6 +39,62 @@ export default function ProfileScreen() {
     if (!profile || !profile.id) return;
     toggleDrawer();
     router.push(`/report?type=profile&itemId=${profile.id}`);
+  };
+
+  const handleBlockUser = () => {
+    if (!profile || !profile.id) return;
+    toggleDrawer();
+    
+    Alert.alert(
+      'Block User',
+      `Are you sure you want to block @${profile.username}? You won't see their content anymore and they won't see yours.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await blockUser(profile.id);
+              Alert.alert('User Blocked', `You have blocked @${profile.username}.`);
+              router.back(); // Navigate back after blocking
+            } catch (error) {
+              Alert.alert('Error', 'Failed to block user. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUnblockUser = () => {
+    if (!profile || !profile.id) return;
+    toggleDrawer();
+    
+    Alert.alert(
+      'Unblock User',
+      `Are you sure you want to unblock @${profile.username}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Unblock',
+          onPress: async () => {
+            try {
+              await unblockUser(profile.id);
+              Alert.alert('User Unblocked', `You have unblocked @${profile.username}.`);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to unblock user. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (!profile) {
@@ -62,7 +120,16 @@ export default function ProfileScreen() {
 
   const HeaderComponent = () => {
     return (
-      <ProfileHeader profile={profile} logs={profileLogs} isFollowing={isFollowing} loading={loading} toggleFollow={toggleFollow} followersCount={followersCount} followingCount={followingCount} />
+      <ProfileHeader 
+        profile={profile} 
+        logs={profileLogs} 
+        isFollowing={isFollowing} 
+        loading={loading} 
+        toggleFollow={toggleFollow} 
+        followersCount={followersCount} 
+        followingCount={followingCount}
+        isBlocked={isBlocked}
+      />
     );
   };
   
@@ -77,6 +144,11 @@ export default function ProfileScreen() {
       icon: 'report' as keyof typeof MaterialIcons.glyphMap,
       text: 'Report Profile',
       onPress: handleReportProfile,
+    },
+    {
+      icon: (isBlocked ? 'person-add' : 'block') as keyof typeof MaterialIcons.glyphMap,
+      text: isBlocked ? 'Unblock User' : 'Block User',
+      onPress: isBlocked ? handleUnblockUser : handleBlockUser,
     },
   ];
 

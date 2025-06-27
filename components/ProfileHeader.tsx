@@ -13,9 +13,10 @@ interface ProfileHeaderProps {
   toggleFollow: () => void
   followersCount: number
   followingCount: number
+  isBlocked?: boolean
 }
 
-export default function ProfileHeader({ profile, logs, isFollowing, loading, toggleFollow, followersCount, followingCount }: ProfileHeaderProps) {
+export default function ProfileHeader({ profile, logs, isFollowing, loading, toggleFollow, followersCount, followingCount, isBlocked = false }: ProfileHeaderProps) {
   const { profile: currentProfile, signOut } = useAuth();
 
   const handleFollowersPress = () => {
@@ -69,7 +70,7 @@ export default function ProfileHeader({ profile, logs, isFollowing, loading, tog
           </View>
         </View>
         <View style={styles.headerBottom}>
-            {currentProfile?.id != profile?.id && (
+            {currentProfile?.id != profile?.id && !isBlocked && (
               <TouchableOpacity 
                 style={[styles.followButton, isFollowing && styles.followingButton]} 
                 onPress={toggleFollow}
@@ -83,6 +84,11 @@ export default function ProfileHeader({ profile, logs, isFollowing, loading, tog
                   </Text>
                 )}
               </TouchableOpacity>
+            )}
+            {isBlocked && (
+              <View style={styles.blockedContainer}>
+                <Text style={styles.blockedText}>This user is blocked</Text>
+              </View>
             )}
         </View>
       </View>
@@ -145,5 +151,18 @@ const styles = StyleSheet.create({
   statValue: {
     fontWeight: 'bold',
     color: '#793206',
+  },
+  blockedContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: '#79320620',
+    borderRadius: 12,
+  },
+  blockedText: {
+    color: '#793206',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
