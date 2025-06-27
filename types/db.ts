@@ -58,8 +58,15 @@ export type Follow = {
     created_at: string; // timestamptz
 };
 
+export type Block = {
+    id: string; // UUID of the block
+    blocker_id: string; // UUID of the user who initiated the block
+    blocked_id: string; // UUID of the user who was blocked
+    created_at: string; // timestamptz
+};
+
 export type Reports = {
-    id: string; 
+    id: string;
     who_reported: string;
     what_was_reported: string;
     item_id: string;
