@@ -61,6 +61,7 @@ export type Follow = {
 export type Reports = {
     id: string; 
     who_reported: string;
-    log_reported: string; 
+    what_was_reported: string;
+    message: string;
     created_at: string;
 }
