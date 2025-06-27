@@ -14,7 +14,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.arthrduarte.farelo",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Farelo needs access to your photo library to let you import recipes by taking photos or selecting existing images of recipes, which our AI will analyze to extract ingredients and cooking instructions. You can also save photos of your finished dishes to document your cooking experiences and share them with friends.",
+        "NSCameraUsageDescription": "Farelo uses your camera to take photos of recipes for AI-powered recipe extraction, and to capture images of your finished dishes when logging your cooking experiences.",
+        "NSPhotoLibraryAddUsageDescription": "Farelo can optionally save recipe photos and images of your finished dishes to your photo library for your personal collection."
       },
       "associatedDomains": ["applinks:usefarelo.com"]
     },
