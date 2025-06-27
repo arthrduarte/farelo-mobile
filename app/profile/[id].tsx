@@ -5,17 +5,39 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated } from 'react-native';
 import { Profile } from '@/types/db';
 import { LogLoader } from '@/components/log/LogLoader';
 import { useFollow } from '@/hooks/useFollow';
+import Drawer from '@/components/ui/Drawer';
+import { useState, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
   const { id, profile: profileParam } = useLocalSearchParams();
   const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(id as string);
   const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(id as string);
+  const { profile: currentUserProfile } = useAuth();
   const profile = JSON.parse(profileParam as string) as Profile;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const drawerAnimation = useRef(new Animated.Value(0)).current;
 
+  const toggleDrawer = () => {
+    const toValue = isDrawerOpen ? 0 : 1;
+    Animated.spring(drawerAnimation, {
+      toValue,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 11
+    }).start();
+    setIsDrawerOpen(!isDrawerOpen);
+  };
+
+  const handleReportProfile = () => {
+    if (!profile || !profile.id) return;
+    toggleDrawer();
+    router.push(`/report?type=profile&itemId=${profile.id}`);
+  };
 
   if (!profile) {
     return (
@@ -50,9 +72,25 @@ export default function ProfileScreen() {
     </View>
   );
 
+  const drawerOptions = [
+    {
+      icon: 'report' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Report Profile',
+      onPress: handleReportProfile,
+    },
+  ];
+
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title={profile.username} showBackButton={true} />
+      <ScreenHeader 
+        title={profile.username} 
+        showBackButton={true}
+        rightItem={
+            <TouchableOpacity onPress={toggleDrawer}>
+              <MaterialIcons name="more-vert" size={24} color="#793206" />
+            </TouchableOpacity>
+        }
+      />
 
       <FlatList
         style={styles.list}
@@ -73,6 +111,14 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         onRefresh={refreshProfileLogs}
         refreshing={profileLogsLoading}
+      />
+      
+      <Drawer
+        isDrawerOpen={isDrawerOpen}
+        toggleDrawer={toggleDrawer}
+        drawerAnimation={drawerAnimation}
+        options={drawerOptions}
+        title="Options"
       />
     </ThemedView>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { formatTimeAgo } from '@/lib/utils';
 
 type Comment = {
@@ -17,11 +17,16 @@ type Comment = {
 
 interface CommentEntryProps {
   comment: Comment;
+  onLongPress?: (commentId: string) => void;
 }
 
-export function CommentEntry({ comment }: CommentEntryProps) {
+export function CommentEntry({ comment, onLongPress }: CommentEntryProps) {
   return (
-    <View style={styles.commentContainer}>
+    <TouchableOpacity 
+      style={styles.commentContainer}
+      onLongPress={() => onLongPress?.(comment.id)}
+      activeOpacity={0.7}
+    >
       <Image 
         source={{ uri: comment.profile?.image }}
         style={styles.commentAvatar}
@@ -37,7 +42,7 @@ export function CommentEntry({ comment }: CommentEntryProps) {
           {formatTimeAgo(comment.created_at)}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

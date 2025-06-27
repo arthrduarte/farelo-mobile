@@ -88,7 +88,7 @@ export default function LogDetailsScreen() {
     const handleReportLog = () => {
         if (!log || !log.id) return;
         toggleDrawer();
-        router.push('/report?type=log');
+        router.push(`/report?type=log&itemId=${log.id}`);
     };
 
     const drawerOptions = isOwnRecipe
