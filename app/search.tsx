@@ -31,7 +31,8 @@ export default function SearchScreen() {
 
                 let query = supabase
                     .from('profiles_with_log_count')
-                    .select('*') 
+                    .select('*')
+                    .neq('id', currentUser.id)
                     .order('log_count', { ascending: false })
                     .limit(10);
 
@@ -64,8 +65,9 @@ export default function SearchScreen() {
             const blockedUserIds = await getAllBlockedRelationships();
             
             let debouncedQuery = supabase
-                .from('profiles')
+                .from('profiles_with_log_count')
                 .select('*')
+                .neq('id', currentUser.id)
                 .ilike('username', `%${query}%`)
                 .limit(15);
 
