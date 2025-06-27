@@ -62,6 +62,7 @@ export type Reports = {
     id: string; 
     who_reported: string;
     what_was_reported: string;
+    item_id: string;
     message: string;
     created_at: string;
 }

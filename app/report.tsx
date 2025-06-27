@@ -4,11 +4,14 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ReportType = 'recipe' | 'comment' | 'profile' | 'log';
 
 export default function ReportScreen() {
-  const { type } = useLocalSearchParams<{ type: ReportType }>();
+  const { type, itemId } = useLocalSearchParams<{ type: ReportType; itemId: string }>();
+  const { profile } = useAuth();
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,15 +21,37 @@ export default function ReportScreen() {
       return;
     }
 
+    if (!profile?.id) {
+      Alert.alert('Error', 'You must be logged in to report content.');
+      return;
+    }
+
+    if (!itemId) {
+      Alert.alert('Error', 'Unable to identify the content to report.');
+      return;
+    }
+
+    if (!type) {
+      Alert.alert('Error', 'Report type is missing.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement the actual report submission logic
-      // This would typically involve calling an API to save the report
-      console.log('Report submitted:', {
-        type,
-        message: message.trim()
-      });
+      const { error } = await supabase
+        .from('reports')
+        .insert({
+          who_reported: profile.id,
+          what_was_reported: type,
+          item_id: itemId,
+          message: message.trim()
+        });
+
+      if (error) {
+        console.error('Error submitting report:', error);
+        throw new Error(`Failed to submit report: ${error.message}`);
+      }
 
       Alert.alert(
         'Report Submitted', 
