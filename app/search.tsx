@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { debounce } from 'lodash'; // Using lodash debounce
 import Avatar from '@/components/ui/Avatar';
 import { useBlocks } from '@/hooks/useBlocks';
+import { applyNotIn } from '@/lib/utils';
 
 export default function SearchScreen() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -28,12 +29,15 @@ export default function SearchScreen() {
             try {
                 const blockedUserIds = await getAllBlockedRelationships();
 
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .neq('id', blockedUserIds) // Exclude blocked users
-                    .order('created_at', { ascending: false }) // Show newer users first
-                    .limit(10); // Get 10 suggested users
+                let query = supabase
+                    .from('profiles_with_log_count')
+                    .select('*') 
+                    .order('log_count', { ascending: false })
+                    .limit(10);
+
+                query = applyNotIn(query, 'id', blockedUserIds);
+
+                const { data, error } = await query;
 
                 if (error) throw error;
                 setSuggestedUsers(data || []);
@@ -59,12 +63,15 @@ export default function SearchScreen() {
         try {
             const blockedUserIds = await getAllBlockedRelationships();
             
-            const { data, error } = await supabase
+            let debouncedQuery = supabase
                 .from('profiles')
                 .select('*')
                 .ilike('username', `%${query}%`)
-                .neq('id', blockedUserIds) // Exclude blocked users
-                .limit(15); // Limit results
+                .limit(15);
+
+            debouncedQuery = applyNotIn(debouncedQuery, 'id', blockedUserIds);
+
+            const { data, error } = await debouncedQuery;
 
             if (error) throw error;
             setResults(data || []);
