@@ -6,11 +6,14 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import Avatar from '@/components/ui/Avatar';
 import { MaterialIcons } from '@expo/vector-icons';
+import { applyNotIn } from '@/lib/utils';
+import { useBlocks } from '@/hooks/useBlocks';
 
 export const WhoToFollow = () => {
     const [suggestedUsers, setSuggestedUsers] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { profile: currentUser } = useAuth();
+    const { getAllBlockedRelationships } = useBlocks();
 
     useEffect(() => {
         const fetchSuggestedUsers = async () => {
@@ -18,12 +21,18 @@ export const WhoToFollow = () => {
             
             setIsLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from('profiles')
+                const blockedUserIds = await getAllBlockedRelationships();
+
+                let query = supabase
+                    .from('profiles_with_log_count')
                     .select('*')
-                    .neq('id', currentUser.id) // Exclude current user
-                    .order('created_at', { ascending: false }) // Show newer users first
-                    .limit(9); // Get 9 suggested users to make room for "See More" card
+                    .neq('id', currentUser.id)
+                    .order('log_count', { ascending: false })
+                    .limit(10);
+
+                query = applyNotIn(query, 'id', blockedUserIds);
+
+                const { data, error } = await query;
 
                 if (error) throw error;
                 setSuggestedUsers(data || []);

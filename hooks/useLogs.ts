@@ -5,6 +5,7 @@ import { Log, Log_Comment, Log_Like, Profile, Recipe } from '../types/db'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { EnhancedLog } from '@/types/types'
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext'
+import { useBlocks } from './useBlocks'
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
 
@@ -21,6 +22,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const queryClient = useQueryClient();
+    const { getAllBlockedRelationships } = useBlocks();
 
     // 1️⃣ load cached logs on mount (for feed)
     useEffect(() => {
@@ -54,6 +56,12 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             if (followErr) throw followErr
             const followingIds = [...(follows?.map((f) => f.following_id) ?? []), profile_id]
 
+            // 2a-bis) get blocked users to filter out
+            const blockedUserIds = await getAllBlockedRelationships();
+
+            // Filter out blocked users from following list
+            const filteredFollowingIds = followingIds.filter(id => !blockedUserIds.includes(id));
+
             // 2b) fetch logs including the full recipe
             const { data: logs, error: logErr } = await supabase
                 .from('logs')
@@ -62,7 +70,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                     profile:profiles(*),
                     recipe:recipes(*)
                 `)
-                .in('profile_id', followingIds)
+                .in('profile_id', filteredFollowingIds)
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
 
@@ -93,8 +101,13 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
             // Combine logs with their likes and comment counts
             const logsWithData = logs.map(log => {
-                const logLikes = likes?.filter(like => like.log_id === log.id) ?? [];
-                const logComments = comments?.filter(comment => comment.log_id === log.id) ?? [];
+                // Filter out likes and comments from blocked users
+                const logLikes = likes?.filter(like =>
+                    like.log_id === log.id && !blockedUserIds.includes(like.profile_id)
+                ) ?? [];
+                const logComments = comments?.filter(comment =>
+                    comment.log_id === log.id && !blockedUserIds.includes(comment.profile_id)
+                ) ?? [];
 
                 return {
                     ...log,
@@ -112,7 +125,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         } finally {
             setFeedLoading(false)
         }
-    }, [profile_id, pageSize])
+    }, [profile_id, pageSize, getAllBlockedRelationships])
 
     const fetchProfileLogs = useCallback(async () => {
         if (!profile_id) return
@@ -139,6 +152,9 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
             const logIds = logs.map((log) => log.id);
 
+            // Get blocked users to filter out likes and comments
+            const blockedUserIds = await getAllBlockedRelationships();
+
             // Fetch likes for own logs
             const { data: likes, error: likesErr } = await supabase
                 .from('log_likes')
@@ -157,8 +173,13 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
             // Combine own logs with their likes and comments
             const profileLogsWithData = logs.map(log => {
-                const logLikes = likes?.filter(like => like.log_id === log.id) ?? [];
-                const logComments = comments?.filter(comment => comment.log_id === log.id) ?? [];
+                // Filter out likes and comments from blocked users
+                const logLikes = likes?.filter(like =>
+                    like.log_id === log.id && !blockedUserIds.includes(like.profile_id)
+                ) ?? [];
+                const logComments = comments?.filter(comment =>
+                    comment.log_id === log.id && !blockedUserIds.includes(comment.profile_id)
+                ) ?? [];
 
                 return {
                     ...log,
@@ -176,7 +197,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         } finally {
             setProfileLogsLoading(false)
         }
-    }, [profile_id, pageSize])
+    }, [profile_id, pageSize, getAllBlockedRelationships])
 
 
     // 3️⃣ run fetch after we've loaded cache

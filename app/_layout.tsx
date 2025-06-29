@@ -51,6 +51,7 @@ function RootLayoutNav() {
       <Stack.Screen name="settings/main"/>
       <Stack.Screen name="settings/account/email"/>
       <Stack.Screen name="settings/account/password"/>
+      <Stack.Screen name="report"/>
     </Stack>
   );
 }

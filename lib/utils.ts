@@ -8,3 +8,12 @@ export const formatTimeAgo = (date: string) => {
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
     return `${Math.floor(diffInSeconds / 86400)} days ago`;
 };
+
+export const applyNotIn = (query: any, column: string, ids: string[]) => {
+  if (!ids || ids.length === 0) return query;
+
+  const safeList = ids.filter(Boolean);
+  if (safeList.length === 0) return query;
+
+  return query.not(column, 'in', `(${safeList.join(',')})`);
+};
