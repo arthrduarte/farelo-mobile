@@ -133,11 +133,20 @@ export default function ProfileScreen() {
     );
   };
   
-  const EmptyStateComponent = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>This user hasn't posted any logs yet.</Text>
-    </View>
-  );
+  const EmptyStateComponent = () => {
+    if (isBlocked) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>This user is blocked.</Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>This user hasn't posted any logs yet.</Text>
+      </View>
+    );
+  };
 
   const drawerOptions = [
     {
@@ -166,12 +175,15 @@ export default function ProfileScreen() {
 
       <FlatList
         style={styles.list}
-        data={profileLogs}
+        data={isBlocked ? [] : profileLogs}
         renderItem={({ item }) => (
           <LogCard key={item.id} log={item} />
         )}
         ListHeaderComponent={HeaderComponent}
         ListEmptyComponent={() => {
+          if (isBlocked) {
+            return <EmptyStateComponent />;
+          }
           if (profileLogsLoading) {
             return <LoadingComponent />;
           }
