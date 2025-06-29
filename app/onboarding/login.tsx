@@ -42,7 +42,7 @@ export default function LoginScreen() {
 
           <View style={styles.buttonContainer}>
             <GoogleButton />
-            <IOSButton redirectTo="/paywall" />
+            <IOSButton />
           </View>
 
           <View style={styles.dividerContainer}>

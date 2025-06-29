@@ -88,25 +88,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 1) on mount: grab current session & customer info
   useEffect(() => {
-    console.log('[1] Starting getSession');
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('[2] getSession completed');
-      setSession(session)
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        console.log('[3] User exists, calling fetchProfile');
-        await fetchProfile(session.user.id)
-        console.log('[4] fetchProfile completed');
-        if (await Purchases.isConfigured()) {
-            await refreshCustomerInfo();
+    const initializeSession = async () => {
+      try {
+        console.log('[1] Starting getSession');
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AuthContext] Error getting session:', error);
+          setLoading(false);
+          return;
         }
-      } else {
-        console.log('[5] No user, should set loading false');
-        setLoading(false)
+
+        console.log('[2] getSession completed');
+        const { session } = data;
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          console.log('[3] User exists, calling fetchProfile');
+          await fetchProfile(session.user.id);
+          console.log('[4] fetchProfile completed');
+          
+          if (await Purchases.isConfigured()) {
+            await refreshCustomerInfo();
+          }
+        }
+      } catch (err) {
+        console.error('[AuthContext] Unexpected error during session initialization:', err);
+      } finally {
+        setLoading(false);
       }
-    })
-  }, [])
+    };
+
+    initializeSession();
+  }, []);
 
   // 2) subscribe to any auth state change (signIn, signOut, token refresh)
   useEffect(() => {

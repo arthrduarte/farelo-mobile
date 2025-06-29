@@ -8,6 +8,8 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { debounce } from 'lodash'; // Using lodash debounce
 import Avatar from '@/components/ui/Avatar';
+import { useBlocks } from '@/hooks/useBlocks';
+import { applyNotIn } from '@/lib/utils';
 
 export default function SearchScreen() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +18,7 @@ export default function SearchScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
     const { profile: currentUser } = useAuth();
+    const { getAllBlockedRelationships } = useBlocks();
 
     // Fetch suggested users on component mount
     useEffect(() => {
@@ -24,12 +27,18 @@ export default function SearchScreen() {
             
             setIsLoadingSuggestions(true);
             try {
-                const { data, error } = await supabase
-                    .from('profiles')
+                const blockedUserIds = await getAllBlockedRelationships();
+
+                let query = supabase
+                    .from('profiles_with_log_count')
                     .select('*')
-                    .neq('id', currentUser.id) // Exclude current user
-                    .order('created_at', { ascending: false }) // Show newer users first
-                    .limit(8); // Get 8 suggested users
+                    .neq('id', currentUser.id)
+                    .order('log_count', { ascending: false })
+                    .limit(10);
+
+                query = applyNotIn(query, 'id', blockedUserIds);
+
+                const { data, error } = await query;
 
                 if (error) throw error;
                 setSuggestedUsers(data || []);
@@ -53,12 +62,18 @@ export default function SearchScreen() {
         }
         setIsLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('profiles')
+            const blockedUserIds = await getAllBlockedRelationships();
+            
+            let debouncedQuery = supabase
+                .from('profiles_with_log_count')
                 .select('*')
+                .neq('id', currentUser.id)
                 .ilike('username', `%${query}%`)
-                .neq('id', currentUser.id) // Exclude current user
-                .limit(15); // Limit results
+                .limit(15);
+
+            debouncedQuery = applyNotIn(debouncedQuery, 'id', blockedUserIds);
+
+            const { data, error } = await debouncedQuery;
 
             if (error) throw error;
             setResults(data || []);

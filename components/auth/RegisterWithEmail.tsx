@@ -12,11 +12,14 @@ import {
 import { useRouter } from 'expo-router'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
+import { AntDesign } from '@expo/vector-icons'
+import { usePaywall } from '@/contexts/PaywallContext'
 
 const { width } = Dimensions.get('window')
 
 export const RegisterWithEmail = () => {
   const router = useRouter()
+  const { showPaywall } = usePaywall()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -89,7 +92,8 @@ export const RegisterWithEmail = () => {
           return
         }
 
-        router.replace('/paywall')
+        showPaywall()
+        router.replace('/')
       }, 100)
     } catch (err) {
       console.error("[Register] Unexpected error:", err)

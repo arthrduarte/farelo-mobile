@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
-import { router } from 'expo-router';
 import { Alert, Platform, StyleSheet, View, Text, Pressable } from 'react-native';
 import Purchases, { PurchasesStoreTransaction, CustomerInfo, PurchasesError } from 'react-native-purchases';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,17 +12,12 @@ interface PresentPaywallResult {
     error?: PurchasesError; 
 }
 
-export default function PaywallScreen() {
-    const { refreshCustomerInfo } = useAuth();
+interface PaywallProps {
+    onDismiss: () => void;
+}
 
-    const handleDismiss = () => {
-        console.log('Paywall dismissed');
-        if (router.canGoBack()) {
-            router.back();
-        } else {
-            router.replace('/');
-        }
-    };
+export const Paywall: React.FC<PaywallProps> = ({ onDismiss }) => {
+    const { refreshCustomerInfo } = useAuth();
 
     const handlePurchaseCompleted = async (customerInfo: CustomerInfo, storeTransaction: PurchasesStoreTransaction | null) => {
         console.log('Purchase completed via presentPaywall:', customerInfo, storeTransaction);
@@ -36,7 +30,7 @@ export default function PaywallScreen() {
             console.error('[PaywallScreen] Error refreshing customerInfo after purchase:', error);
         }
         
-        handleDismiss();
+        onDismiss();
     };
 
     const handleRestoreCompleted = async (customerInfo: CustomerInfo) => {
@@ -50,7 +44,7 @@ export default function PaywallScreen() {
             console.error('[PaywallScreen] Error refreshing customerInfo after restore:', error);
         }
 
-        handleDismiss();
+        onDismiss();
     };
 
     useEffect(() => {
@@ -70,7 +64,7 @@ export default function PaywallScreen() {
                         } else {
                             console.warn("Purchase reported but customerInfo or storeTransaction missing from result.");
                             Alert.alert('Purchase Processed', 'Your purchase is being processed.');
-                            handleDismiss();
+                            onDismiss();
                         }
                         break;
                     case PAYWALL_RESULT.RESTORED:
@@ -79,12 +73,12 @@ export default function PaywallScreen() {
                         } else {
                             console.warn("Restore reported but customerInfo missing from result.");
                             Alert.alert('Restore Processed', 'Your restore is being processed.');
-                            handleDismiss();
+                            onDismiss();
                         }
                         break;
                     case PAYWALL_RESULT.CANCELLED:
                         console.log('Paywall cancelled by user.');
-                        handleDismiss();
+                        onDismiss();
                         break;
                     case PAYWALL_RESULT.ERROR:
                         if (paywallOutcome.error) {
@@ -94,17 +88,17 @@ export default function PaywallScreen() {
                             console.error('Paywall error reported but no error object found.');
                             Alert.alert('Error', 'An unknown error occurred with the paywall.');
                         }
-                        handleDismiss();
+                        onDismiss();
                         break;
                     default:
                         console.log('Paywall not presented or unknown result:', paywallOutcome.result);
-                        handleDismiss();
+                        onDismiss();
                         break;
                 }
             } catch (e: any) {
                 console.error('Failed to present paywall overall:', e);
                 Alert.alert('Error', e.message || 'Could not display payment options.');
-                handleDismiss();
+                onDismiss();
             }
         };
 
@@ -117,7 +111,7 @@ export default function PaywallScreen() {
             console.log('Manual restore triggered, customerInfo:', customerInfo);
             if (customerInfo.entitlements.active && Object.keys(customerInfo.entitlements.active).length > 0) {
                 Alert.alert('Restore Successful', 'Your access has been restored.');
-                handleDismiss();
+                onDismiss();
             } else {
                 Alert.alert('No Active Subscriptions', 'No active subscriptions found to restore.');
             }
@@ -168,4 +162,4 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-});
+}); 

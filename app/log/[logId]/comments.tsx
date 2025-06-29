@@ -1,21 +1,47 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, Animated } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
 import { useLog } from "@/hooks/useLogs";
 import { useAuth } from "@/contexts/AuthContext";
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { supabase } from "@/lib/supabase";
 import { Divider } from "@/components/Divider";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { CommentEntry } from "@/components/log/CommentEntry";
+import Drawer from "@/components/ui/Drawer";
 
 export default function LogCommentsScreen() {
     const { logId } = useLocalSearchParams();
     const { data, isLoading, refetch } = useLog(logId as string);
     const { profile } = useAuth();
     const [newComment, setNewComment] = useState('');
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
+    const drawerAnimation = useRef(new Animated.Value(0)).current;
+
+    const toggleDrawer = () => {
+        const toValue = isDrawerOpen ? 0 : 1;
+        Animated.spring(drawerAnimation, {
+            toValue,
+            useNativeDriver: true,
+            tension: 65,
+            friction: 11
+        }).start();
+        setIsDrawerOpen(!isDrawerOpen);
+    };
+
+    const handleCommentLongPress = (commentId: string) => {
+        setSelectedCommentId(commentId);
+        toggleDrawer();
+    };
+
+    const handleReportComment = () => {
+        if (!selectedCommentId) return;
+        toggleDrawer();
+        router.push(`/report?type=comment&itemId=${selectedCommentId}`);
+    };
 
     const handleAddComment = useCallback(async () => {
         if (!newComment.trim() || !profile || !data?.log?.id) return;
@@ -46,6 +72,14 @@ export default function LogCommentsScreen() {
     }
 
     const { log, comments } = data;
+
+    const drawerOptions = [
+        {
+            icon: 'report' as keyof typeof MaterialIcons.glyphMap,
+            text: 'Report Comment',
+            onPress: handleReportComment,
+        },
+    ];
 
     return (
         <ThemedView style={styles.container}>
@@ -90,7 +124,12 @@ export default function LogCommentsScreen() {
                 {comments.length > 0 ? (
                     <FlatList
                         data={comments}
-                        renderItem={({ item }) => <CommentEntry comment={item} />}
+                        renderItem={({ item }) => (
+                            <CommentEntry 
+                                comment={item} 
+                                onLongPress={handleCommentLongPress}
+                            />
+                        )}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.commentsContainer}
                         keyboardShouldPersistTaps="handled"
@@ -120,6 +159,14 @@ export default function LogCommentsScreen() {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+            
+            <Drawer
+                isDrawerOpen={isDrawerOpen}
+                toggleDrawer={toggleDrawer}
+                drawerAnimation={drawerAnimation}
+                options={drawerOptions}
+                title="Options"
+            />
         </ThemedView>
     );
 }

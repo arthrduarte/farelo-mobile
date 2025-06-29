@@ -9,11 +9,13 @@ import { RECIPE_KEYS } from '@/hooks/useRecipes';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 import Purchases from 'react-native-purchases';
+import { usePaywall } from "@/contexts/PaywallContext";
 
 const PREMIUM_ENTITLEMENT_ID = 'pro';
 
 export default function SelectGallery() {
   const { profile, refreshCustomerInfo } = useAuth();
+  const { showPaywall } = usePaywall();
   const queryClient = useQueryClient();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -135,7 +137,7 @@ export default function SelectGallery() {
       const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
 
       if (!hasActiveEntitlement) {
-        router.push('/paywall');
+        showPaywall();
       } else {
         await importRecipeMutation.mutateAsync(selectedImages);
       }

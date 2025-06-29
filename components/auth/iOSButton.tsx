@@ -3,13 +3,11 @@ import { Alert, View, StyleSheet, Platform } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import { supabase } from '@/lib/supabase'
+import { usePaywall } from '@/contexts/PaywallContext'
 
-interface IOSButtonProps {
-  redirectTo?: any
-}
-
-export const IOSButton = ({ redirectTo = '/paywall' }: IOSButtonProps) => {
+export const IOSButton = () => {
   const router = useRouter()
+  const { showPaywall } = usePaywall()
 
   async function signInWithApple() {
     try {
@@ -24,7 +22,7 @@ export const IOSButton = ({ redirectTo = '/paywall' }: IOSButtonProps) => {
         throw new Error('Apple didn\'t return identity token')
       }
 
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const { error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
       })
@@ -35,7 +33,8 @@ export const IOSButton = ({ redirectTo = '/paywall' }: IOSButtonProps) => {
         return
       }
 
-      router.replace(redirectTo)
+      showPaywall()
+      router.replace('/')
     } catch (error: any) {
       if (error.code === 'ERR_REQUEST_CANCELED') {
         // User canceled the Apple Sign-In flow
@@ -68,6 +67,7 @@ export const IOSButton = ({ redirectTo = '/paywall' }: IOSButtonProps) => {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    marginTop: 10,
   },
   button: {
     width: '100%',

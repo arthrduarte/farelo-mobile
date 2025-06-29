@@ -43,7 +43,7 @@ export default function RegisterScreen() {
           <View style={styles.buttonContainer}>
             <GoogleButton />
 
-            <IOSButton redirectTo="/paywall" />
+            <IOSButton />
           </View>
           
           <View style={styles.dividerContainer}>
