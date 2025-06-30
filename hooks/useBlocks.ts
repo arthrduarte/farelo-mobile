@@ -65,12 +65,23 @@ export const useBlocks = (userId?: string) => {
   }
 
   const getAllBlockedIds = async () => {
-    const { data, error } = await supabase
+    const { data: blockerData, error: blockerError } = await supabase
       .from('blocks')
       .select('blocked_id')
+      .eq('blocker_id', profile?.id)
 
-    if (error) throw error
-    return data.map((b: { blocked_id: string }) => b.blocked_id)
+    if (blockerError) throw blockerError
+
+    const { data: blockedData, error: blockedError } = await supabase
+      .from('blocks')
+      .select('blocker_id')
+      .eq('blocked_id', profile?.id)
+
+    if (blockedError) throw blockedError
+
+    return [...blockerData, ...blockedData].map((b: { blocked_id: string } | { blocker_id: string }) =>
+      'blocked_id' in b ? b.blocked_id : b.blocker_id
+    )
   }
 
   return { blockUser, unblockUser, getAllBlockedIds, isBlocked }
