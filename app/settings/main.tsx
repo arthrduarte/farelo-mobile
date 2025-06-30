@@ -44,6 +44,15 @@ export default function Settings() {
               <Feather name="chevron-right" size={24} color="#793206" />
             </View>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.card} onPress={() => router.push('/settings/blocked')}>
+            <View style={styles.cardContent}>
+              <Feather name="star" size={24} color="#793206" />
+              <Text style={styles.cardTitle}>Blocked Users</Text>
+            </View>
+            <View>
+              <Feather name="chevron-right" size={24} color="#793206" />
+            </View>
+          </TouchableOpacity>
         </View>
         <View style={styles.bottomSection}>
           <Text style={styles.contact}>Contact us: team.usefarelo@gmail.com</Text>
