@@ -23,15 +23,34 @@ export const useBlocks = (userId?: string) => {
   })
 
   const blockUser = async (blockedId: string) => {
-    const { error } = await supabase
+    const { error: blockError } = await supabase
       .from('blocks')
       .insert({
         blocker_id: profile?.id,
         blocked_id: blockedId
       })
 
-    if (error) throw error
+    if (blockError) throw blockError
+
+    const { error: unfollowError1 } = await supabase
+      .from('follows')
+      .delete()
+      .eq('follower_id', profile?.id)
+      .eq('following_id', blockedId)
+
+    if (unfollowError1) throw unfollowError1
+
+    const { error: unfollowError2 } = await supabase
+      .from('follows')
+      .delete()
+      .eq('follower_id', blockedId)
+      .eq('following_id', profile?.id)
+
+    if (unfollowError2) throw unfollowError2
+
+    // Invalidate both blocks and follows queries to update UI
     queryClient.invalidateQueries({ queryKey: ['blocks'] })
+    queryClient.invalidateQueries({ queryKey: ['follows'] })
   }
 
   const unblockUser = async (blockedId: string) => {
