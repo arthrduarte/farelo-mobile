@@ -8,6 +8,7 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { debounce } from 'lodash'; // Using lodash debounce
 import Avatar from '@/components/ui/Avatar';
+import { useBlocks } from '@/hooks/useBlocks';
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +17,7 @@ export default function SearchScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
   const { profile: currentUser } = useAuth();
+  const { getAllBlockedIds } = useBlocks();
 
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
@@ -23,13 +25,23 @@ export default function SearchScreen() {
       
       setIsLoadingSuggestions(true);
       try {
-        const { data, error } = await supabase
-          .from('profiles')
+        const blockedIds = await getAllBlockedIds();
+          
+        let query = supabase
+          .from('profiles_with_log_count')
           .select('*')
-          .neq('id', currentUser.id) // Exclude current user
-          .order('created_at', { ascending: false }) // Show newer users first
-          .limit(8); // Get 8 suggested users
+          .neq('id', currentUser.id)
+          .order('log_count', { ascending: false })
+          .limit(8);
+
+        if (blockedIds.length > 0) {
+          query = query.not('id', 'in', `(${blockedIds.join(',')})`)
+        }
+
+        const { data, error } = await query;
+
         if (error) throw error;
+        
         setSuggestedUsers(data || []);
       } catch (error) {
         console.error("Error fetching suggested users:", error);
@@ -49,12 +61,21 @@ export default function SearchScreen() {
     }
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
+      const blockedIds = await getAllBlockedIds();
+
+      let queryDebounced = supabase
+        .from('profiles_with_log_count')
         .select('*')
         .ilike('username', `%${query}%`)
         .neq('id', currentUser.id)
+        .order('log_count', { ascending: false })
         .limit(15);
+
+      if (blockedIds.length > 0) {
+        queryDebounced = queryDebounced.not('id', 'in', `(${blockedIds.join(',')})`)
+      }
+
+      const { data, error } = await queryDebounced;
       if (error) throw error;
       setResults(data || []);
     } catch (error) {
