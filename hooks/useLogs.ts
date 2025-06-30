@@ -83,7 +83,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             }
 
             const logIds = logs.map((log) => log.id);
-            
+
             const likesQuery = supabase
                 .from('log_likes')
                 .select('*')
@@ -284,10 +284,14 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 }
 
 export const useLog = (id: string | undefined) => {
+    const { getAllBlockedIds } = useBlocks();
+
     return useQuery({
         queryKey: LOG_KEYS.detail(id || ''),
         enabled: !!id,
         queryFn: async () => {
+            const blockedIds = await getAllBlockedIds();
+
             const { data: log, error: logError } = await supabase
                 .from('logs')
                 .select(`
@@ -305,7 +309,7 @@ export const useLog = (id: string | undefined) => {
 
             if (logError) throw logError;
 
-            const { data: comments, error: commentsError } = await supabase
+            let commentsQuery = supabase
                 .from('log_comments')
                 .select(`
                     *,
@@ -319,12 +323,24 @@ export const useLog = (id: string | undefined) => {
                 .eq('log_id', id)
                 .order('created_at', { ascending: true });
 
+            if (blockedIds.length > 0) {
+                commentsQuery = commentsQuery.not('profile_id', 'in', `(${blockedIds.join(',')})`);
+            }
+
+            const { data: comments, error: commentsError } = await commentsQuery;
+
             if (commentsError) throw commentsError;
 
-            const { data: likes, error: likesError } = await supabase
+            let likesQuery = supabase
                 .from('log_likes')
                 .select('*')
                 .eq('log_id', id);
+
+            if (blockedIds.length > 0) {
+                likesQuery = likesQuery.not('profile_id', 'in', `(${blockedIds.join(',')})`);
+            }
+
+            const { data: likes, error: likesError } = await likesQuery;
 
             if (likesError) throw likesError;
 
