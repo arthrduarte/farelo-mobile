@@ -13,9 +13,10 @@ interface ProfileHeaderProps {
   toggleFollow: () => void
   followersCount: number
   followingCount: number
+  isBlocked: boolean
 }
 
-export default function ProfileHeader({ profile, logs, isFollowing, loading, toggleFollow, followersCount, followingCount }: ProfileHeaderProps) {
+export default function ProfileHeader({ profile, logs, isFollowing, loading, toggleFollow, followersCount, followingCount, isBlocked }: ProfileHeaderProps) {
   const { profile: currentProfile, signOut } = useAuth();
 
   const handleFollowersPress = () => {
@@ -71,15 +72,19 @@ export default function ProfileHeader({ profile, logs, isFollowing, loading, tog
         <View style={styles.headerBottom}>
             {currentProfile?.id != profile?.id && (
               <TouchableOpacity 
-                style={[styles.followButton, isFollowing && styles.followingButton]} 
+                style={[
+                  styles.followButton, 
+                  isFollowing && styles.followingButton,
+                  isBlocked && styles.blockedButton
+                ]} 
                 onPress={toggleFollow}
-                disabled={loading}
+                disabled={loading || isBlocked}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text style={styles.followButtonText}>
-                    {isFollowing ? 'Following' : 'Follow'}
+                    {isBlocked ? 'Blocked' : isFollowing ? 'Following' : 'Follow'}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -118,6 +123,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   followingButton: {
+    backgroundColor: '#79320633',
+  },
+  blockedButton: {
     backgroundColor: '#79320633',
   },
   followButtonText: {

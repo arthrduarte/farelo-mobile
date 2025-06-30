@@ -12,6 +12,7 @@ import { useFollow } from '@/hooks/useFollow';
 import Drawer from '@/components/ui/Drawer';
 import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBlocks } from '@/hooks/useBlocks';
 
 export default function ProfileScreen() {
   const { id, profile: profileParam } = useLocalSearchParams();
@@ -21,7 +22,8 @@ export default function ProfileScreen() {
   const profile = JSON.parse(profileParam as string) as Profile;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
-
+  const { blockUser, unblockUser, getAllBlockedIds, isBlocked } = useBlocks(profile?.id);
+  
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
     Animated.spring(drawerAnimation, {
@@ -37,6 +39,12 @@ export default function ProfileScreen() {
     if (!profile || !profile.id) return;
     toggleDrawer();
     router.push(`/report?type=profile&itemId=${profile.id}`);
+  };
+
+  const handleBlockUser = () => {
+    if (!profile || !profile.id) return;
+    toggleDrawer();
+    blockUser(profile.id);
   };
 
   if (!profile) {
@@ -62,13 +70,26 @@ export default function ProfileScreen() {
 
   const HeaderComponent = () => {
     return (
-      <ProfileHeader profile={profile} logs={profileLogs} isFollowing={isFollowing} loading={loading} toggleFollow={toggleFollow} followersCount={followersCount} followingCount={followingCount} />
+      <ProfileHeader 
+        profile={profile} 
+        logs={profileLogs} 
+        isFollowing={isFollowing} 
+        loading={loading} 
+        toggleFollow={toggleFollow} 
+        followersCount={followersCount} 
+        followingCount={followingCount}
+        isBlocked={isBlocked}
+      />
     );
   };
   
   const EmptyStateComponent = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>This user hasn't posted any logs yet.</Text>
+      <Text style={styles.emptyText}>
+        {isBlocked 
+          ? "You can't see this user's logs because they are blocked." 
+          : "This user hasn't posted any logs yet."}
+      </Text>
     </View>
   );
 
@@ -78,6 +99,11 @@ export default function ProfileScreen() {
       text: 'Report Profile',
       onPress: handleReportProfile,
     },
+    {
+      icon: isBlocked ? 'person-add' : 'block' as keyof typeof MaterialIcons.glyphMap,
+      text: isBlocked ? 'Unblock User' : 'Block User',
+      onPress: isBlocked ? () => unblockUser(profile.id) : handleBlockUser,
+    }
   ];
 
   return (
@@ -94,19 +120,16 @@ export default function ProfileScreen() {
 
       <FlatList
         style={styles.list}
-        data={profileLogs}
+        data={isBlocked ? [] : profileLogs}
         renderItem={({ item }) => (
           <LogCard key={item.id} log={item} />
         )}
         ListHeaderComponent={HeaderComponent}
         ListEmptyComponent={() => {
-          if (profileLogsLoading) {
+          if (profileLogsLoading && !isBlocked) {
             return <LoadingComponent />;
           }
-          if (!profileLogsLoading && profileLogs.length === 0) {
-            return <EmptyStateComponent />;
-          }
-          return null; 
+          return <EmptyStateComponent />;
         }}
         showsVerticalScrollIndicator={false}
         onRefresh={refreshProfileLogs}
