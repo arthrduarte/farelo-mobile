@@ -5,6 +5,7 @@ import { Log, Log_Comment, Log_Like, Profile, Recipe } from '../types/db'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { EnhancedLog } from '@/types/types'
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext'
+import { useBlocks } from './useBlocks'
 
 const CACHE_KEY = (profile_id: string) => `feed_cache_${profile_id}`
 
@@ -19,6 +20,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     const [profileLogsLoading, setProfileLogsLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
     const [isDeleting, setIsDeleting] = useState(false);
+    const { getAllBlockedIds } = useBlocks();
 
     const queryClient = useQueryClient();
 
@@ -45,11 +47,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         if (!profile_id) return
         setFeedLoading(true)
         try {
-            const { data: blockedData, error: blockedError } = await supabase
-                .rpc('get_blocked_ids')
-
-            if (blockedError) throw blockedError
-            const blockedIds = blockedData.map((b: { blocked_id: string }) => b.blocked_id)
+            const blockedIds = await getAllBlockedIds();
 
             const { data: follows, error: followErr } = await supabase
                 .from('follows')
