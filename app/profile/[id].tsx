@@ -19,11 +19,11 @@ export default function ProfileScreen() {
   const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(id as string);
   const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(id as string);
   const { profile: currentUserProfile } = useAuth();
-  const { isBlocked, isBlocking, blockUser, unblockUser } = useBlocks(id as string);
   const profile = JSON.parse(profileParam as string) as Profile;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
-
+  const { blockUser, unblockUser, isBlocked } = useBlocks(profile?.id);
+  
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
     Animated.spring(drawerAnimation, {
@@ -44,57 +44,7 @@ export default function ProfileScreen() {
   const handleBlockUser = () => {
     if (!profile || !profile.id) return;
     toggleDrawer();
-    
-    Alert.alert(
-      'Block User',
-      `Are you sure you want to block @${profile.username}? You won't see their content anymore and they won't see yours.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await blockUser(profile.id);
-              Alert.alert('User Blocked', `You have blocked @${profile.username}.`);
-              router.back(); // Navigate back after blocking
-            } catch (error) {
-              Alert.alert('Error', 'Failed to block user. Please try again.');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleUnblockUser = () => {
-    if (!profile || !profile.id) return;
-    toggleDrawer();
-    
-    Alert.alert(
-      'Unblock User',
-      `Are you sure you want to unblock @${profile.username}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Unblock',
-          onPress: async () => {
-            try {
-              await unblockUser(profile.id);
-              Alert.alert('User Unblocked', `You have unblocked @${profile.username}.`);
-            } catch (error) {
-              Alert.alert('Error', 'Failed to unblock user. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+    blockUser(profile.id);
   };
 
   if (!profile) {
@@ -133,20 +83,15 @@ export default function ProfileScreen() {
     );
   };
   
-  const EmptyStateComponent = () => {
-    if (isBlocked) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>This user is blocked.</Text>
-        </View>
-      );
-    }
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>This user hasn't posted any logs yet.</Text>
-      </View>
-    );
-  };
+  const EmptyStateComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>
+        {isBlocked 
+          ? "You can't see this user's logs because they are blocked." 
+          : "This user hasn't posted any logs yet."}
+      </Text>
+    </View>
+  );
 
   const drawerOptions = [
     {
@@ -155,10 +100,10 @@ export default function ProfileScreen() {
       onPress: handleReportProfile,
     },
     {
-      icon: (isBlocked ? 'person-add' : 'block') as keyof typeof MaterialIcons.glyphMap,
+      icon: isBlocked ? 'person-add' : 'block' as keyof typeof MaterialIcons.glyphMap,
       text: isBlocked ? 'Unblock User' : 'Block User',
-      onPress: isBlocked ? handleUnblockUser : handleBlockUser,
-    },
+      onPress: isBlocked ? () => unblockUser(profile.id) : handleBlockUser,
+    }
   ];
 
   return (
@@ -181,16 +126,10 @@ export default function ProfileScreen() {
         )}
         ListHeaderComponent={HeaderComponent}
         ListEmptyComponent={() => {
-          if (isBlocked) {
-            return <EmptyStateComponent />;
-          }
-          if (profileLogsLoading) {
+          if (profileLogsLoading && !isBlocked) {
             return <LoadingComponent />;
           }
-          if (!profileLogsLoading && profileLogs.length === 0) {
-            return <EmptyStateComponent />;
-          }
-          return null; 
+          return <EmptyStateComponent />;
         }}
         showsVerticalScrollIndicator={false}
         onRefresh={refreshProfileLogs}

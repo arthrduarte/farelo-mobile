@@ -35,19 +35,19 @@ export default function Settings() {
               <Feather name="chevron-right" size={24} color="#793206" />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.card} onPress={() => router.push('/settings/blocked')}>
+          <TouchableOpacity style={styles.card} onPress={() => showPaywall()}>
             <View style={styles.cardContent}>
-              <Feather name="shield" size={24} color="#793206" />
-              <Text style={styles.cardTitle}>Blocked Users</Text>
+              <Feather name="star" size={24} color="#793206" />
+              <Text style={styles.cardTitle}>Upgrade to Pro</Text>
             </View>
             <View>
               <Feather name="chevron-right" size={24} color="#793206" />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.card} onPress={() => showPaywall()}>
+          <TouchableOpacity style={styles.card} onPress={() => router.push('/settings/blocked')}>
             <View style={styles.cardContent}>
-              <Feather name="star" size={24} color="#793206" />
-              <Text style={styles.cardTitle}>Upgrade to Pro</Text>
+              <Feather name="shield" size={24} color="#793206" />
+              <Text style={styles.cardTitle}>Blocked Users</Text>
             </View>
             <View>
               <Feather name="chevron-right" size={24} color="#793206" />

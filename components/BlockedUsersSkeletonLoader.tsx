@@ -13,7 +13,6 @@ const BlockedUsersSkeletonLoader = () => {
               <View style={styles.usernameSkeleton} />
             </View>
           </View>
-          <View style={styles.buttonSkeleton} />
         </View>
       ))}
     </View>

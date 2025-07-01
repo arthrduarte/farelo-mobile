@@ -1,133 +1,129 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Text, FlatList, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { MaterialIcons } from '@expo/vector-icons';
-import { supabase } from '@/lib/supabase';
+import { router } from 'expo-router';
+import Avatar from '@/components/ui/Avatar';
 import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlocks } from '@/hooks/useBlocks';
-import Avatar from '@/components/ui/Avatar';
+import { supabase } from '@/lib/supabase';
 import BlockedUsersSkeletonLoader from '@/components/BlockedUsersSkeletonLoader';
 
-interface BlockedUserItem {
-  blocked_id: string;
-  profile: Profile;
-}
-
-export default function BlockedUsersScreen() {
-  const { profile: currentUser } = useAuth();
-  const { unblockUser } = useBlocks();
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUserItem[]>([]);
+export default function BlockedScreen() {
+  const { getAllBlockedIds } = useBlocks();
+  const { profile } = useAuth();
+  const [blockedUsers, setBlockedUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchBlockedUsers = async () => {
-    if (!currentUser) return;
-
-    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('blocks')
-        .select(`
-          blocked_id,
-          profiles!blocks_blocked_id_fkey(*)
-        `)
-        .eq('blocker_id', currentUser.id);
+      setLoading(true);
+      setError(null);
+      
+      // Get all blocked user IDs
+      const blockedIds = await getAllBlockedIds();
+      
+      if (blockedIds.length === 0) {
+        setBlockedUsers([]);
+        return;
+      }
 
-      if (error) throw error;
+      // Fetch user profiles for blocked users
+      const { data, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', blockedIds);
 
-      const blockedUsersList = data?.map(block => ({
-        blocked_id: block.blocked_id,
-        profile: block.profiles as unknown as Profile
-      })) || [];
-
-      setBlockedUsers(blockedUsersList);
-    } catch (error) {
-      console.error('Error fetching blocked users:', error);
-      Alert.alert('Error', 'Failed to load blocked users');
+      if (fetchError) throw fetchError;
+      
+      setBlockedUsers(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load blocked users');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUnblockUser = (userId: string, username: string) => {
-    Alert.alert(
-      'Unblock User',
-      `Are you sure you want to unblock @${username}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Unblock',
-          onPress: async () => {
-            try {
-              await unblockUser(userId);
-              setBlockedUsers(prev => prev.filter(user => user.blocked_id !== userId));
-              Alert.alert('Success', `@${username} has been unblocked.`);
-            } catch (error) {
-              Alert.alert('Error', 'Failed to unblock user. Please try again.');
-            }
-          },
-        },
-      ]
-    );
-  };
-
   useEffect(() => {
     fetchBlockedUsers();
-  }, [currentUser]);
+  }, []);
 
-  const renderBlockedUser = ({ item }: { item: BlockedUserItem }) => (
-    <View style={styles.userItem}>
-      <View style={styles.userInfo}>
-        <Avatar 
-          imageUrl={item.profile.image} 
-          firstName={item.profile.first_name} 
-          size={40} 
-        />
-        <View style={styles.userDetails}>
-          <Text style={styles.name}>
-            {item.profile.first_name} {item.profile.last_name}
-          </Text>
-          <Text style={styles.username}>@{item.profile.username}</Text>
-        </View>
+  const renderBlockedUser = ({ item }: { item: Profile }) => (
+    <TouchableOpacity 
+      style={styles.blockedItem}
+      onPress={() => {
+        if (item.id === profile?.id) {
+          router.push('/profile');
+        } else {
+          router.push({
+            pathname: '/profile/[id]',
+            params: { id: item.id, profile: JSON.stringify(item) }
+          });
+        }
+      }}
+    >
+      <Avatar 
+        imageUrl={item.image} 
+        firstName={item.first_name}
+        size={50}
+      />
+      <View style={styles.blockedInfo}>
+        <Text style={styles.blockedName}>
+          {item.first_name} {item.last_name}
+        </Text>
+        <Text style={styles.blockedUsername}>@{item.username}</Text>
       </View>
-      <TouchableOpacity
-        style={styles.unblockButton}
-        onPress={() => handleUnblockUser(item.blocked_id, item.profile.username)}
-      >
-        <MaterialIcons name="person-add" size={20} color="white" />
-        <Text style={styles.unblockButtonText}>Unblock</Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="block" size={64} color="#79320666" />
-      <Text style={styles.emptyTitle}>No Blocked Users</Text>
-      <Text style={styles.emptyDescription}>
-        When you block users, they'll appear here and you can unblock them at any time.
+      <Text style={styles.emptyText}>
+        You haven't blocked any users yet.
       </Text>
+    </View>
+  );
+
+  const LoadingState = () => (
+    <>
+      <BlockedUsersSkeletonLoader />
+    </>
+  );
+
+  const ErrorState = () => (
+    <View style={styles.errorContainer}>
+      <Text style={styles.errorText}>Failed to load blocked users</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={fetchBlockedUsers}>
+        <Text style={styles.retryButtonText}>Try Again</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Blocked Users" showBackButton={true} />
-      
-      <FlatList
-        data={blockedUsers}
-        renderItem={renderBlockedUser}
-        keyExtractor={(item) => item.blocked_id}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={!loading ? EmptyState : undefined}
-        ListHeaderComponent={loading ? BlockedUsersSkeletonLoader : undefined}
-        refreshing={false}
-        onRefresh={fetchBlockedUsers}
+      <ScreenHeader 
+        title="Blocked Users" 
+        showBackButton={true}
       />
+      
+      {loading ? (
+        <LoadingState />
+      ) : error ? (
+        <ErrorState />
+      ) : (
+        <FlatList
+          data={blockedUsers}
+          renderItem={renderBlockedUser}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={EmptyState}
+          showsVerticalScrollIndicator={false}
+          onRefresh={fetchBlockedUsers}
+          refreshing={loading}
+          contentContainerStyle={blockedUsers.length === 0 ? styles.emptyListContainer : undefined}
+        />
+      )}
     </ThemedView>
   );
 }
@@ -136,71 +132,74 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  listContainer: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  userItem: {
+  blockedItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#7932061A',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#79320633',
   },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  userDetails: {
+  blockedInfo: {
     marginLeft: 12,
     flex: 1,
   },
-  name: {
+  blockedName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#793206',
-    marginBottom: 2,
   },
-  username: {
+  blockedUsername: {
     fontSize: 14,
     color: '#79320680',
-  },
-  unblockButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#793206',
-    backgroundColor: '#793206',
-  },
-  unblockButtonText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: 'white',
-    fontWeight: '500',
+    marginTop: 2,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 100,
+    justifyContent: 'center',
+    padding: 32,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#793206',
-    marginTop: 16,
-    marginBottom: 8,
+  emptyListContainer: {
+    flex: 1,
   },
-  emptyDescription: {
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#79320680',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+  },
+  loadingText: {
     fontSize: 16,
     color: '#79320680',
+    marginTop: 12,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#793206',
     textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 32,
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#793206',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 
