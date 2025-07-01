@@ -8,7 +8,7 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlocks } from '@/hooks/useBlocks';
 import { supabase } from '@/lib/supabase';
-import { BlockedUserSkeleton } from '@/components/BlockedUserSkeleton';
+import BlockedUsersSkeletonLoader from '@/components/BlockedUsersSkeletonLoader';
 
 export default function BlockedScreen() {
   const { getAllBlockedIds } = useBlocks();
@@ -88,11 +88,7 @@ export default function BlockedScreen() {
 
   const LoadingState = () => (
     <>
-      <BlockedUserSkeleton />
-      <BlockedUserSkeleton />
-      <BlockedUserSkeleton />
-      <BlockedUserSkeleton />
-      <BlockedUserSkeleton />
+      <BlockedUsersSkeletonLoader />
     </>
   );
 
