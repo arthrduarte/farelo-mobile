@@ -46,7 +46,7 @@ export default function Settings() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.card} onPress={() => router.push('/settings/blocked')}>
             <View style={styles.cardContent}>
-              <Feather name="star" size={24} color="#793206" />
+              <Feather name="shield" size={24} color="#793206" />
               <Text style={styles.cardTitle}>Blocked Users</Text>
             </View>
             <View>
