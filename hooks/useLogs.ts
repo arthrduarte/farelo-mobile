@@ -20,9 +20,8 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
     const [profileLogsLoading, setProfileLogsLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
     const [isDeleting, setIsDeleting] = useState(false);
-
+    const { getAllBlockedIds } = useBlocks();
     const queryClient = useQueryClient();
-    const { getAllBlockedRelationships } = useBlocks();
 
     // 1️⃣ load cached logs on mount (for feed)
     useEffect(() => {
@@ -47,7 +46,8 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         if (!profile_id) return
         setFeedLoading(true)
         try {
-            // 2a) get list of who this user follows
+            const blockedIds = await getAllBlockedIds();
+
             const { data: follows, error: followErr } = await supabase
                 .from('follows')
                 .select('following_id')
@@ -56,23 +56,22 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             if (followErr) throw followErr
             const followingIds = [...(follows?.map((f) => f.following_id) ?? []), profile_id]
 
-            // 2a-bis) get blocked users to filter out
-            const blockedUserIds = await getAllBlockedRelationships();
-
-            // Filter out blocked users from following list
-            const filteredFollowingIds = followingIds.filter(id => !blockedUserIds.includes(id));
-
-            // 2b) fetch logs including the full recipe
-            const { data: logs, error: logErr } = await supabase
+            let logsQuery = supabase
                 .from('logs')
                 .select(`
                     *,
                     profile:profiles(*),
                     recipe:recipes(*)
                 `)
-                .in('profile_id', filteredFollowingIds)
+                .in('profile_id', followingIds)
                 .order('created_at', { ascending: false })
                 .limit(pageSize)
+
+            if (blockedIds.length > 0) {
+                logsQuery = logsQuery.not('profile_id', 'in', `(${blockedIds.join(',')})`)
+            }
+
+            const { data: logs, error: logErr } = await logsQuery
 
             if (logErr) throw logErr
             if (!logs) {
@@ -82,38 +81,35 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
                 return;
             }
 
-            // 2c) fetch likes for each log
             const logIds = logs.map((log) => log.id);
-            const { data: likes, error: likesErr } = await supabase
+
+            const likesQuery = supabase
                 .from('log_likes')
                 .select('*')
                 .in('log_id', logIds)
 
-            if (likesErr) throw likesErr
-
-            // 2d) fetch all comments for the logs
-            const { data: comments, error: commentsError } = await supabase
+            const commentsQuery = supabase
                 .from('log_comments')
-                .select('*') // Only need log_id to count per log
+                .select('*')
                 .in('log_id', logIds)
 
+            if (blockedIds.length > 0) {
+                likesQuery.not('profile_id', 'in', `(${blockedIds.join(',')})`);
+                commentsQuery.not('profile_id', 'in', `(${blockedIds.join(',')})`);
+            }
+
+            const { data: likes, error: likesErr } = await likesQuery
+            const { data: comments, error: commentsError } = await commentsQuery
+
+            if (likesErr) throw likesErr
             if (commentsError) throw commentsError;
 
-            // Combine logs with their likes and comment counts
             const logsWithData = logs.map(log => {
-                // Filter out likes and comments from blocked users
-                const logLikes = likes?.filter(like =>
-                    like.log_id === log.id && !blockedUserIds.includes(like.profile_id)
-                ) ?? [];
-                const logComments = comments?.filter(comment =>
-                    comment.log_id === log.id && !blockedUserIds.includes(comment.profile_id)
-                ) ?? [];
-
                 return {
                     ...log,
                     recipe: log.recipe as Recipe,
-                    likes: logLikes,
-                    comments: logComments
+                    likes: likes?.filter(like => like.log_id === log.id) ?? [],
+                    comments: comments?.filter(comment => comment.log_id === log.id) ?? []
                 }
             });
 
@@ -121,11 +117,11 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
             await AsyncStorage.setItem(CACHE_KEY(profile_id), JSON.stringify(logsWithData))
 
         } catch (err) {
-            console.error('useFeed › fetchFeed error', err)
+            console.error('useFeed: fetchFeed error', err)
         } finally {
             setFeedLoading(false)
         }
-    }, [profile_id, pageSize, getAllBlockedRelationships])
+    }, [profile_id, pageSize])
 
     const fetchProfileLogs = useCallback(async () => {
         if (!profile_id) return
@@ -152,9 +148,6 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
             const logIds = logs.map((log) => log.id);
 
-            // Get blocked users to filter out likes and comments
-            const blockedUserIds = await getAllBlockedRelationships();
-
             // Fetch likes for own logs
             const { data: likes, error: likesErr } = await supabase
                 .from('log_likes')
@@ -173,13 +166,8 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 
             // Combine own logs with their likes and comments
             const profileLogsWithData = logs.map(log => {
-                // Filter out likes and comments from blocked users
-                const logLikes = likes?.filter(like =>
-                    like.log_id === log.id && !blockedUserIds.includes(like.profile_id)
-                ) ?? [];
-                const logComments = comments?.filter(comment =>
-                    comment.log_id === log.id && !blockedUserIds.includes(comment.profile_id)
-                ) ?? [];
+                const logLikes = likes?.filter(like => like.log_id === log.id) ?? [];
+                const logComments = comments?.filter(comment => comment.log_id === log.id) ?? [];
 
                 return {
                     ...log,
@@ -197,7 +185,7 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
         } finally {
             setProfileLogsLoading(false)
         }
-    }, [profile_id, pageSize, getAllBlockedRelationships])
+    }, [profile_id, pageSize])
 
 
     // 3️⃣ run fetch after we've loaded cache
@@ -295,10 +283,14 @@ export function useLogs(profile_id: string, pageSize: number = 20) {
 }
 
 export const useLog = (id: string | undefined) => {
+    const { getAllBlockedIds } = useBlocks();
+
     return useQuery({
         queryKey: LOG_KEYS.detail(id || ''),
         enabled: !!id,
         queryFn: async () => {
+            const blockedIds = await getAllBlockedIds();
+
             const { data: log, error: logError } = await supabase
                 .from('logs')
                 .select(`
@@ -316,7 +308,7 @@ export const useLog = (id: string | undefined) => {
 
             if (logError) throw logError;
 
-            const { data: comments, error: commentsError } = await supabase
+            let commentsQuery = supabase
                 .from('log_comments')
                 .select(`
                     *,
@@ -330,12 +322,24 @@ export const useLog = (id: string | undefined) => {
                 .eq('log_id', id)
                 .order('created_at', { ascending: true });
 
+            if (blockedIds.length > 0) {
+                commentsQuery = commentsQuery.not('profile_id', 'in', `(${blockedIds.join(',')})`);
+            }
+
+            const { data: comments, error: commentsError } = await commentsQuery;
+
             if (commentsError) throw commentsError;
 
-            const { data: likes, error: likesError } = await supabase
+            let likesQuery = supabase
                 .from('log_likes')
                 .select('*')
                 .eq('log_id', id);
+
+            if (blockedIds.length > 0) {
+                likesQuery = likesQuery.not('profile_id', 'in', `(${blockedIds.join(',')})`);
+            }
+
+            const { data: likes, error: likesError } = await likesQuery;
 
             if (likesError) throw likesError;
 

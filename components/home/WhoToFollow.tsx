@@ -6,14 +6,13 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import Avatar from '@/components/ui/Avatar';
 import { MaterialIcons } from '@expo/vector-icons';
-import { applyNotIn } from '@/lib/utils';
 import { useBlocks } from '@/hooks/useBlocks';
 
 export const WhoToFollow = () => {
     const [suggestedUsers, setSuggestedUsers] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { profile: currentUser } = useAuth();
-    const { getAllBlockedRelationships } = useBlocks();
+    const { getAllBlockedIds } = useBlocks();
 
     useEffect(() => {
         const fetchSuggestedUsers = async () => {
@@ -21,16 +20,18 @@ export const WhoToFollow = () => {
             
             setIsLoading(true);
             try {
-                const blockedUserIds = await getAllBlockedRelationships();
+                const blockedIds = await getAllBlockedIds();
 
                 let query = supabase
                     .from('profiles_with_log_count')
                     .select('*')
                     .neq('id', currentUser.id)
                     .order('log_count', { ascending: false })
-                    .limit(10);
+                    .limit(9);
 
-                query = applyNotIn(query, 'id', blockedUserIds);
+                if (blockedIds.length > 0) {
+                    query = query.not('id', 'in', `(${blockedIds.join(',')})`);
+                }
 
                 const { data, error } = await query;
 
