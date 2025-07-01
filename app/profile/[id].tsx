@@ -5,7 +5,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated, Alert } from 'react-native';
 import { Profile } from '@/types/db';
 import { LogLoader } from '@/components/log/LogLoader';
 import { useFollow } from '@/hooks/useFollow';
@@ -22,7 +22,7 @@ export default function ProfileScreen() {
   const profile = JSON.parse(profileParam as string) as Profile;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
-  const { blockUser, unblockUser, getAllBlockedIds, isBlocked } = useBlocks(profile?.id);
+  const { blockUser, unblockUser, isBlocked } = useBlocks(profile?.id);
   
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
