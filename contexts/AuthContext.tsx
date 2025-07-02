@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 2) subscribe to any auth state change (signIn, signOut, token refresh)
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session) => {
+      (event: AuthChangeEvent, session) => {
         console.log('[6] onAuthStateChange fired - Event:', event, '- Timestamp:', new Date().toISOString());
         console.log('[6.1] Auth event type:', event);
         console.log('[6.2] Session present:', session ? 'Yes' : 'No');
@@ -144,9 +144,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null)
 
         if (session?.user) {
-            console.log('[6.5] User found, calling fetchProfile from auth state change');
-            await fetchProfile(session.user.id);
-            console.log('[6.6] fetchProfile completed from auth state change');
+            console.log('[6.5] User found, dispatching fetchProfile from auth state change (no await)');
+            // Do not await fetchProfile here to avoid deadlocks, as per Supabase docs
+            fetchProfile(session.user.id);
         } else {
           console.log('[6.5] No user, clearing profile');
           setProfile(null)
