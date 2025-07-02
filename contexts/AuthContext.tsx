@@ -16,37 +16,29 @@ import {
 import { supabase } from '../lib/supabase'
 import { Profile } from '../types/db'
 import EventEmitter from 'eventemitter3'; // Using eventemitter3
-import Purchases, { CustomerInfo, PurchasesEntitlementInfo } from 'react-native-purchases';
+import { useRevenueCat } from './RevenueCatContext';
 
 export const profileUpdateEmitter = new EventEmitter();
 export const PROFILE_UPDATED = 'PROFILE_UPDATED';
-
-const PREMIUM_ENTITLEMENT_ID = 'pro';
 
 type AuthContextType = {
   user: User | null
   session: Session | null
   profile: Profile | null
-  customerInfo: CustomerInfo | null;
-  isProMember: boolean;
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
-  refreshCustomerInfo: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   profile: null,
-  customerInfo: null,
-  isProMember: false,
   loading: true,
   signIn: async () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
-  refreshCustomerInfo: async () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -54,37 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
-  const [isProMember, setIsProMember] = useState<boolean>(false);
-
-  useEffect(() => {
-    // Listener for customer info updates from RevenueCat
-    const customerInfoUpdateHandler = (info: CustomerInfo) => {      
-      const proEntitlement: PurchasesEntitlementInfo | undefined = info.entitlements.active[PREMIUM_ENTITLEMENT_ID];
-      
-      setIsProMember(!!proEntitlement);
-      setCustomerInfo(info); // Set customer info after logging
-    };
-    Purchases.addCustomerInfoUpdateListener(customerInfoUpdateHandler);
-    return () => {
-      Purchases.removeCustomerInfoUpdateListener(customerInfoUpdateHandler);
-    };
-  }, []);
-
-  const refreshCustomerInfo = async () => {
-    if (!user) {
-      return;
-    }
-    try {
-      const fetchedCustomerInfo = await Purchases.getCustomerInfo();
-      const proEntitlement: PurchasesEntitlementInfo | undefined = fetchedCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
-      
-      setIsProMember(!!proEntitlement);
-      setCustomerInfo(fetchedCustomerInfo); 
-    } catch (error) {
-      console.error('[AuthContext] Error refreshing CustomerInfo:', error);
-    }
-  };
+  
+  // Get RevenueCat context
+  const revenueCat = useRevenueCat();
 
   // 1) on mount: grab current session & customer info
   useEffect(() => {
@@ -144,15 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('[3] User exists, calling fetchProfile - User ID:', session.user.id);
           await fetchProfile(session.user.id);
           console.log('[4] fetchProfile completed');
-          
-          console.log('[4.1] Checking Purchases configuration...');
-          if (await Purchases.isConfigured()) {
-            console.log('[4.2] Purchases configured, refreshing customer info...');
-            await refreshCustomerInfo();
-            console.log('[4.3] Customer info refresh completed');
-          } else {
-            console.log('[4.2] Purchases not configured, skipping customer info');
-          }
         } else {
           console.log('[3] No user session found');
         }
@@ -192,18 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('[6.5] User found, calling fetchProfile from auth state change');
             await fetchProfile(session.user.id);
             console.log('[6.6] fetchProfile completed from auth state change');
-            
-            // Refresh customer info on auth changes too
-            if (await Purchases.isConfigured()) {
-                console.log('[6.7] Refreshing customer info from auth state change');
-                await refreshCustomerInfo();
-                console.log('[6.8] Customer info refresh completed from auth state change');
-            }
         } else {
-          console.log('[6.5] No user, clearing profile and customer info');
+          console.log('[6.5] No user, clearing profile');
           setProfile(null)
-          setCustomerInfo(null)
-          setIsProMember(false)
         }
         console.log('[6.9] onAuthStateChange processing complete');
     })
@@ -229,15 +175,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error
       }
       
-      if (await Purchases.isConfigured()) {
-        Purchases.logOut()
-            .catch(rcError => console.error('[AuthContext] RevenueCat logout error:', rcError));
-      }
+      // Logout from RevenueCat
+      await revenueCat.logoutUser()
 
       setLoading(false)
       setProfile(null)
-      setCustomerInfo(null)
-      setIsProMember(false)
     } catch (err) {
       console.error("[AuthContext] Unexpected error during signOut:", err)
       setLoading(false)
@@ -260,22 +202,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('[AuthContext] Error fetching profile:', error)
       } else {
         setProfile(data)
-        // Log user into RevenueCat once profile is fetched & refresh customer info
+        // Log user into RevenueCat once profile is fetched
         if (data && data.id) {
-          console.log('[10] Checking Purchases.isConfigured');
-          if (await Purchases.isConfigured()) {
-            console.log('[11] Logging into RevenueCat');
-            Purchases.logIn(data.id)
-                .then(async (loginResult) => {
-                    setCustomerInfo(loginResult.customerInfo);
-                    const proEntitlement: PurchasesEntitlementInfo | undefined = loginResult.customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
-                    
-                    setIsProMember(!!proEntitlement);
-                })
-                .catch(rcError => console.error('[AuthContext] RevenueCat login error:', rcError));
-          } else {
-             console.warn('[AuthContext] Purchases SDK not configured, skipping logIn and customerInfo fetch.');
-          }
+          console.log('[10] Logging user into RevenueCat');
+          await revenueCat.loginUser(data.id)
         }
       }
       console.log('[12] About to set loading false');
@@ -302,10 +232,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(data);
         // Emit event to notify all listeners that profile was updated
         profileUpdateEmitter.emit(PROFILE_UPDATED, data);
-        // After profile refresh, also refresh customer info from RevenueCat
-        if (await Purchases.isConfigured()) {
-          await refreshCustomerInfo();
-        }
       }
     } catch (err) {
       console.error('[AuthContext] Unexpected error refreshing profile:', err);
@@ -320,13 +246,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         profile,
-        customerInfo,
-        isProMember,
         loading,
         signIn,
         signOut,
         refreshProfile,
-        refreshCustomerInfo,
       }}
     >
       {children}

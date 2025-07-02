@@ -3,6 +3,7 @@ import { View, Text, FlatList, KeyboardAvoidingView, Platform, Image, ActivityIn
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRevenueCat } from '@/contexts/RevenueCatContext';
 import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
 import { useLocalSearchParams } from 'expo-router';
 import { MessageItem } from '@/components/chat/MessageItem';
@@ -19,10 +20,9 @@ type ChatMessage = {
   timestamp: string;
 };
 
-const PREMIUM_ENTITLEMENT_ID = 'pro';
-
 export default function ChatScreen() {
-  const { profile, refreshCustomerInfo } = useAuth();
+  const { profile } = useAuth();
+  const { refreshCustomerInfo, isProMember } = useRevenueCat();
   const { recipeId } = useLocalSearchParams();
   const { data: recipe, isError } = useRecipe(recipeId as string, profile?.id);
   const queryClient = useQueryClient();
@@ -50,11 +50,8 @@ export default function ChatScreen() {
     try {
       // Refresh customer info to get the latest subscription status
       await refreshCustomerInfo();
-      
-      const currentCustomerInfo = await Purchases.getCustomerInfo();
-      const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
 
-      if (!hasActiveEntitlement) {
+      if (!isProMember) {
         showPaywall(); 
         return false;
       }

@@ -11,6 +11,7 @@ import Purchases from 'react-native-purchases';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { RevenueCatProvider } from '@/contexts/RevenueCatContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PaywallProvider } from '@/contexts/PaywallContext';
 
@@ -97,14 +98,16 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <PaywallProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <RootLayoutNav />
-              <StatusBar style="auto" />
-            </ThemeProvider>
-          </PaywallProvider>
-        </AuthProvider>
+        <RevenueCatProvider>
+          <AuthProvider>
+            <PaywallProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <RootLayoutNav />
+                <StatusBar style="auto" />
+              </ThemeProvider>
+            </PaywallProvider>
+          </AuthProvider>
+        </RevenueCatProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
