@@ -2,7 +2,7 @@
   "expo": {
     "name": "Farelo",
     "slug": "farelo",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "owner": "arthrduarte",
     "icon": "./assets/images/icon.png",
@@ -11,7 +11,7 @@
     "newArchEnabled": false,
     "ios": {
       "usesAppleSignIn": true,
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.arthrduarte.farelo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
