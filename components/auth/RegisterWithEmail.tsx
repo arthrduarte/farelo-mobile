@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Text,
 } from 'react-native'
+import NetInfo from '@react-native-community/netinfo'
 import { useRouter } from 'expo-router'
 import { ThemedText } from '@/components/ThemedText'
 import { supabase } from '@/lib/supabase'
@@ -61,6 +62,13 @@ export const RegisterWithEmail = () => {
 
     try {
       setLoading(true)
+
+      // Check for internet connectivity
+      const netInfo = await NetInfo.fetch()
+      if (!netInfo.isConnected) {
+        Alert.alert('Connection error')
+        return
+      }
       
       const { error } = await supabase.auth.signUp({
         email: email,
