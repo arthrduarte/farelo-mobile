@@ -7,29 +7,18 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "ios": {
-        "simulator": false,
-        "bundleIdentifier": "com.arthrduarte.farelo.dev"
-      },
-      "android": {
-        "package": "com.arthrduarte.farelo.dev"
-      },
       "env": {
+        "APP_VARIANT": "development"
       }
     },
     "preview": {
-      "ios": {
-        "distribution": "store"
-      },
-      "android": {
-        "distribution": "internal"
-      },
       "env": {
+        "APP_VARIANT": "preview"
       }
     },
     "production": {
-      "autoIncrement": true,
       "env": {
+        "APP_VARIANT": "production"
       }
     }
   },
