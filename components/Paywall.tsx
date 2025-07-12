@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { Alert, Platform, StyleSheet, View, Text, Pressable } from 'react-native';
 import Purchases, { PurchasesStoreTransaction, CustomerInfo, PurchasesError } from 'react-native-purchases';
-import { useAuth } from '@/contexts/AuthContext';
+import { useRevenueCat } from '@/contexts/RevenueCatContext';
 
 // Define the expected structure for the result of presentPaywall
 interface PresentPaywallResult {
@@ -17,7 +17,7 @@ interface PaywallProps {
 }
 
 export const Paywall: React.FC<PaywallProps> = ({ onDismiss }) => {
-    const { refreshCustomerInfo } = useAuth();
+    const { refreshCustomerInfo } = useRevenueCat();
 
     const handlePurchaseCompleted = async (customerInfo: CustomerInfo, storeTransaction: PurchasesStoreTransaction | null) => {
         console.log('Purchase completed via presentPaywall:', customerInfo, storeTransaction);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, Alert, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRevenueCat } from '@/contexts/RevenueCatContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { RECIPE_KEYS } from '@/hooks/useRecipes';
 import { router } from 'expo-router';
@@ -23,10 +24,9 @@ const UNSUPPORTED_DOMAINS = [
 ];
 
 // Assuming this is defined in your AuthContext or elsewhere, using the one found
-const PREMIUM_ENTITLEMENT_ID = 'pro';
-
 export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps) {
-  const { profile, refreshCustomerInfo } = useAuth();
+  const { profile } = useAuth();
+  const { refreshCustomerInfo, isProMember } = useRevenueCat();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -141,11 +141,8 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
     try {
       // Refresh customer info to get the latest subscription status
       await refreshCustomerInfo();
-      
-      const currentCustomerInfo = await Purchases.getCustomerInfo();
-      const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
 
-      if (!hasActiveEntitlement) {
+      if (!isProMember) {
         showPaywall(); 
       } else {
         // If user has active entitlement, proceed with import

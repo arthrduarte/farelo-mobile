@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, View, Image, ScrollView, Alert, Act
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRevenueCat } from '@/contexts/RevenueCatContext';
 import { router } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { RECIPE_KEYS } from '@/hooks/useRecipes';
@@ -11,10 +12,9 @@ import { Recipe } from '@/types/db';
 import Purchases from 'react-native-purchases';
 import { usePaywall } from "@/contexts/PaywallContext";
 
-const PREMIUM_ENTITLEMENT_ID = 'pro';
-
 export default function SelectGallery() {
-  const { profile, refreshCustomerInfo } = useAuth();
+  const { profile } = useAuth();
+  const { refreshCustomerInfo, isProMember } = useRevenueCat();
   const { showPaywall } = usePaywall();
   const queryClient = useQueryClient();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -133,10 +133,8 @@ export default function SelectGallery() {
 
     try {
       await refreshCustomerInfo();
-      const currentCustomerInfo = await Purchases.getCustomerInfo();
-      const hasActiveEntitlement = !!currentCustomerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]?.isActive;
 
-      if (!hasActiveEntitlement) {
+      if (!isProMember) {
         showPaywall();
       } else {
         await importRecipeMutation.mutateAsync(selectedImages);
