@@ -8,11 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": false,
-        "bundleIdentifier": "com.arthrduarte.farelo"
-      },
-      "android": {
-        "package": "com.arthrduarte.farelo"
+        "simulator": false
       }
     },
     "preview": {
