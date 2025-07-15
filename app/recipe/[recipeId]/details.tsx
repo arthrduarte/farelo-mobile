@@ -114,7 +114,7 @@ export default function RecipeDetailsScreen() {
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           {/* share button should open the share modal/drawer */}
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             style={styles.actionButton}
             onPress={() => Share.share({
               message: `Check out my ${recipe.title} recipe on Farelo!\n\nhttps://usefarelo.com/recipe/${recipeId}/share`,
@@ -123,7 +123,7 @@ export default function RecipeDetailsScreen() {
           >
             <MaterialIcons name="share" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Share</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity 
             style={styles.actionButton}
             onPress={() => setShowRemixModal(true)}
