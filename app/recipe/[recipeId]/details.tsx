@@ -76,6 +76,14 @@ export default function RecipeDetailsScreen() {
     router.push(`/recipe/${recipeId}/edit` as any);
   };
 
+  const handleShare = () => {
+    toggleDrawer();
+    Share.share({
+      message: `Check out my ${recipe?.title} recipe on Farelo!\n\nhttps://usefarelo.com/recipe/${recipeId}/share!`,
+      url: `https://usefarelo.com/recipe/${recipeId}/share`,
+    });
+  };
+
   if (isLoading) {
     return (
       <ThemedView style={styles.centerContainer}>
@@ -96,6 +104,11 @@ export default function RecipeDetailsScreen() {
   }
 
   const drawerOptions = [
+    {
+      icon: 'share' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Share',
+      onPress: handleShare,
+    },
     {
       icon: 'refresh' as keyof typeof MaterialIcons.glyphMap,
       text: 'Remix',
