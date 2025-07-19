@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Share } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Share, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
-import DeleteModal from '@/components/recipe/DeleteModal';
 import RemixModal from '@/components/recipe/RemixModal';
 import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,7 +22,6 @@ export default function RecipeDetailsScreen() {
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
   const deleteRecipeMutation = useDeleteRecipe();
   const updateRecipeMutation = useUpdateRecipe();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
 
   const handleDelete = async (recipeToDelete: Recipe) => {
@@ -33,6 +31,24 @@ export default function RecipeDetailsScreen() {
     } catch (err) {
       console.error('Error deleting recipe:', err);
     }
+  };
+
+  const showDeleteConfirmation = () => {
+    Alert.alert(
+      'Delete Recipe',
+      `Are you sure you want to delete "${recipe?.title}"? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => handleDelete(recipe!)
+        }
+      ]
+    );
   };
 
   if (isLoading) {
@@ -56,16 +72,6 @@ export default function RecipeDetailsScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <DeleteModal 
-        visible={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => {
-          setShowDeleteConfirm(false);
-          handleDelete(recipe);
-        }}
-        recipe={recipe}
-      />
-
       <RemixModal
         visible={showRemixModal}
         onClose={() => setShowRemixModal(false)}
@@ -140,7 +146,7 @@ export default function RecipeDetailsScreen() {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => setShowDeleteConfirm(true)}
+            onPress={showDeleteConfirmation}
           >
             <MaterialIcons name="delete" size={24} color="#793206" />
             <Text style={styles.actionButtonText}>Delete</Text>

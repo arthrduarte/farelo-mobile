@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
-import DeleteModal from '@/components/recipe/DeleteModal';
 import RemixModal from '@/components/recipe/RemixModal';
 import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,19 +20,7 @@ export default function RecipeShareScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
-  const deleteRecipeMutation = useDeleteRecipe();
-  const updateRecipeMutation = useUpdateRecipe();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showRemixModal, setShowRemixModal] = useState(false);
 
-  const handleDelete = async (recipeToDelete: Recipe) => {
-    try {
-      await deleteRecipeMutation.mutateAsync(recipeToDelete);
-      router.back();
-    } catch (err) {
-      console.error('Error deleting recipe:', err);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -56,21 +43,6 @@ export default function RecipeShareScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <DeleteModal 
-        visible={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => {
-          setShowDeleteConfirm(false);
-          handleDelete(recipe);
-        }}
-        recipe={recipe}
-      />
-
-      <RemixModal
-        visible={showRemixModal}
-        onClose={() => setShowRemixModal(false)}
-        recipe={recipe}
-      />
 
       <ScreenHeader title="Shared Recipe" showBackButton={true} />
 
@@ -99,10 +71,6 @@ export default function RecipeShareScreen() {
         ) : (
           <ImagesSection mainImage={recipe.ai_image_url} />
         )}
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-        </View>
 
         {/* Tags */}
         <TagsSection tags={recipe.tags} />
