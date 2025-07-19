@@ -1,6 +1,9 @@
-import { View, Image, StyleSheet, ScrollView } from 'react-native';
+import { View, Image, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { PulsingPlaceholder } from './ImagePlaceholder';
 import { useState } from 'react';
+
+const windowWidth = Dimensions.get('window').width;
+const imageSize = windowWidth - 32; // Full width minus padding (16 on each side)
 
 interface ImagesSectionProps {
     images?: string[];
@@ -11,7 +14,7 @@ interface ImagesSectionProps {
 export const ImagesSection: React.FC<ImagesSectionProps> = ({ 
     images, 
     mainImage,
-    height = 200
+    height = imageSize // Default to the calculated square size
 }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -20,7 +23,7 @@ export const ImagesSection: React.FC<ImagesSectionProps> = ({
         return mainImage ? (
             <Image 
                 source={{ uri: mainImage }} 
-                style={[styles.recipeImage, { height }]}
+                style={[styles.recipeImage, { height: imageSize, width: imageSize }]}
             />
         ) : (
             <PulsingPlaceholder />
@@ -30,14 +33,14 @@ export const ImagesSection: React.FC<ImagesSectionProps> = ({
     // If it's multiple images (log details case)
     if (images && images.length > 0) {
         return (
-            <View style={[styles.carouselContainer, { height: height + 50 }]}>
+            <View style={[styles.carouselContainer, { height: imageSize + 50 }]}>
                 <ScrollView
                     horizontal
                     pagingEnabled
                     showsHorizontalScrollIndicator={false}
                     onScroll={(e) => {
                         const offset = e.nativeEvent.contentOffset.x;
-                        setCurrentImageIndex(Math.round(offset / styles.carouselImage.width));
+                        setCurrentImageIndex(Math.round(offset / imageSize));
                     }}
                     scrollEventThrottle={16}
                 >
@@ -45,7 +48,7 @@ export const ImagesSection: React.FC<ImagesSectionProps> = ({
                         <Image
                             key={index}
                             source={{ uri: image }}
-                            style={[styles.carouselImage, { height }]}
+                            style={[styles.carouselImage, { height: imageSize, width: imageSize }]}
                         />
                     ))}
                 </ScrollView>
@@ -69,15 +72,14 @@ export const ImagesSection: React.FC<ImagesSectionProps> = ({
 
 const styles = StyleSheet.create({
     recipeImage: {
-        width: '100%',
         borderRadius: 12,
         marginBottom: 16,
     },
     carouselContainer: {
         marginBottom: 16,
+        alignItems: 'center',
     },
     carouselImage: {
-        width: 343, // Adjust based on screen width minus padding
         borderRadius: 12,
         marginRight: 16,
     },

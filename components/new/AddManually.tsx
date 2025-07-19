@@ -56,15 +56,6 @@ export default function AddManually() {
     })();
   }, []);
 
-  // Check form validity (currently not used, but kept for potential future validation logic)
-  useEffect(() => {
-    const finalIngredients = manualFormData.ingredients.filter(item => item.trim() !== '');
-    const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
-    // const isValid = !!(manualFormData.title.trim() && manualFormData.time > 0 && manualFormData.servings > 0 && finalIngredients.length > 0 && finalInstructions.length > 0);
-    // If you need to notify a parent component or update UI based on validity, you can do it here.
-    // For example: onFormValidityChange?.(isValid);
-  }, [manualFormData]);
-
   const handleManualFormChange = (field: keyof Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags' | 'user_image_url'>, value: string | number | string[] | null) => {
     setManualFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -168,7 +159,7 @@ export default function AddManually() {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [1, 1],
       quality: 0.7, // Adjusted quality for faster uploads
     });
 
