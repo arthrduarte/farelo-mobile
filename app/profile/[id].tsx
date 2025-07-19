@@ -1,4 +1,4 @@
-import { LogCard } from '@/components/LogCard';
+import { LogCard } from '@/components/log/LogCard';
 import ProfileHeader from '@/components/ProfileHeader';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';

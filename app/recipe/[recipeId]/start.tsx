@@ -9,7 +9,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useState, useEffect } from 'react';
 import { Divider } from '@/components/Divider';
 import { ImagesSection } from '@/components/recipe/RecipeImage';
-import ChatBubble from '@/components/ChatBubble';
+import ChatBubble from '@/components/chat/ChatBubble';
 
 export default function StartRecipeScreen() {
   const { recipeId } = useLocalSearchParams();

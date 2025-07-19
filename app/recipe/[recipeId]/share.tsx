@@ -15,7 +15,7 @@ import { ImagesSection } from '@/components/recipe/RecipeImage';
 import { NotesSection } from '@/components/recipe/NotesSection';
 import { TagsSection } from '@/components/recipe/TagsSection';
 import { Divider } from '@/components/Divider';
-import ChatBubble from '@/components/ChatBubble';
+import ChatBubble from '@/components/chat/ChatBubble';
 
 export default function RecipeShareScreen() {
   const { recipeId } = useLocalSearchParams();

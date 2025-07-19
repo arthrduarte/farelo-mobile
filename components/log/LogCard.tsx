@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { ThemedText } from './ThemedText';
+import { ThemedText } from '@/components/ThemedText';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLikes } from '@/hooks/useLikes';
 import { useCopyRecipe } from '@/hooks/useRecipes';
-import { Divider } from './Divider';
+import { Divider } from '@/components/Divider';
 import { EnhancedLog } from '@/types/types';
-import { LogImage } from './log/LogImage';
+import { LogImage } from './LogImage';
 import { Log } from '@/types/db';
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
-import Avatar from './ui/Avatar';
+import Avatar from '@/components/ui/Avatar';
 
 type LogCardProps = {
   log: EnhancedLog;

@@ -1,5 +1,5 @@
 import { StyleSheet, TouchableOpacity, Platform, View, FlatList, Text } from 'react-native';
-import { LogCard } from '@/components/LogCard';
+import { LogCard } from '@/components/log/LogCard';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';

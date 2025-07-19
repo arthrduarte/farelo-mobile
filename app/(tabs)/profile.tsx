@@ -4,7 +4,7 @@ import { ThemedView } from '@/components/ThemedView';
 import ProfileHeader from '@/components/ProfileHeader';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
-import { LogCard } from '@/components/LogCard';
+import { LogCard } from '@/components/log/LogCard';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
