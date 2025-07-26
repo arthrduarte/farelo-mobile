@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, Animated } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, ActivityIndicator, TextInput, Platform, Animated } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatTimeAgo } from "@/lib/utils";
@@ -11,6 +11,7 @@ import { Divider } from "@/components/Divider";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { CommentEntry } from "@/components/log/CommentEntry";
 import Drawer from "@/components/ui/Drawer";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function LogCommentsScreen() {
     const { logId } = useLocalSearchParams();
@@ -84,43 +85,41 @@ export default function LogCommentsScreen() {
     return (
         <ThemedView style={styles.container}>
             <ScreenHeader title="Comments" showBackButton={true} />
-            <KeyboardAvoidingView 
-                style={styles.keyboardAvoidingContainer}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-            >
-                <View style={styles.topContentContainer}>
-                    <View style={styles.logHeader}>
-                        <Image 
-                            source={{ uri: log.profile.image }}
-                            style={styles.avatar}
-                        />
-                        <View style={styles.headerText}>
-                            <Text style={styles.name}>
-                                {log.profile.first_name} {log.profile.last_name}
-                            </Text>
-                            <Text style={styles.time}>
-                                {formatTimeAgo(log.created_at)}
-                            </Text>
-                        </View>
+            <View style={styles.topContentContainer}>
+                <View style={styles.logHeader}>
+                    <Image 
+                        source={{ uri: log.profile.image }}
+                        style={styles.avatar}
+                    />
+                    <View style={styles.headerText}>
+                        <Text style={styles.name}>
+                            {log.profile.first_name} {log.profile.last_name}
+                        </Text>
+                        <Text style={styles.time}>
+                            {formatTimeAgo(log.created_at)}
+                        </Text>
                     </View>
-                    <TouchableOpacity style={styles.recipeContainer} onPress={() => router.push({
-                        pathname: '/log/[logId]/details',
-                        params: { logId: log.id }
-                    })}>
-                        <View style={styles.recipeDetailsContainer}>
-                            <Text style={styles.recipeName}>{log.recipe.title}</Text>
-                            {log.description && (
-                                <Text style={styles.description} numberOfLines={2}>{log.description}</Text>
-                            )}
-                        </View>
-                        <View style={styles.recipeArrowContainer}>
-                            <MaterialIcons name="arrow-forward" size={24} color="#793206" />
-                        </View>
-                    </TouchableOpacity>
-                    <Divider />
                 </View>
-
+                <TouchableOpacity style={styles.recipeContainer} onPress={() => router.push({
+                    pathname: '/log/[logId]/details',
+                    params: { logId: log.id }
+                })}>
+                    <View style={styles.recipeDetailsContainer}>
+                        <Text style={styles.recipeName}>{log.recipe.title}</Text>
+                        {log.description && (
+                            <Text style={styles.description} numberOfLines={2}>{log.description}</Text>
+                        )}
+                    </View>
+                    <View style={styles.recipeArrowContainer}>
+                        <MaterialIcons name="arrow-forward" size={24} color="#793206" />
+                    </View>
+                </TouchableOpacity>
+                <Divider />
+            </View>
+            <KeyboardAvoidingView 
+                style={styles.keyboardAvoidingContainer} 
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
                 {comments.length > 0 ? (
                     <FlatList
                         data={comments}
@@ -140,7 +139,6 @@ export default function LogCommentsScreen() {
                         <Text style={styles.noCommentsText}>No comments yet. Be the first!</Text>
                     </View>
                 )}
-
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -178,7 +176,6 @@ const styles = StyleSheet.create({
     },
     keyboardAvoidingContainer: {
         flex: 1,
-        paddingHorizontal: 16,
     },
     centerContainer: {
         flex: 1,
@@ -186,6 +183,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     topContentContainer: {
+        paddingHorizontal: 16,
     },
     logHeader: {
         flexDirection: 'row',
@@ -235,6 +233,7 @@ const styles = StyleSheet.create({
     },
     commentsList: {
         flex: 1,
+        paddingHorizontal: 16,
     },
     commentsContainer: {
         paddingBottom: 16,
@@ -254,7 +253,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         paddingVertical: 10,
-        paddingHorizontal: 0,
+        paddingHorizontal: 16,
         borderTopWidth: 1,
         borderTopColor: '#79320633',
         backgroundColor: '#EDE4D2',
