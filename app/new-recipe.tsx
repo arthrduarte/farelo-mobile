@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated, KeyboardAvoidingView, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { useState, useRef, useEffect } from 'react';
@@ -90,9 +90,16 @@ export default function NewRecipeModal() {
         }
       />
 
-      <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
-        {renderContent()}
-      </ScrollView>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
+          {renderContent()}
+        </ScrollView>
+      </KeyboardAvoidingView>
+
 
       {/* Use the new Drawer component */}
       <Drawer 
