@@ -11,6 +11,8 @@ import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 import 'react-native-url-polyfill/auto';
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,15}$/;
+
 export default function EditProfile() {
   const { profile, refreshProfile } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -20,6 +22,38 @@ export default function EditProfile() {
     last_name: profile?.last_name ?? null,
     username: profile?.username || '',
   });
+
+  const validateUsername = async (username: string): Promise<string | null> => {
+    // Check if empty
+    if (!username.trim()) {
+      return 'Username cannot be empty';
+    }
+
+    // Check format
+    if (!USERNAME_REGEX.test(username)) {
+      return 'Username must be 3-15 characters long and can only contain letters, numbers, and underscores';
+    }
+
+    // Check uniqueness (only if username changed)
+    if (username !== profile?.username) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
+        console.error('Error checking username:', error);
+        return 'Error checking username availability';
+      }
+
+      if (data) {
+        return 'Username is already taken';
+      }
+    }
+
+    return null;
+  };
 
   const handleImagePick = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -77,6 +111,13 @@ export default function EditProfile() {
         throw new Error('Profile not found');
       }
 
+      // Validate username
+      const usernameError = await validateUsername(formData.username);
+      if (usernameError) {
+        Alert.alert('Validation Error', usernameError);
+        return;
+      }
+
       let imageUrl = profile?.image;
       if (selectedImage) {
         imageUrl = await uploadImage(selectedImage);
@@ -106,7 +147,15 @@ export default function EditProfile() {
 
   return (
     <ThemedView style={styles.safeArea}>
-      <ScreenHeader title="Edit Profile" showBackButton={true} />
+      <ScreenHeader title="Edit Profile" showBackButton={true} rightItem={
+        <TouchableOpacity 
+          style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          <Text style={styles.saveButtonText}>{isLoading ? 'Saving...' : 'Save'}</Text>
+        </TouchableOpacity>
+      } />
 
       <ThemedView style={styles.container}>
         <View style={styles.imageSection}>
@@ -156,14 +205,6 @@ export default function EditProfile() {
               autoCapitalize="none"
             />
           </View>
-
-          <TouchableOpacity 
-            style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
-            onPress={handleSubmit}
-            disabled={isLoading}
-          >
-            <Text style={styles.saveButtonText}>{isLoading ? 'Saving...' : 'Save'}</Text>
-          </TouchableOpacity>
         </View>
       </ThemedView>
     </ThemedView>
@@ -251,11 +292,10 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#793206',
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
     borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
   },
   saveButtonText: {
     color: '#FFFFFF',
