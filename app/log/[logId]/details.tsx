@@ -49,8 +49,10 @@ export default function LogDetailsScreen() {
 
     const handleCopyRecipe = () => {
         if (isOwnRecipe) return;
+        if (isDrawerOpen) {
+            toggleDrawer();
+        }
         copyRecipe({ recipeIdToCopy: log.recipe.id });
-        toggleDrawer();
     };
 
     const handleDeleteLog = async () => {
@@ -162,7 +164,7 @@ export default function LogDetailsScreen() {
                         disabled={isCopying}
                     >
                         <Text style={styles.addButtonText}>
-                            {isCopying ? "Adding..." : "Add to your cookbook"}
+                            {isCopying ? "Copying..." : "Copy to your recipes"}
                         </Text>
                     </TouchableOpacity>
                 ) : null}

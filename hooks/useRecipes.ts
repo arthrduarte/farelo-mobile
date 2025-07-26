@@ -165,16 +165,16 @@ export const useCopyRecipe = () => {
                 profile_id: currentUserId,
                 title: originalRecipe.title,
                 description: originalRecipe.description,
-                ai_image_url: originalRecipe.ai_image_url, // Keep original AI image
+                ai_image_url: originalRecipe.ai_image_url, 
                 time: originalRecipe.time,
                 servings: originalRecipe.servings,
                 ingredients: originalRecipe.ingredients,
                 instructions: originalRecipe.instructions,
                 tags: originalRecipe.tags,
-                source_url: originalRecipe.source_url, // Keep original source URL
-                user_image_url: null, // Reset user image
-                notes: '', // Reset notes
-                chat: null, // Reset chat
+                source_url: originalRecipe.source_url, 
+                user_image_url: originalRecipe.user_image_url, 
+                notes: '', 
+                chat: null, 
             };
 
             // 3. Insert the new recipe
