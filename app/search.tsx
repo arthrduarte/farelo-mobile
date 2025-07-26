@@ -69,7 +69,7 @@ export default function SearchScreen() {
         .ilike('username', `%${query}%`)
         .neq('id', currentUser.id)
         .order('log_count', { ascending: false })
-        .limit(15);
+        .limit(8);
 
       if (blockedIds.length > 0) {
         queryDebounced = queryDebounced.not('id', 'in', `(${blockedIds.join(',')})`)
