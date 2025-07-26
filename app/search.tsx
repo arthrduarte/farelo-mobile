@@ -31,6 +31,8 @@ export default function SearchScreen() {
           .from('profiles_with_log_count')
           .select('*')
           .neq('id', currentUser.id)
+          .not('image', 'is', null)
+          .not('image', 'eq', '')
           .order('log_count', { ascending: false })
           .limit(8);
 
