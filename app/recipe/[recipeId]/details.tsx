@@ -187,12 +187,12 @@ export default function RecipeDetailsScreen() {
         <Divider />
 
         {/* Ingredients */}
-        <IngredientsSection ingredients={recipe.ingredients} />
+        <IngredientsSection ingredients={recipe.ingredients} details={true} />
 
         <Divider />
 
         {/* Instructions */}
-        <InstructionsSection instructions={recipe.instructions} />
+        <InstructionsSection instructions={recipe.instructions} details={true} />
 
         <Divider />
 
