@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Linking,
+  ScrollView,
+  Platform,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -16,7 +18,8 @@ import { ThemedText } from '@/components/ThemedText'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 import { LoginWithEmail } from '@/components/auth/LoginWithEmail'
 import { AntDesign } from '@expo/vector-icons'
-import { IOSButton } from '@/components/auth/iOSButton' 
+import { IOSButton } from '@/components/auth/iOSButton'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 
 const { width } = Dimensions.get('window')
 
@@ -28,42 +31,53 @@ export default function LoginScreen() {
     <ThemedView style={styles.container}>
       <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
           <AntDesign name="arrowleft" size={24} color="#793206" />
         </TouchableOpacity>
 
-        <View style={styles.form}>
-          <ThemedText type="title" style={styles.heading}>
-            Welcome back
-          </ThemedText>
+        <KeyboardAvoidingView
+          style={styles.scrollContent}
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+          enabled={true}
+        >
+          <ScrollView
+            style={styles.form}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <ThemedText type="title" style={styles.heading}>
+              Welcome back
+            </ThemedText>
 
-          <View style={styles.buttonContainer}>
-            <GoogleButton />
-            <IOSButton />
-          </View>
+            <View style={styles.buttonContainer}>
+              <GoogleButton />
+              <IOSButton />
+            </View>
 
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <ThemedText style={styles.orText}>or</ThemedText>
-            <View style={styles.divider} />
-          </View>
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <ThemedText style={styles.orText}>or</ThemedText>
+              <View style={styles.divider} />
+            </View>
 
-          {showEmailForm ? (
-            <LoginWithEmail />
-          ) : (
-            <TouchableOpacity
-              style={styles.emailButton}
-              onPress={() => setShowEmailForm(true)}
-            >
-              <ThemedText style={styles.emailButtonText}>
-                Continue with email
-              </ThemedText>
-            </TouchableOpacity>
-          )}
-        </View>
+            {showEmailForm ? (
+              <LoginWithEmail />
+            ) : (
+              <TouchableOpacity
+                style={styles.emailButton}
+                onPress={() => setShowEmailForm(true)}
+              >
+                <ThemedText style={styles.emailButtonText}>
+                  Continue with email
+                </ThemedText>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
   )
@@ -77,6 +91,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   backButton: {
     width: 40,

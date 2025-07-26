@@ -8,6 +8,7 @@ import { Easing, Platform } from 'react-native';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases from 'react-native-purchases';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -96,19 +97,21 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <RevenueCatProvider>
-          <AuthProvider>
-            <PaywallProvider>
-              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <RootLayoutNav />
-                <StatusBar style="auto" />
-              </ThemeProvider>
-            </PaywallProvider>
-          </AuthProvider>
-        </RevenueCatProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <KeyboardProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <RevenueCatProvider>
+            <AuthProvider>
+              <PaywallProvider>
+                <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                  <RootLayoutNav />
+                  <StatusBar style="auto" />
+                </ThemeProvider>
+              </PaywallProvider>
+            </AuthProvider>
+          </RevenueCatProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
+    </KeyboardProvider>
   );
 }
