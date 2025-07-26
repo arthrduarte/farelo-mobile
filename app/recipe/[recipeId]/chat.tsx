@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, KeyboardAvoidingView, Platform, Image, ActivityIndicator, Alert, SafeAreaView, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Platform, Image, ActivityIndicator, Alert, SafeAreaView, StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,7 @@ import { EmptyChat } from '@/components/chat/EmptyChat';
 import { useQueryClient } from '@tanstack/react-query';
 import Purchases from 'react-native-purchases';
 import { usePaywall } from "@/contexts/PaywallContext";
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 // Define the message type based on the database schema
 type ChatMessage = {
@@ -110,8 +111,7 @@ export default function ChatScreen() {
       <ScreenHeader title="Jacquin" showBackButton={true} />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {messages.length > 0 ? (
           <FlatList
