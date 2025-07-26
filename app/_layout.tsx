@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { Easing, Platform } from 'react-native';
 import 'react-native-reanimated';
@@ -15,6 +16,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { RevenueCatProvider } from '@/contexts/RevenueCatContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PaywallProvider } from '@/contexts/PaywallContext';
+import { Colors } from '@/constants/Colors';
 
 const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS;
 const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID;
@@ -64,6 +66,10 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(Colors.light.background);
+  }, []);
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -105,7 +111,7 @@ export default function RootLayout() {
               <PaywallProvider>
                 <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                   <RootLayoutNav />
-                  <StatusBar style="dark" />
+                  <StatusBar style="dark" backgroundColor={Colors.light.background} />
                 </ThemeProvider>
               </PaywallProvider>
             </AuthProvider>
