@@ -7,12 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import Avatar from '@/components/ui/Avatar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useBlocks } from '@/hooks/useBlocks';
+import { useFollowing } from '@/hooks/useFollowing';
 
 export const WhoToFollow = () => {
     const [suggestedUsers, setSuggestedUsers] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { profile: currentUser } = useAuth();
     const { getAllBlockedIds } = useBlocks();
+    const { following } = useFollowing(currentUser?.id || '');
 
     useEffect(() => {
         const fetchSuggestedUsers = async () => {
@@ -21,16 +23,20 @@ export const WhoToFollow = () => {
             setIsLoading(true);
             try {
                 const blockedIds = await getAllBlockedIds();
+                const followingIds = following.map(user => user.id);
+                const excludeIds = [...blockedIds, ...followingIds];
 
                 let query = supabase
                     .from('profiles_with_log_count')
                     .select('*')
                     .neq('id', currentUser.id)
+                    .not('image', 'is', null)
+                    .not('image', 'eq', '')
                     .order('log_count', { ascending: false })
                     .limit(9);
 
-                if (blockedIds.length > 0) {
-                    query = query.not('id', 'in', `(${blockedIds.join(',')})`);
+                if (excludeIds.length > 0) {
+                    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
                 }
 
                 const { data, error } = await query;
@@ -46,7 +52,7 @@ export const WhoToFollow = () => {
         };
 
         fetchSuggestedUsers();
-    }, [currentUser]);
+    }, [currentUser, following]);
 
     const handleSelectUser = (selectedProfile: Profile) => {
         router.push({

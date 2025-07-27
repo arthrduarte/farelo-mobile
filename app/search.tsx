@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { debounce } from 'lodash'; // Using lodash debounce
 import Avatar from '@/components/ui/Avatar';
 import { useBlocks } from '@/hooks/useBlocks';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,6 +32,8 @@ export default function SearchScreen() {
           .from('profiles_with_log_count')
           .select('*')
           .neq('id', currentUser.id)
+          .not('image', 'is', null)
+          .not('image', 'eq', '')
           .order('log_count', { ascending: false })
           .limit(8);
 
@@ -69,7 +72,7 @@ export default function SearchScreen() {
         .ilike('username', `%${query}%`)
         .neq('id', currentUser.id)
         .order('log_count', { ascending: false })
-        .limit(15);
+        .limit(8);
 
       if (blockedIds.length > 0) {
         queryDebounced = queryDebounced.not('id', 'in', `(${blockedIds.join(',')})`)
@@ -138,23 +141,28 @@ export default function SearchScreen() {
           <Text style={styles.sectionTitle}>Suggested People</Text>
         </View>
       )}
-      {showLoader ? (
-        <ActivityIndicator style={styles.loader} size="large" color="#793206" />
-      ) : (
-        <FlatList
-          data={displayData}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={() => {
-            if (searchQuery) {
-              return <Text style={styles.noResultsText}>No users found for "{searchQuery}"</Text>;
-            } else {
-              return <Text style={styles.noResultsText}>No suggested users available</Text>;
-            }
-          }}
-          contentContainerStyle={styles.listContentContainer}
-        />
-      )}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        {showLoader ? (
+          <ActivityIndicator style={styles.loader} size="large" color="#793206" />
+        ) : (
+          <FlatList
+            data={displayData}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={() => {
+              if (searchQuery) {
+                return <Text style={styles.noResultsText}>No users found for "{searchQuery}"</Text>;
+              } else {
+                return <Text style={styles.noResultsText}>No suggested users available</Text>;
+              }
+            }}
+            contentContainerStyle={styles.listContentContainer}
+          />
+        )}
+      </KeyboardAvoidingView>
     </ThemedView>
     );
 }

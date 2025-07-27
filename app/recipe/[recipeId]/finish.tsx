@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 import 'react-native-url-polyfill/auto';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export default function FinishRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -24,23 +25,50 @@ export default function FinishRecipeScreen() {
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [images, setImages] = useState<string[] | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const imagePicker = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images', 'videos'],
+      mediaTypes: ['images'],
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [1, 1],
       quality: 1,
     });
 
     if (!result.canceled) {
-      setImages([...(images || []), result.assets[0].uri]);
+      setSelectedImage(result.assets[0].uri);
     }
   }
 
-  const removeImage = (index: number) => {
-    setImages(images?.filter((_, i) => i !== index) || null);
+  const saveImage = async (image: string, profileId: string): Promise<string> => {
+    try {
+      const base64 = await FileSystem.readAsStringAsync(image, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      const fileExt = image.split('.').pop()?.toLowerCase() ?? 'jpeg'; 
+      const contentType = `image/${fileExt}`; 
+      const fileName = `${profileId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`; 
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('log.images')
+        .upload(fileName, decode(base64), { contentType }); 
+
+      if (uploadError) {
+        console.error(`Supabase Upload Error for ${fileName}:`, uploadError);
+        throw uploadError; 
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('log.images')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+      
+    } catch (fileProcessingError) {
+        console.error(`Error processing or uploading file ${image}:`, fileProcessingError);
+        throw fileProcessingError; 
+    }
   }
 
   const handleNewLog = async () => {
@@ -48,83 +76,39 @@ export default function FinishRecipeScreen() {
 
     try {
       setIsSubmitting(true);
-      
-      // 1. Upload images to storage if they exist
-      let uploadedImageUrls: string[] = [];
-      if (images && images.length > 0) {
-        const uploadPromises = images.map(async (uri) => {
-          try {
-            
-            // Read the file content as base64
-            const base64 = await FileSystem.readAsStringAsync(uri, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-            
-            // Determine file type and name
-            const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg'; // Simple extension extraction
-            const contentType = `image/${fileExt}`; // Basic content type mapping
-            const fileName = `${profile.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`; 
-            
 
-            // Upload the decoded base64 content
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('log.images')
-              .upload(fileName, decode(base64), { contentType }); // Use decode and set content type
-
-            if (uploadError) {
-              console.error(`Supabase Upload Error for ${fileName}:`, uploadError);
-              throw uploadError; // Re-throw Supabase specific error
-            }
-
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-              .from('log.images')
-              .getPublicUrl(fileName);
-              
-            return publicUrl;
-
-          } catch (fileProcessingError) {
-             console.error(`Error processing or uploading file ${uri}:`, fileProcessingError);
-             throw fileProcessingError; // Re-throw error to stop Promise.all
-          }
-        });
-
-        uploadedImageUrls = await Promise.all(uploadPromises);
+      let logImage: string;
+      if (selectedImage) {
+        logImage = await saveImage(selectedImage, profile.id);
+      } else if (recipe.user_image_url) {
+        logImage = recipe.user_image_url;
+      } else {
+        logImage = recipe.ai_image_url;
       }
 
-      // 2. Update recipe with new user images (Consider if this is still needed if log has images)
-      // Maybe only update if there were pre-existing images or notes change?
-      const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes; // Combine notes if existing ones
-      // Only update user_images_url on the recipe if it makes sense in your data model
-      // For now, let's assume the log images are sufficient and we only update notes
+      const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes; 
       await updateRecipeMutation.mutateAsync({
         ...recipe,
-        notes: notes ? updatedNotes : recipe.notes, // Update notes only if new notes were added
-        // user_images_url: uploadedImageUrls.length > 0 ? uploadedImageUrls : recipe.user_images_url, // Decide if recipe needs user_images_url
+        notes: notes ? updatedNotes : recipe.notes,
       });
 
-
-      // 3. Create new log
       const { error: logError } = await supabase
         .from('logs')
         .insert({
           profile_id: profile.id,
           recipe_id: recipe.id,
-          description: description || null, // Use null if empty
-          images: uploadedImageUrls.length > 0 ? uploadedImageUrls : [recipe.ai_image_url], // Use uploaded or fallback to AI image
+          description: description || null,
+          images: logImage ? [logImage] : [recipe.ai_image_url],
         });
 
       if (logError) {
         console.error("Supabase Insert Log Error:", logError);
-        throw new Error(logError.message); // Use new Error for consistency
+        throw new Error(logError.message); 
       }
 
-      // Use replace to prevent going back to the form
       router.replace('/(tabs)');
     } catch (error) {
-      // Catch errors from file processing, upload, recipe update, or log insert
       console.error('Error in handleNewLog:', error); 
-      // TODO: Add user-facing error handling UI (e.g., Alert.alert('Upload Failed', error.message))
     } finally {
       setIsSubmitting(false);
     }
@@ -153,99 +137,88 @@ export default function FinishRecipeScreen() {
     <ThemedView style={styles.container}>
       <ScreenHeader title="Finish Recipe" showBackButton={true} />
 
-      <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
-        {/* Header */}
-        <Text style={styles.title}>{recipe.title}</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
+          {/* Header */}
+          <Text style={styles.title}>{recipe.title}</Text>
 
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Description</Text>
-          <TextInput
-            style={styles.textInput}
-            placeholder="How was it? Tell people about it here..."
-            placeholderTextColor="#79320680"
-            multiline
-            value={description}
-            onChangeText={setDescription}
-          />
-        </View>
-
-        <Divider />
-
-        {/* Images */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.imagesContainer}
-          contentContainerStyle={styles.imagesContentContainer}
-        >
-          {/* Show AI image only if no user images */}
-          {(!images || images.length === 0) && (
-            <Image 
-              source={{ uri: recipe.ai_image_url }} 
-              style={styles.recipeImage}
+          {/* Description */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="How was it? Tell people about it here..."
+              placeholderTextColor="#79320680"
+              multiline
+              value={description}
+              onChangeText={setDescription}
             />
-          )}
+          </View>
 
-          {/* User Images */}
-          {images?.map((image, index) => (
-            <View key={index} style={styles.imageWrapper}>
-              <Image 
-                source={{ uri: image }} 
-                style={styles.recipeImage}
-              />
-              <TouchableOpacity 
-                style={styles.removeButton} 
-                onPress={() => removeImage(index)}
-              >
-                <MaterialIcons name="close" size={24} color="#793206" />
+          <Divider />
+
+          {/* Images */}
+          <View style={styles.imagesContainer}>
+            {selectedImage ? (
+              <View style={styles.imageWrapper}>
+                <Image source={{ uri: selectedImage }} style={styles.recipeImage} />
+                <TouchableOpacity 
+                  style={styles.removeButton} 
+                  onPress={() => setSelectedImage(null)}
+                >
+                  <MaterialIcons name="close" size={20} color="#793206" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.uploadButton} onPress={imagePicker}>
+                <MaterialIcons name="add-a-photo" size={24} color="#793206" />
+                <Text style={styles.uploadButtonText}>Upload Photo</Text>
+                <Text style={{ fontSize: 14, color: '#79320680' }}>If you don't upload a photo we'll use the recipe's image</Text>
               </TouchableOpacity>
-            </View>
-          ))}
-          
-          {/* Upload Photo Button */}
-          <TouchableOpacity style={styles.uploadButton} onPress={imagePicker}>
-            <MaterialIcons name="add-a-photo" size={24} color="#793206" />
-          </TouchableOpacity>
+            )}
+          </View>
+
+          <Divider />
+
+          {/* Notes */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notes (only for you)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="How did it turn out? Would you change anything next time?"
+              placeholderTextColor="#79320680"
+              multiline
+              value={notes}
+              onChangeText={setNotes}
+            />
+          </View>
+
+          <Divider />
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={[styles.logButton, isSubmitting && styles.disabledButton]} 
+              onPress={handleNewLog}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.logButtonText}>
+                {isSubmitting ? 'Saving...' : 'Log'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.discardButton} 
+              onPress={() => router.back()}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.discardButtonText}>Discard Meal</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
-
-        <Divider />
-
-        {/* Notes */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notes (only for you)</Text>
-          <TextInput
-            style={styles.textInput}
-            placeholder="How did it turn out? Would you change anything next time?"
-            placeholderTextColor="#79320680"
-            multiline
-            value={notes}
-            onChangeText={setNotes}
-          />
-        </View>
-
-        <Divider />
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.logButton, isSubmitting && styles.disabledButton]} 
-            onPress={handleNewLog}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.logButtonText}>
-              {isSubmitting ? 'Saving...' : 'Log'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.discardButton} 
-            onPress={() => router.back()}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.discardButtonText}>Discard Meal</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -272,10 +245,6 @@ const styles = StyleSheet.create({
     color: '#793206',
     marginBottom: 8,
   },
-  timeText: {
-    fontSize: 16,
-    color: '#793206',
-  },
   section: {
     marginBottom: 24,
   },
@@ -291,17 +260,20 @@ const styles = StyleSheet.create({
   },
   imagesContainer: {
     paddingVertical: 12,
+    width: '100%',
   },
   imagesContentContainer: {
     gap: 16,
     alignItems: 'center',
   },
   recipeImage: {
-    width: 140,
-    height: 140,
+    width: '100%',
+    height: '100%',
     borderRadius: 8,
   },
   imageWrapper: {
+    width: '100%',
+    aspectRatio: 1,
     position: 'relative',
   },
   removeButton: {
@@ -310,28 +282,38 @@ const styles = StyleSheet.create({
     right: -8,
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: 1,
-    // borderWidth: 1,
-    // borderColor: '#79320633',
+    padding: 4,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
   },
   uploadButton: {
-    width: 140,
-    height: 140,
+    width: '100%',
+    aspectRatio: 1,
     borderRadius: 8,
     borderWidth: 2,
     borderStyle: 'dashed',
     borderColor: '#79320633',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#79320633',
+  },
+  uploadButtonText: {
+    color: '#793206',
+    fontSize: 16,
+    marginVertical: 12,
+    fontWeight: '600',
   },
   actionButtons: {
     gap: 12,
-    marginTop: 12,
+    marginVertical: 12,
   },
   discardButton: {
     padding: 8,
     borderRadius: 8,
+    marginBottom: 12,
     alignItems: 'center',
   },
   discardButtonText: {

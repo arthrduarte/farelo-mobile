@@ -1,6 +1,9 @@
-import { View, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Image, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { PulsingPlaceholder } from '../recipe/ImagePlaceholder';
 import { useState } from 'react';
+
+const windowWidth = Dimensions.get('window').width;
+const imageSize = windowWidth - 32; // Full width minus padding (16 on each side)
 
 interface LogImageProps {
     images?: string[];
@@ -12,7 +15,7 @@ interface LogImageProps {
 export const LogImage: React.FC<LogImageProps> = ({ 
     images, 
     mainImage,
-    height = 200,
+    height = imageSize, // Use calculated imageSize as default
     onImagePress
 }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -22,7 +25,7 @@ export const LogImage: React.FC<LogImageProps> = ({
         return mainImage ? (
             <Image 
                 source={{ uri: mainImage }} 
-                style={[styles.recipeImage, { height }]}
+                style={[styles.recipeImage, { height: imageSize, width: imageSize }]}
             />
         ) : (
             <PulsingPlaceholder />
@@ -32,14 +35,14 @@ export const LogImage: React.FC<LogImageProps> = ({
     // If it's multiple images (log details case)
     if (images && images.length > 0) {
         return (
-            <View style={[styles.carouselContainer, { height: height + 50 }]}>
+            <View style={[styles.carouselContainer, { height: imageSize + 50 }]}>
                 <ScrollView
                     horizontal
                     pagingEnabled
                     showsHorizontalScrollIndicator={false}
                     onScroll={(e) => {
                         const offset = e.nativeEvent.contentOffset.x;
-                        setCurrentImageIndex(Math.round(offset / styles.carouselImage.width));
+                        setCurrentImageIndex(Math.round(offset / imageSize));
                     }}
                     scrollEventThrottle={16}
                 >
@@ -51,7 +54,7 @@ export const LogImage: React.FC<LogImageProps> = ({
                         >
                             <Image
                                 source={{ uri: image }}
-                                style={[styles.carouselImage, { height }]}
+                                style={[styles.carouselImage, { height: imageSize, width: imageSize }]}
                             />
                         </TouchableOpacity>
                     ))}
@@ -76,15 +79,14 @@ export const LogImage: React.FC<LogImageProps> = ({
 
 const styles = StyleSheet.create({
     recipeImage: {
-        width: '100%',
         borderRadius: 12,
         marginBottom: 16,
     },
     carouselContainer: {
         marginBottom: 16,
+        alignItems: 'center',
     },
     carouselImage: {
-        width: 343, // Adjust based on screen width minus padding
         borderRadius: 12,
         marginRight: 16,
     },

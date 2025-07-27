@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe as BaseRecipe } from '@/types/db';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Divider } from '@/components/Divider';
 import { ImagesSection } from '@/components/recipe/RecipeImage';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+
 interface Recipe extends BaseRecipe {
   newTag?: string;
 }
@@ -110,279 +112,290 @@ export default function EditRecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Edit Recipe" showBackButton={true} />
-
-      <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
-        {/* Header */}
-        {isEditing.title ? (
-          <TextInput
-            style={[styles.title, styles.input]}
-            value={editedRecipe.title}
-            onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, title: text } : null)}
-            onBlur={() => stopEditing('title')}
-            autoFocus
-          />
-        ) : (
-          <TouchableOpacity onPress={() => startEditing('title')}>
-            <Text style={styles.title}>{editedRecipe.title}</Text>
-            {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.metaInfo}>
-          <View style={styles.metaItem}>
-            <View style={styles.timeIcon}>
-              <MaterialIcons name="schedule" size={16} color="#603808" />
-            </View>
-            {isEditing.time ? (
-              <TextInput
-                style={[styles.metaText, styles.input]}
-                value={String(editedRecipe.time)}
-                onChangeText={(text) => {
-                  const numValue = parseInt(text) || 0;
-                  setEditedRecipe(prev => prev ? { ...prev, time: numValue } : null);
-                }}
-                onBlur={() => stopEditing('time')}
-                keyboardType="numeric"
-                autoFocus
-              />
-            ) : (
-              <TouchableOpacity onPress={() => startEditing('time')}>
-                <Text style={styles.metaText}>{editedRecipe.time} mins</Text>
-                {errors.time && <Text style={styles.errorText}>{errors.time}</Text>}
-              </TouchableOpacity>
-            )}
-          </View>
-          <View style={styles.metaItem}>
-            <View style={styles.servingsIcon}>
-              <MaterialIcons name="people" size={16} color="#603808" />
-            </View>
-            {isEditing.servings ? (
-              <TextInput
-                style={[styles.metaText, styles.input]}
-                value={String(editedRecipe.servings)}
-                onChangeText={(text) => {
-                  const numValue = parseInt(text) || 0;
-                  setEditedRecipe(prev => prev ? { ...prev, servings: numValue } : null);
-                }}
-                onBlur={() => stopEditing('servings')}
-                keyboardType="numeric"
-                autoFocus
-              />
-            ) : (
-              <TouchableOpacity onPress={() => startEditing('servings')}>
-                <Text style={styles.metaText}>{editedRecipe.servings} servings</Text>
-                {errors.servings && <Text style={styles.errorText}>{errors.servings}</Text>}
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Recipe Image */}
-        {editedRecipe.user_image_url ? (
-          <ImagesSection mainImage={editedRecipe.user_image_url} />
-        ) : (
-          <ImagesSection mainImage={editedRecipe.ai_image_url} />
-        )}
-
-        {/* Action Buttons */}
-        <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
-          <Text style={styles.updateButtonText}>Update</Text>
-        </TouchableOpacity>
-
-        {/* Tags */}
-        <View style={styles.tagContainer}>
-          {editedRecipe.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-          <TouchableOpacity
-            style={styles.manageTag}
-            onPress={() => setIsTagManagerVisible(true)}
+      <ScreenHeader 
+        title="Edit Recipe" 
+        showBackButton={true}
+        rightItem={
+          <TouchableOpacity 
+            onPress={handleUpdate}
+            style={[styles.saveButton]}
           >
-            <MaterialIcons name="settings" size={16} color="white" />
-            <Text style={styles.tagText}>Manage</Text>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
-        </View>
+        }
+      />
 
-        <TagManager
-          visible={isTagManagerVisible}
-          onClose={() => setIsTagManagerVisible(false)}
-          tags={editedRecipe.tags || []}
-          onUpdateTags={(newTags) => {
-            setEditedRecipe(prev => prev ? { ...prev, tags: newTags } : null);
-          }}
-        />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView showsVerticalScrollIndicator={false} style={{ padding: 16 }}>
+          {/* Header */}
+          {isEditing.title ? (
+            <TextInput
+              style={[styles.title, styles.input]}
+              value={editedRecipe.title}
+              onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, title: text } : null)}
+              onBlur={() => stopEditing('title')}
+              autoFocus
+            />
+          ) : (
+            <TouchableOpacity onPress={() => startEditing('title')}>
+              <Text style={styles.title}>{editedRecipe.title}</Text>
+              {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+            </TouchableOpacity>
+          )}
 
-        <Divider />
-
-        {/* Ingredients */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="pepper" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-          </View>
-          {editedRecipe.ingredients?.map((ingredient, index) => (
-            <View 
-              key={index} 
-              style={[
-                styles.ingredient,
-                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-              ]}
-            >
-              {isEditing[`ingredient_${index}`] ? (
+          <View style={styles.metaInfo}>
+            <View style={styles.metaItem}>
+              <View style={styles.timeIcon}>
+                <MaterialIcons name="schedule" size={16} color="#603808" />
+              </View>
+              {isEditing.time ? (
                 <TextInput
-                  style={[
-                    styles.ingredientText,
-                    styles.input,
-                    index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                  ]}
-                  value={ingredient}
+                  style={[styles.metaText, styles.input]}
+                  value={String(editedRecipe.time)}
                   onChangeText={(text) => {
-                    const newIngredients = [...(editedRecipe.ingredients || [])];
-                    newIngredients[index] = text;
-                    setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
+                    const numValue = parseInt(text) || 0;
+                    setEditedRecipe(prev => prev ? { ...prev, time: numValue } : null);
                   }}
-                  onBlur={() => stopEditing(`ingredient_${index}`)}
+                  onBlur={() => stopEditing('time')}
+                  keyboardType="numeric"
                   autoFocus
                 />
               ) : (
-                <TouchableOpacity 
-                  style={styles.editableRow}
-                  onPress={() => startEditing(`ingredient_${index}`)}
-                >
-                  <Text style={[
-                    styles.ingredientText,
-                    index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                  ]}>• {ingredient}</Text>
-                  <TouchableOpacity
-                    onPress={() => {
+                <TouchableOpacity onPress={() => startEditing('time')}>
+                  <Text style={styles.metaText}>{editedRecipe.time} mins</Text>
+                  {errors.time && <Text style={styles.errorText}>{errors.time}</Text>}
+                </TouchableOpacity>
+              )}
+            </View>
+            <View style={styles.metaItem}>
+              <View style={styles.servingsIcon}>
+                <MaterialIcons name="people" size={16} color="#603808" />
+              </View>
+              {isEditing.servings ? (
+                <TextInput
+                  style={[styles.metaText, styles.input]}
+                  value={String(editedRecipe.servings)}
+                  onChangeText={(text) => {
+                    const numValue = parseInt(text) || 0;
+                    setEditedRecipe(prev => prev ? { ...prev, servings: numValue } : null);
+                  }}
+                  onBlur={() => stopEditing('servings')}
+                  keyboardType="numeric"
+                  autoFocus
+                />
+              ) : (
+                <TouchableOpacity onPress={() => startEditing('servings')}>
+                  <Text style={styles.metaText}>{editedRecipe.servings} servings</Text>
+                  {errors.servings && <Text style={styles.errorText}>{errors.servings}</Text>}
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* Tags */}
+          <View style={styles.tagContainer}>
+            {editedRecipe.tags?.map((tag, index) => (
+              <View key={index} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+            <TouchableOpacity
+              style={styles.manageTag}
+              onPress={() => setIsTagManagerVisible(true)}
+            >
+              <MaterialIcons name="settings" size={16} color="white" />
+              <Text style={styles.tagText}>Manage</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TagManager
+            visible={isTagManagerVisible}
+            onClose={() => setIsTagManagerVisible(false)}
+            tags={editedRecipe.tags || []}
+            onUpdateTags={(newTags) => {
+              setEditedRecipe(prev => prev ? { ...prev, tags: newTags } : null);
+            }}
+          />
+
+          {/* Recipe Image */}
+          {editedRecipe.user_image_url ? (
+            <ImagesSection mainImage={editedRecipe.user_image_url} />
+          ) : (
+            <ImagesSection mainImage={editedRecipe.ai_image_url} />
+          )}
+
+          <Divider />
+
+          {/* Ingredients */}
+          <View>
+            <View style={styles.sectionHeader}>
+              <IconSymbol name="pepper" color="#793206" size={24} />
+              <Text style={styles.sectionTitle}>Ingredients</Text>
+            </View>
+            {editedRecipe.ingredients?.map((ingredient, index) => (
+              <View 
+                key={index} 
+                style={[
+                  styles.ingredient,
+                  index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+                ]}
+              >
+                {isEditing[`ingredient_${index}`] ? (
+                  <TextInput
+                    style={[
+                      styles.ingredientText,
+                      styles.input,
+                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+                    ]}
+                    value={ingredient}
+                    onChangeText={(text) => {
                       const newIngredients = [...(editedRecipe.ingredients || [])];
-                      newIngredients.splice(index, 1);
+                      newIngredients[index] = text;
                       setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
                     }}
-                    style={styles.removeButton}
+                    onBlur={() => stopEditing(`ingredient_${index}`)}
+                    autoFocus
+                  />
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.editableRow}
+                    onPress={() => startEditing(`ingredient_${index}`)}
                   >
-                    <MaterialIcons name="close" size={20} color="#793206" />
+                    <Text style={[
+                      styles.ingredientText,
+                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+                    ]}>• {ingredient}</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const newIngredients = [...(editedRecipe.ingredients || [])];
+                        newIngredients.splice(index, 1);
+                        setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
+                      }}
+                      style={styles.removeButton}
+                    >
+                      <MaterialIcons name="close" size={20} color="#793206" />
+                    </TouchableOpacity>
                   </TouchableOpacity>
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-          <TouchableOpacity
-            style={[styles.addButton, styles.ingredientBrown]}
-            onPress={() => {
-              const newIngredients = [...(editedRecipe.ingredients || []), ''];
-              setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
-              startEditing(`ingredient_${newIngredients.length - 1}`);
-            }}
-          >
-            <MaterialIcons name="add" size={20} color="#793206" />
-            <Text style={[styles.addButtonText, styles.textOnBrown]}>Add Ingredient</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Divider />
-
-        {/* Instructions */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Instructions</Text>
-          </View>
-          {editedRecipe.instructions?.map((instruction, index) => (
-            <View 
-              key={index}
-              style={[
-                styles.instruction,
-                index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-              ]}
+                )}
+              </View>
+            ))}
+            <TouchableOpacity
+              style={[styles.addButton, styles.ingredientBrown]}
+              onPress={() => {
+                const newIngredients = [...(editedRecipe.ingredients || []), ''];
+                setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
+                startEditing(`ingredient_${newIngredients.length - 1}`);
+              }}
             >
-              {isEditing[`instruction_${index}`] ? (
-                <TextInput
-                  style={[
-                    styles.instructionText,
-                    styles.input,
-                    index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                  ]}
-                  value={instruction}
-                  onChangeText={(text) => {
-                    const newInstructions = [...(editedRecipe.instructions || [])];
-                    newInstructions[index] = text;
-                    setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
-                  }}
-                  onBlur={() => stopEditing(`instruction_${index}`)}
-                  autoFocus
-                  multiline
-                />
-              ) : (
-                <TouchableOpacity 
-                  style={styles.editableRow}
-                  onPress={() => startEditing(`instruction_${index}`)}
-                >
-                  <Text style={[
-                    styles.instructionText,
-                    index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                  ]}>{index + 1}. {instruction}</Text>
-                  <TouchableOpacity
-                    onPress={() => {
+              <MaterialIcons name="add" size={20} color="#793206" />
+              <Text style={[styles.addButtonText, styles.textOnBrown]}>Add Ingredient</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Divider />
+
+          {/* Instructions */}
+          <View>
+            <View style={styles.sectionHeader}>
+              <IconSymbol name="book" color="#793206" size={24} />
+              <Text style={styles.sectionTitle}>Instructions</Text>
+            </View>
+            {editedRecipe.instructions?.map((instruction, index) => (
+              <View 
+                key={index}
+                style={[
+                  styles.instruction,
+                  index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
+                ]}
+              >
+                {isEditing[`instruction_${index}`] ? (
+                  <TextInput
+                    style={[
+                      styles.instructionText,
+                      styles.input,
+                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+                    ]}
+                    value={instruction}
+                    onChangeText={(text) => {
                       const newInstructions = [...(editedRecipe.instructions || [])];
-                      newInstructions.splice(index, 1);
+                      newInstructions[index] = text;
                       setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
                     }}
-                    style={styles.removeButton}
+                    onBlur={() => stopEditing(`instruction_${index}`)}
+                    autoFocus
+                    multiline
+                  />
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.editableRow}
+                    onPress={() => startEditing(`instruction_${index}`)}
                   >
-                    <MaterialIcons name="close" size={20} color="#793206" />
+                    <Text style={[
+                      styles.instructionText,
+                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+                    ]}>{index + 1}. {instruction}</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const newInstructions = [...(editedRecipe.instructions || [])];
+                        newInstructions.splice(index, 1);
+                        setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
+                      }}
+                      style={styles.removeButton}
+                    >
+                      <MaterialIcons name="close" size={20} color="#793206" />
+                    </TouchableOpacity>
                   </TouchableOpacity>
+                )}
+              </View>
+            ))}
+            <TouchableOpacity
+              style={[styles.addButton, styles.ingredientBrown]}
+              onPress={() => {
+                const newInstructions = [...(editedRecipe.instructions || []), ''];
+                setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
+                startEditing(`instruction_${newInstructions.length - 1}`);
+              }}
+            >
+              <MaterialIcons name="add" size={20} color="#793206" />
+              <Text style={[styles.addButtonText, styles.textOnBrown]}>Add Instruction</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Divider />
+
+          {/* Notes */}
+          <View>
+            <View style={styles.sectionHeader}>
+              <IconSymbol name="book" color="#793206" size={24} />
+              <Text style={styles.sectionTitle}>Notes</Text>
+            </View>
+            <View style={styles.notesContainer}>
+              {isEditing.notes ? (
+                <TextInput
+                  style={[styles.notesText, styles.input, styles.textOnBrown]}
+                  value={editedRecipe.notes || ''}
+                  onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, notes: text } : null)}
+                  onBlur={() => stopEditing('notes')}
+                  multiline
+                  autoFocus
+                  placeholder="Add your notes here..."
+                />
+              ) : (
+                <TouchableOpacity onPress={() => startEditing('notes')}>
+                  <Text style={[styles.notesText, styles.textOnBrown]}>
+                    {editedRecipe.notes || 'No notes added yet.'}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
-          ))}
-          <TouchableOpacity
-            style={[styles.addButton, styles.ingredientBrown]}
-            onPress={() => {
-              const newInstructions = [...(editedRecipe.instructions || []), ''];
-              setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
-              startEditing(`instruction_${newInstructions.length - 1}`);
-            }}
-          >
-            <MaterialIcons name="add" size={20} color="#793206" />
-            <Text style={[styles.addButtonText, styles.textOnBrown]}>Add Instruction</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Divider />
-
-        {/* Notes */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="book" color="#793206" size={24} />
-            <Text style={styles.sectionTitle}>Notes</Text>
           </View>
-          <View style={styles.notesContainer}>
-            {isEditing.notes ? (
-              <TextInput
-                style={[styles.notesText, styles.input, styles.textOnBrown]}
-                value={editedRecipe.notes || ''}
-                onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, notes: text } : null)}
-                onBlur={() => stopEditing('notes')}
-                multiline
-                autoFocus
-                placeholder="Add your notes here..."
-              />
-            ) : (
-              <TouchableOpacity onPress={() => startEditing('notes')}>
-                <Text style={[styles.notesText, styles.textOnBrown]}>
-                  {editedRecipe.notes || 'No notes added yet.'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
 
-        <Divider />
-      </ScrollView>
+          <Divider />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -509,17 +522,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
   },
-  updateButton: {
+  saveButton: {
     backgroundColor: '#793206',
-    padding: 16,
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 16,
   },
-  updateButtonText: {
-    color: 'white',
+  saveButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   input: {
     // borderWidth: 1,
@@ -569,6 +582,11 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  headerButtonText: {
+    color: '#793206',
     fontSize: 16,
     fontWeight: '600',
   },

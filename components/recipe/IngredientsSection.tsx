@@ -1,12 +1,21 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
+import { useState } from 'react';
 
 interface IngredientsSectionProps {
     ingredients: string[];
+    details?: boolean;
 }
 
-export const IngredientsSection: React.FC<IngredientsSectionProps> = ({ ingredients }) => {
+export const IngredientsSection: React.FC<IngredientsSectionProps> = ({ ingredients, details = false }) => {
+    const [checkedIngredients, setCheckedIngredients] = useState<boolean[]>(ingredients.map(() => false));
+
+    const toggleIngredient = (index: number) => {
+        const newCheckedIngredients = [...checkedIngredients];
+        newCheckedIngredients[index] = !newCheckedIngredients[index];
+        setCheckedIngredients(newCheckedIngredients);
+    };
+
     return (
         <View>
             <View style={styles.sectionHeader}>
@@ -14,18 +23,32 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({ ingredie
                 <Text style={styles.sectionTitle}>Ingredients</Text>
             </View>
             {ingredients?.map((ingredient: string, index: number) => (
-                <View 
+                <Pressable 
                     key={index} 
                     style={[
                         styles.ingredient,
                         index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
                     ]}
+                    onPress={() => details && toggleIngredient(index)}
                 >
-                    <Text style={[
-                        styles.ingredientText,
-                        index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                    ]}>• {ingredient}</Text>
-                </View>
+                    <View style={styles.ingredientContent}>
+                        {details && (
+                            <Feather 
+                                name={checkedIngredients[index] ? "check-square" : "square"} 
+                                size={20} 
+                                color="#793206" 
+                                style={styles.checkbox}
+                            />
+                        )}
+                        <Text style={[
+                            styles.ingredientText,
+                            index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige,
+                            checkedIngredients[index] && styles.checkedText
+                        ]}>
+                            {details ? ingredient : `• ${ingredient}`}
+                        </Text>
+                    </View>
+                </Pressable>
             ))}
         </View>
     );
@@ -56,6 +79,14 @@ const styles = StyleSheet.create({
     ingredientBeige: {
         backgroundColor: '#EDE4D2',
     },
+    ingredientContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    checkbox: {
+        marginRight: 8,
+    },
     ingredientText: {
         fontSize: 18,
         flex: 1,
@@ -66,5 +97,9 @@ const styles = StyleSheet.create({
     },
     textOnBeige: {
         color: '#793206',
+    },
+    checkedText: {
+        textDecorationLine: 'line-through',
+        opacity: 0.7,
     },
 });

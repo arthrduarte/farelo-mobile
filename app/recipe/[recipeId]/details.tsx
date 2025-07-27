@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Share } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Share, Alert, Animated } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
-import { MaterialIcons } from '@expo/vector-icons';
-import DeleteModal from '@/components/recipe/DeleteModal';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import RemixModal from '@/components/recipe/RemixModal';
 import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +14,8 @@ import { ImagesSection } from '@/components/recipe/RecipeImage';
 import { NotesSection } from '@/components/recipe/NotesSection';
 import { TagsSection } from '@/components/recipe/TagsSection';
 import { Divider } from '@/components/Divider';
-import ChatBubble from '@/components/ChatBubble';
+import ChatBubble from '@/components/chat/ChatBubble';
+import Drawer from '@/components/ui/Drawer';
 
 export default function RecipeDetailsScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -23,8 +23,20 @@ export default function RecipeDetailsScreen() {
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
   const deleteRecipeMutation = useDeleteRecipe();
   const updateRecipeMutation = useUpdateRecipe();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const drawerAnimation = useRef(new Animated.Value(0)).current;
+
+  const toggleDrawer = () => {
+    const toValue = isDrawerOpen ? 0 : 1;
+    Animated.spring(drawerAnimation, {
+      toValue,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 11
+    }).start();
+    setIsDrawerOpen(!isDrawerOpen);
+  };
 
   const handleDelete = async (recipeToDelete: Recipe) => {
     try {
@@ -33,6 +45,43 @@ export default function RecipeDetailsScreen() {
     } catch (err) {
       console.error('Error deleting recipe:', err);
     }
+  };
+
+  const showDeleteConfirmation = () => {
+    toggleDrawer();
+    Alert.alert(
+      'Delete Recipe',
+      `Are you sure you want to delete "${recipe?.title}"? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => handleDelete(recipe!)
+        }
+      ]
+    );
+  };
+
+  const handleRemix = () => {
+    toggleDrawer();
+    setShowRemixModal(true);
+  };
+
+  const handleEdit = () => {
+    toggleDrawer();
+    router.push(`/recipe/${recipeId}/edit` as any);
+  };
+
+  const handleShare = () => {
+    toggleDrawer();
+    Share.share({
+      message: `Check out my ${recipe?.title} recipe on Farelo!\n\nhttps://usefarelo.com/recipe/${recipeId}/share!`,
+      url: `https://usefarelo.com/recipe/${recipeId}/share`,
+    });
   };
 
   if (isLoading) {
@@ -54,25 +103,57 @@ export default function RecipeDetailsScreen() {
     );
   }
 
+  const drawerOptions = [
+    {
+      icon: 'share' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Share',
+      onPress: handleShare,
+    },
+    {
+      icon: 'refresh' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Remix',
+      onPress: handleRemix,
+    },
+    {
+      icon: 'edit' as keyof typeof MaterialIcons.glyphMap,
+      text: 'Edit',
+      onPress: handleEdit,
+    },
+    {
+      icon: 'delete' as keyof typeof MaterialIcons.glyphMap,
+      text: deleteRecipeMutation.isPending ? 'Deleting...' : 'Delete',
+      onPress: showDeleteConfirmation,
+      disabled: deleteRecipeMutation.isPending,
+    },
+  ];
+
   return (
     <ThemedView style={styles.container}>
-      <DeleteModal 
-        visible={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => {
-          setShowDeleteConfirm(false);
-          handleDelete(recipe);
-        }}
-        recipe={recipe}
-      />
-
       <RemixModal
         visible={showRemixModal}
         onClose={() => setShowRemixModal(false)}
         recipe={recipe}
       />
 
-      <ScreenHeader title="Recipe Details" showBackButton={true} />
+      <ScreenHeader 
+        title="Recipe Details" 
+        showBackButton={true} 
+        rightItem={
+          <>
+          <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+            <TouchableOpacity style={styles.logButton} onPress={() => router.push({
+              pathname: '/recipe/[recipeId]/finish',
+              params: { recipeId: recipe.id }
+            })}>
+              <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Log</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleDrawer}>
+              <MaterialIcons name="more-vert" size={24} color="#793206" />
+            </TouchableOpacity>
+          </View>
+          </>
+        }
+      />
 
       <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -93,16 +174,8 @@ export default function RecipeDetailsScreen() {
           </View>
         </View>
 
-        {/* Start Recipe Button */}
-        <TouchableOpacity 
-          style={styles.startRecipeButton} 
-          onPress={() => router.push({
-            pathname: '/recipe/[recipeId]/start',
-            params: { recipeId: recipe.id }
-          })}
-        >
-          <Text style={styles.startRecipeText}>Start Recipe</Text>
-        </TouchableOpacity>
+        {/* Tags */}
+        <TagsSection tags={recipe.tags} />
 
         {/* Recipe Image */}
         {recipe.user_image_url ? (
@@ -111,54 +184,15 @@ export default function RecipeDetailsScreen() {
           <ImagesSection mainImage={recipe.ai_image_url} />
         )}
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          {/* share button should open the share modal/drawer */}
-          {/* <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => Share.share({
-              message: `Check out my ${recipe.title} recipe on Farelo!\n\nhttps://usefarelo.com/recipe/${recipeId}/share`,
-              url: `https://usefarelo.com/recipe/${recipeId}/share`
-            })}
-          >
-            <MaterialIcons name="share" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Share</Text>
-          </TouchableOpacity> */}
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => setShowRemixModal(true)}
-          >
-            <MaterialIcons name="refresh" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Remix</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => router.push(`/recipe/${recipeId}/edit` as any)}
-          >
-            <MaterialIcons name="edit" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => setShowDeleteConfirm(true)}
-          >
-            <MaterialIcons name="delete" size={24} color="#793206" />
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Tags */}
-        <TagsSection tags={recipe.tags} />
-
         <Divider />
 
         {/* Ingredients */}
-        <IngredientsSection ingredients={recipe.ingredients} />
+        <IngredientsSection ingredients={recipe.ingredients} details={true} />
 
         <Divider />
 
         {/* Instructions */}
-        <InstructionsSection instructions={recipe.instructions} />
+        <InstructionsSection instructions={recipe.instructions} details={true} />
 
         <Divider />
 
@@ -168,6 +202,13 @@ export default function RecipeDetailsScreen() {
         <Divider />
       </ScrollView>
       <ChatBubble recipeId={recipe.id} />
+      <Drawer
+        isDrawerOpen={isDrawerOpen}
+        toggleDrawer={toggleDrawer}
+        drawerAnimation={drawerAnimation}
+        options={drawerOptions}
+        title="Recipe Actions"
+      />
     </ThemedView>
   );
 }
@@ -233,18 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  actionButton: {
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#793206',
-    marginTop: 4,
-  },
+
   button: {
     backgroundColor: '#793206',
     padding: 16,
@@ -255,6 +285,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  logButton: {
+    backgroundColor: '#793206',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignItems: 'center',
   },
   errorText: {
     color: '#793206',

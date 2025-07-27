@@ -7,10 +7,13 @@ import {
   TouchableOpacity,
   Dimensions,
   Linking,
+  ScrollView,
+  Platform,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { ThemedView } from '@/components/ThemedView'
 import { ThemedText } from '@/components/ThemedText'
 import { GoogleButton } from '@/components/auth/GoogleButton'
@@ -26,7 +29,6 @@ export default function RegisterScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -35,55 +37,66 @@ export default function RegisterScreen() {
           <AntDesign name="arrowleft" size={24} color="#793206" />
         </TouchableOpacity>
 
-        <View style={styles.form}>
-          <ThemedText type="title" style={styles.heading}>
-            Create an account
-          </ThemedText>
-
-          <View style={styles.buttonContainer}>
-            <GoogleButton />
-
-            <IOSButton />
-          </View>
-          
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <ThemedText style={styles.orText}>or</ThemedText>
-            <View style={styles.divider} />
-          </View>
-
-          {showEmailForm ? (
-            <RegisterWithEmail />
-          ) : (
-            <TouchableOpacity
-              style={styles.emailButton}
-              onPress={() => setShowEmailForm(true)}
-            >
-              <ThemedText style={styles.emailButtonText}>
-                Continue with email
-              </ThemedText>
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.termsContainer}>
-            <ThemedText style={styles.termsText}>
-              By continuing you are agreeing to our{' '}
-              <ThemedText 
-                style={styles.termsLink}
-                onPress={() => Linking.openURL('https://www.usefarelo.com/terms')}
-              >
-                Terms of Service
-              </ThemedText>
-              {' '}and{' '}
-              <ThemedText 
-                style={styles.termsLink}
-                onPress={() => Linking.openURL('https://www.usefarelo.com/privacy')}
-              >
-                Privacy Policy
-              </ThemedText>
+        <KeyboardAvoidingView
+          style={styles.scrollContent}
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+          enabled={true}
+        >
+          <ScrollView
+            style={styles.form}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <ThemedText type="title" style={styles.heading}>
+              Create an account
             </ThemedText>
-          </View>
-        </View>
+
+            <View style={styles.buttonContainer}>
+              <GoogleButton />
+
+              <IOSButton />
+            </View>
+            
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <ThemedText style={styles.orText}>or</ThemedText>
+              <View style={styles.divider} />
+            </View>
+
+            {showEmailForm ? (
+              <RegisterWithEmail />
+            ) : (
+              <TouchableOpacity
+                style={styles.emailButton}
+                onPress={() => setShowEmailForm(true)}
+              >
+                <ThemedText style={styles.emailButtonText}>
+                  Continue with email
+                </ThemedText>
+              </TouchableOpacity>
+            )}
+
+            <View style={styles.termsContainer}>
+              <ThemedText style={styles.termsText}>
+                By continuing you are agreeing to our{' '}
+                <ThemedText 
+                  style={styles.termsLink}
+                  onPress={() => Linking.openURL('https://www.usefarelo.com/terms')}
+                >
+                  Terms of Service
+                </ThemedText>
+                {' '}and{' '}
+                <ThemedText 
+                  style={styles.termsLink}
+                  onPress={() => Linking.openURL('https://www.usefarelo.com/privacy')}
+                >
+                  Privacy Policy
+                </ThemedText>
+              </ThemedText>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
   )
@@ -97,6 +110,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   backButton: {
     width: 40,
