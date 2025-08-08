@@ -2,9 +2,9 @@ import { View, Image, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface AvatarProps {
-  imageUrl?: string;
-  firstName?: string;
-  size?: number;
+  imageUrl?: string | undefined;
+  firstName?: string | undefined;
+  size?: number | undefined;
 }
 
 export default function Avatar({ imageUrl, firstName = '', size = 100 }: AvatarProps) {

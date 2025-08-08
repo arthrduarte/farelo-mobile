@@ -116,7 +116,12 @@ export default function ChatScreen() {
         {messages.length > 0 ? (
           <FlatList
             data={messages}
-            renderItem={({ item }) => <MessageItem message={item} userAvatar={profile?.image} />}
+            renderItem={({ item }) => (
+              <MessageItem
+                message={item}
+                {...(profile?.image ? { userAvatar: profile.image } : {})}
+              />
+            )}
             contentContainerStyle={styles.messagesContainer}
             keyExtractor={(item, index) => `${item.timestamp}-${index}`}
             ref={flatListRef}
