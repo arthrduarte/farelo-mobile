@@ -13,7 +13,8 @@
     "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky"
   },
   "jest": {
     "preset": "jest-expo"
@@ -79,7 +80,18 @@
     "jest-expo": "~52.0.6",
     "prettier": "^3.6.2",
     "react-test-renderer": "18.3.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10"
   },
-  "private": true
+  "private": true,
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,mdx,css,scss,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
 }
