@@ -4,12 +4,10 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "web": "expo start --web",
-    "test": "jest --watchAll",
     "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx . --fix",
     "format": "prettier --write .",
