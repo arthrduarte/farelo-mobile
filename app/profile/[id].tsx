@@ -5,32 +5,38 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useLogs } from '@/hooks/useLogs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, FlatList, Animated } from 'react-native';
 import { Profile } from '@/types/db';
 import { LogLoader } from '@/components/log/LogLoader';
 import { useFollow } from '@/hooks/useFollow';
 import Drawer from '@/components/ui/Drawer';
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useBlocks } from '@/hooks/useBlocks';
+import { useCheckIsBlocked } from '@/hooks/blocks/useCheckIsBlocked';
+import { useBlockUser } from '@/hooks/blocks/useBlockUser';
+import { useUnblockUser } from '@/hooks/blocks/useUnblockUser';
 
 export default function ProfileScreen() {
   const { id, profile: profileParam } = useLocalSearchParams();
   const { profileLogs, profileLogsLoading, refreshProfileLogs } = useLogs(id as string);
-  const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(id as string);
+  const { isFollowing, loading, toggleFollow, followersCount, followingCount } = useFollow(
+    id as string,
+  );
   const { profile: currentUserProfile } = useAuth();
   const profile = JSON.parse(profileParam as string) as Profile;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
-  const { blockUser, unblockUser, isBlocked } = useBlocks(profile?.id);
-  
+  const { data: isBlocked = false } = useCheckIsBlocked(profile?.id);
+  const { mutate: blockUser } = useBlockUser();
+  const { mutate: unblockUser } = useUnblockUser();
+
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
     Animated.spring(drawerAnimation, {
       toValue,
       useNativeDriver: true,
       tension: 65,
-      friction: 11
+      friction: 11,
     }).start();
     setIsDrawerOpen(!isDrawerOpen);
   };
@@ -70,24 +76,24 @@ export default function ProfileScreen() {
 
   const HeaderComponent = () => {
     return (
-      <ProfileHeader 
-        profile={profile} 
-        logs={profileLogs} 
-        isFollowing={isFollowing} 
-        loading={loading} 
-        toggleFollow={toggleFollow} 
-        followersCount={followersCount} 
+      <ProfileHeader
+        profile={profile}
+        logs={profileLogs}
+        isFollowing={isFollowing}
+        loading={loading}
+        toggleFollow={toggleFollow}
+        followersCount={followersCount}
         followingCount={followingCount}
         isBlocked={isBlocked}
       />
     );
   };
-  
+
   const EmptyStateComponent = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>
-        {isBlocked 
-          ? "You can't see this user's logs because they are blocked." 
+        {isBlocked
+          ? "You can't see this user's logs because they are blocked."
           : "This user hasn't posted any logs yet."}
       </Text>
     </View>
@@ -100,30 +106,28 @@ export default function ProfileScreen() {
       onPress: handleReportProfile,
     },
     {
-      icon: isBlocked ? 'person-add' : 'block' as keyof typeof MaterialIcons.glyphMap,
+      icon: isBlocked ? 'person-add' : ('block' as keyof typeof MaterialIcons.glyphMap),
       text: isBlocked ? 'Unblock User' : 'Block User',
       onPress: isBlocked ? () => unblockUser(profile.id) : handleBlockUser,
-    }
+    },
   ];
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader 
-        title={profile.username} 
+      <ScreenHeader
+        title={profile.username}
         showBackButton={true}
         rightItem={
-            <TouchableOpacity onPress={toggleDrawer}>
-              <MaterialIcons name="more-vert" size={24} color="#793206" />
-            </TouchableOpacity>
+          <TouchableOpacity onPress={toggleDrawer}>
+            <MaterialIcons name="more-vert" size={24} color="#793206" />
+          </TouchableOpacity>
         }
       />
 
       <FlatList
         style={styles.list}
         data={isBlocked ? [] : profileLogs}
-        renderItem={({ item }) => (
-          <LogCard key={item.id} log={item} />
-        )}
+        renderItem={({ item }) => <LogCard key={item.id} log={item} />}
         ListHeaderComponent={HeaderComponent}
         ListEmptyComponent={() => {
           if (profileLogsLoading && !isBlocked) {
@@ -135,7 +139,7 @@ export default function ProfileScreen() {
         onRefresh={refreshProfileLogs}
         refreshing={profileLogsLoading}
       />
-      
+
       <Drawer
         isDrawerOpen={isDrawerOpen}
         toggleDrawer={toggleDrawer}
@@ -178,9 +182,9 @@ const styles = StyleSheet.create({
   },
   stats: {
     flexDirection: 'row',
-    gap: 24
+    gap: 24,
   },
-  emptyContainer: { 
+  emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -198,5 +202,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#79320680',
     fontSize: 16,
-  }
+  },
 });

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { blockUser } from '@/actions/blocks';
+import { blockUser } from '@/actions/blocks/blockUser';
 
 export const useBlockUser = () => {
   const { profile } = useAuth();

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { checkIsBlocked } from '@/actions/blocks';
+import { checkIsBlocked } from '@/actions/blocks/checkIsBlocked';
 
 export const useCheckIsBlocked = (userId?: string) => {
   const { profile } = useAuth();
