@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -8,7 +17,7 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { debounce } from 'lodash'; // Using lodash debounce
 import Avatar from '@/components/ui/Avatar';
-import { useBlocks } from '@/hooks/useBlocks';
+import { useGetAllBlockedIds } from '@/hooks/blocks/useGetAllBlockedIds';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export default function SearchScreen() {
@@ -18,16 +27,14 @@ export default function SearchScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
   const { profile: currentUser } = useAuth();
-  const { getAllBlockedIds } = useBlocks();
+  const { data: blockedIds = [], isLoading: isLoadingBlockedIds } = useGetAllBlockedIds();
 
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
-      if (!currentUser) return;
-      
+      if (!currentUser || isLoadingBlockedIds) return;
+
       setIsLoadingSuggestions(true);
       try {
-        const blockedIds = await getAllBlockedIds();
-          
         let query = supabase
           .from('profiles_with_log_count')
           .select('*')
@@ -38,56 +45,57 @@ export default function SearchScreen() {
           .limit(8);
 
         if (blockedIds.length > 0) {
-          query = query.not('id', 'in', `(${blockedIds.join(',')})`)
+          query = query.not('id', 'in', `(${blockedIds.join(',')})`);
         }
 
         const { data, error } = await query;
 
         if (error) throw error;
-        
+
         setSuggestedUsers(data || []);
       } catch (error) {
-        console.error("Error fetching suggested users:", error);
+        console.error('Error fetching suggested users:', error);
         setSuggestedUsers([]);
       } finally {
         setIsLoadingSuggestions(false);
       }
     };
     fetchSuggestedUsers();
-  }, [currentUser]);
+  }, [currentUser, blockedIds, isLoadingBlockedIds]);
 
-  const searchUsers = useCallback(debounce(async (query: string) => {
-    if (!query.trim() || !currentUser) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const blockedIds = await getAllBlockedIds();
-
-      let queryDebounced = supabase
-        .from('profiles_with_log_count')
-        .select('*')
-        .ilike('username', `%${query}%`)
-        .neq('id', currentUser.id)
-        .order('log_count', { ascending: false })
-        .limit(8);
-
-      if (blockedIds.length > 0) {
-        queryDebounced = queryDebounced.not('id', 'in', `(${blockedIds.join(',')})`)
+  const searchUsers = useCallback(
+    debounce(async (query: string) => {
+      if (!query.trim() || !currentUser || isLoadingBlockedIds) {
+        setResults([]);
+        setIsLoading(false);
+        return;
       }
+      setIsLoading(true);
+      try {
+        let queryDebounced = supabase
+          .from('profiles_with_log_count')
+          .select('*')
+          .ilike('username', `%${query}%`)
+          .neq('id', currentUser.id)
+          .order('log_count', { ascending: false })
+          .limit(8);
 
-      const { data, error } = await queryDebounced;
-      if (error) throw error;
-      setResults(data || []);
-    } catch (error) {
-      console.error("Error searching users:", error);
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, 500), [currentUser]);
+        if (blockedIds.length > 0) {
+          queryDebounced = queryDebounced.not('id', 'in', `(${blockedIds.join(',')})`);
+        }
+
+        const { data, error } = await queryDebounced;
+        if (error) throw error;
+        setResults(data || []);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        setResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 500),
+    [currentUser, blockedIds, isLoadingBlockedIds],
+  );
 
   useEffect(() => {
     searchUsers(searchQuery);
@@ -99,10 +107,10 @@ export default function SearchScreen() {
   const handleSelectUser = (selectedProfile: Profile) => {
     router.push({
       pathname: '/profile/[id]',
-      params: { 
+      params: {
         id: selectedProfile.id,
-        profile: JSON.stringify(selectedProfile)
-      }
+        profile: JSON.stringify(selectedProfile),
+      },
     });
   };
 
@@ -110,7 +118,9 @@ export default function SearchScreen() {
     <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectUser(item)}>
       <Avatar imageUrl={item.image} firstName={item.first_name} size={40} />
       <View>
-        <Text style={styles.name}>{item.first_name} {item.last_name}</Text>
+        <Text style={styles.name}>
+          {item.first_name} {item.last_name}
+        </Text>
         <Text style={styles.username}>@{item.username}</Text>
       </View>
     </TouchableOpacity>
@@ -125,16 +135,16 @@ export default function SearchScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color="#793206" />
         </TouchableOpacity>
-          <TextInput
-            style={styles.input}
-            placeholder="Search by username..."
-            placeholderTextColor="#79320680"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoFocus={true}
-          />
+        <TextInput
+          style={styles.input}
+          placeholder="Search by username..."
+          placeholderTextColor="#79320680"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoFocus={true}
+        />
       </View>
       {!searchQuery && (
         <View style={styles.sectionHeader}>
@@ -164,78 +174,78 @@ export default function SearchScreen() {
         )}
       </KeyboardAvoidingView>
     </ThemedView>
-    );
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-      flex: 1,
-      backgroundColor: '#EDE4D2',
+    flex: 1,
+    backgroundColor: '#EDE4D2',
   },
   headerContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 8,
-      paddingTop: Platform.OS === 'ios' ? 20 : 10,
-      paddingBottom: 10,
-      backgroundColor: '#EDE4D2',
-      borderBottomWidth: 1,
-      borderBottomColor: '#79320633',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingTop: Platform.OS === 'ios' ? 20 : 10,
+    paddingBottom: 10,
+    backgroundColor: '#EDE4D2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#79320633',
   },
-   backButton: {
-      padding: 8,
-      marginRight: 8,
+  backButton: {
+    padding: 8,
+    marginRight: 8,
   },
   input: {
-      flex: 1,
-      height: 40,
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      color: '#793206',
-      borderWidth: 1,
-      borderColor: '#79320633',
+    flex: 1,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#793206',
+    borderWidth: 1,
+    borderColor: '#79320633',
   },
   loader: {
-      marginTop: 20,
+    marginTop: 20,
   },
   listContentContainer: {
-      padding: 16,
+    padding: 16,
   },
   resultItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: '#7932061A',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#7932061A',
   },
   name: {
-      fontSize: 16,
-      color: '#793206',
-      fontWeight: '600',
-      marginLeft: 12,
+    fontSize: 16,
+    color: '#793206',
+    fontWeight: '600',
+    marginLeft: 12,
   },
   username: {
-      fontSize: 14,
-      color: '#79320680',
-      marginLeft: 12,
+    fontSize: 14,
+    color: '#79320680',
+    marginLeft: 12,
   },
   noResultsText: {
-      textAlign: 'center',
-      marginTop: 20,
-      color: '#79320680',
-      fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#79320680',
+    fontSize: 16,
   },
   sectionHeader: {
-      padding: 16,
-      backgroundColor: '#EDE4D2',
-      borderBottomWidth: 1,
-      borderBottomColor: '#79320633',
+    padding: 16,
+    backgroundColor: '#EDE4D2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#79320633',
   },
   sectionTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: '#793206',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#793206',
   },
 });

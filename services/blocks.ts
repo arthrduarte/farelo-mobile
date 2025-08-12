@@ -48,6 +48,31 @@ export const getBlockedUsers = async (blocker_id: string): Promise<Profile[]> =>
   return profiles || [];
 };
 
+// Get all blocked IDs for a user
+export const getAllBlockedIds = async (profile_id: string): Promise<string[]> => {
+  // Get users blocked by profile_id
+  const { data: blockerData, error: blockerError } = await supabase
+    .from('blocks')
+    .select('blocked_id')
+    .eq('blocker_id', profile_id);
+
+  if (blockerError) throw blockerError;
+
+  // Get users blocking profile_id
+  const { data: blockedData, error: blockedError } = await supabase
+    .from('blocks')
+    .select('blocker_id')
+    .eq('blocked_id', profile_id);
+
+  if (blockedError) throw blockedError;
+
+  // Combine and deduplicate IDs
+  return [...blockerData, ...blockedData].map(
+    (b: { blocked_id: string } | { blocker_id: string }) =>
+      'blocked_id' in b ? b.blocked_id : b.blocker_id,
+  );
+};
+
 // Check if a user is blocked
 export const isUserBlocked = async (blocker_id: string, blocked_id: string): Promise<boolean> => {
   const { data, error } = await supabase
