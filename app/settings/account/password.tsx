@@ -17,10 +17,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useChangePassword } from '@/hooks/auth/useChangePassword';
 
 export default function UpdatePassword() {
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { profile } = useAuth();
@@ -29,7 +27,6 @@ export default function UpdatePassword() {
   const handleUpdatePassword = () => {
     changePasswordMutation.mutate(
       {
-        currentPassword,
         newPassword,
         confirmPassword,
         email: profile?.email || '',
@@ -39,7 +36,6 @@ export default function UpdatePassword() {
           Alert.alert('Success', 'Your password has been updated successfully', [
             {
               text: 'OK',
-              onPress: () => router.back(),
             },
           ]);
         },
@@ -55,25 +51,6 @@ export default function UpdatePassword() {
       <ScreenHeader title="Update Password" showBackButton />
 
       <View style={styles.section}>
-        <Text style={styles.label}>Current Password</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            placeholder="Enter current password"
-            placeholderTextColor="#79320633"
-            secureTextEntry={!showCurrentPassword}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity
-            onPress={() => setShowCurrentPassword(!showCurrentPassword)}
-            style={styles.eyeIcon}
-          >
-            <Feather name={showCurrentPassword ? 'eye' : 'eye-off'} size={20} color="#793206" />
-          </TouchableOpacity>
-        </View>
-
         <Text style={[styles.label, { marginTop: 20 }]}>New Password</Text>
         <View style={styles.inputContainer}>
           <TextInput
