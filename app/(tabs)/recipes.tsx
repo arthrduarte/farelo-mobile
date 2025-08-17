@@ -13,7 +13,7 @@ import RecipeCard from '@/components/recipe/RecipeCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import { Link, router } from 'expo-router';
-import { useRecipes } from '@/hooks/recipes';
+import { useInfiniteRecipes } from '@/hooks/recipes';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce } from 'lodash';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
@@ -30,12 +30,17 @@ export default function RecipesScreen() {
   const drawerAnimation = useRef(new Animated.Value(0)).current;
 
   const {
-    data: recipes,
+    data,
     isLoading,
     isError,
     error,
     refetch,
-  } = useRecipes(profile?.id, debouncedSearchTerm);
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteRecipes(profile?.id, debouncedSearchTerm);
+
+  const recipes = data?.pages.flat() ?? [];
 
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
@@ -135,6 +140,21 @@ export default function RecipesScreen() {
     </View>
   );
 
+  const LoadMoreComponent = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.loadMoreContainer}>
+        <ActivityIndicator size="small" color="#793206" />
+      </View>
+    );
+  };
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
   const ErrorComponent = () => (
     <View style={styles.centerContainer}>
       <Text style={styles.errorText}>
@@ -199,8 +219,11 @@ export default function RecipesScreen() {
           data={recipes}
           renderItem={({ item }) => <RecipeCard key={item.id} recipe={item} />}
           ListEmptyComponent={debouncedSearchTerm ? NoSearchResultsComponent : EmptyComponent}
+          ListFooterComponent={LoadMoreComponent}
           refreshing={isLoading}
           onRefresh={refetch}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.1}
         />
       )}
       <Drawer
@@ -289,5 +312,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });

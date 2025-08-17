@@ -1,5 +1,6 @@
 // Export all recipe hooks
 export { useRecipes } from './useRecipes';
+export { useInfiniteRecipes } from './useInfiniteRecipes';
 export { useRecipe } from './useRecipe';
 export { useCreateRecipe } from './useCreateRecipe';
 export { useUpdateRecipe } from './useUpdateRecipe';
