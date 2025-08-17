@@ -1,13 +1,19 @@
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 
-// Get recipes for a user with optional search
-export const getRecipes = async (profileId: string, searchTerm?: string): Promise<Recipe[]> => {
+// Get recipes for a user with optional search and pagination
+export const getRecipes = async (
+  profileId: string,
+  searchTerm?: string,
+  limit: number = 10,
+  offset: number = 0,
+): Promise<Recipe[]> => {
   let query = supabase
     .from('recipes')
     .select('*')
     .order('created_at', { ascending: false })
-    .eq('profile_id', profileId);
+    .eq('profile_id', profileId)
+    .range(offset, offset + limit - 1);
 
   if (searchTerm && searchTerm.trim() !== '') {
     const cleanedSearchTerm = searchTerm.trim();
