@@ -42,3 +42,4 @@ app-example
 .env
 
 credentials.json
+.eslintcache

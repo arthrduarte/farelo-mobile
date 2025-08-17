@@ -8,4 +8,17 @@ export default defineConfig([
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/jsx-uses-react": "off",
+    },
+  },
+  {
+    files: ["**/*.{jsx,tsx}"],
+    rules: {
+      "react/no-unescaped-entities": "off",
+    },
+  },
 ]);

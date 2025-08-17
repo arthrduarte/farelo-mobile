@@ -6,168 +6,163 @@ import { Profile } from '@/types/db';
 import { useAuth } from '@/contexts/AuthContext';
 import Avatar from '@/components/ui/Avatar';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useBlocks } from '@/hooks/useBlocks';
+import { useGetAllBlockedIds } from '@/hooks/blocks/useGetAllBlockedIds';
 import { useFollowing } from '@/hooks/useFollowing';
 
 export const WhoToFollow = () => {
-    const [suggestedUsers, setSuggestedUsers] = useState<Profile[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const { profile: currentUser } = useAuth();
-    const { getAllBlockedIds } = useBlocks();
-    const { following } = useFollowing(currentUser?.id || '');
+  const [suggestedUsers, setSuggestedUsers] = useState<Profile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { profile: currentUser } = useAuth();
+  const { data: blockedIds = [] } = useGetAllBlockedIds();
+  const { following } = useFollowing(currentUser?.id || '');
 
-    useEffect(() => {
-        const fetchSuggestedUsers = async () => {
-            if (!currentUser) return;
-            
-            setIsLoading(true);
-            try {
-                const blockedIds = await getAllBlockedIds();
-                const followingIds = following.map(user => user.id);
-                const excludeIds = [...blockedIds, ...followingIds];
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      if (!currentUser) return;
 
-                let query = supabase
-                    .from('profiles_with_log_count')
-                    .select('*')
-                    .neq('id', currentUser.id)
-                    .not('image', 'is', null)
-                    .not('image', 'eq', '')
-                    .order('log_count', { ascending: false })
-                    .limit(9);
+      setIsLoading(true);
+      try {
+        const followingIds = following.map((user) => user.id);
+        const excludeIds = [...blockedIds, ...followingIds];
 
-                if (excludeIds.length > 0) {
-                    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-                }
+        let query = supabase
+          .from('profiles_with_log_count')
+          .select('*')
+          .neq('id', currentUser.id)
+          .not('image', 'is', null)
+          .not('image', 'eq', '')
+          .order('log_count', { ascending: false })
+          .limit(9);
 
-                const { data, error } = await query;
+        if (excludeIds.length > 0) {
+          query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+        }
 
-                if (error) throw error;
-                setSuggestedUsers(data || []);
-            } catch (error) {
-                console.error("Error fetching suggested users:", error);
-                setSuggestedUsers([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        const { data, error } = await query;
 
-        fetchSuggestedUsers();
-    }, [currentUser, following]);
-
-    const handleSelectUser = (selectedProfile: Profile) => {
-        router.push({
-            pathname: '/profile/[id]',
-            params: { 
-                id: selectedProfile.id,
-                profile: JSON.stringify(selectedProfile)
-            }
-        });
+        if (error) throw error;
+        setSuggestedUsers(data || []);
+      } catch (error) {
+        console.error('Error fetching suggested users:', error);
+        setSuggestedUsers([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    if (isLoading || suggestedUsers.length === 0) {
-        return null;
-    }
+    fetchSuggestedUsers();
+  }, [currentUser, following]);
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.headerContainer}>
-                <Text style={styles.title}>Who to Follow</Text>
-            </View>
-            
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
-            >
-                {suggestedUsers.map((user) => (
-                    <TouchableOpacity
-                        key={user.id}
-                        style={styles.userCard}
-                        onPress={() => handleSelectUser(user)}
-                    >
-                        <Avatar 
-                            imageUrl={user.image} 
-                            firstName={user.first_name} 
-                            size={60} 
-                        />
-                        <Text style={styles.name} numberOfLines={1}>
-                            {user.first_name} {user.last_name}
-                        </Text>
-                        <Text style={styles.username} numberOfLines={1}>
-                            @{user.username}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-                
-                {/* See More Card */}
-                <TouchableOpacity
-                    style={[styles.userCard, styles.seeMoreCard]}
-                    onPress={() => router.push('/search')}
-                >
-                    <View style={styles.seeMoreIconContainer}>
-                        <MaterialIcons name="add" size={32} color="#793206" />
-                    </View>
-                    <Text style={styles.seeMoreText}>See More</Text>
-                </TouchableOpacity>
-            </ScrollView>
-        </View>
-    );
+  const handleSelectUser = (selectedProfile: Profile) => {
+    router.push({
+      pathname: '/profile/[id]',
+      params: {
+        id: selectedProfile.id,
+        profile: JSON.stringify(selectedProfile),
+      },
+    });
+  };
+
+  if (isLoading || suggestedUsers.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>Who to Follow</Text>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {suggestedUsers.map((user) => (
+          <TouchableOpacity
+            key={user.id}
+            style={styles.userCard}
+            onPress={() => handleSelectUser(user)}
+          >
+            <Avatar imageUrl={user.image} firstName={user.first_name} size={60} />
+            <Text style={styles.name} numberOfLines={1}>
+              {user.first_name} {user.last_name}
+            </Text>
+            <Text style={styles.username} numberOfLines={1}>
+              @{user.username}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
+        {/* See More Card */}
+        <TouchableOpacity
+          style={[styles.userCard, styles.seeMoreCard]}
+          onPress={() => router.push('/search')}
+        >
+          <View style={styles.seeMoreIconContainer}>
+            <MaterialIcons name="add" size={32} color="#793206" />
+          </View>
+          <Text style={styles.seeMoreText}>See More</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        marginBottom: 16,
-    },
-    headerContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        marginBottom: 12,
-    },
-    title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#793206',
-    },
-    scrollContent: {
-        paddingHorizontal: 12,
-    },
-    userCard: {
-        alignItems: 'center',
-        marginHorizontal: 4,
-        width: 100,
-    },
-    name: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#793206',
-        textAlign: 'center',
-        marginTop: 8,
-    },
-    username: {
-        fontSize: 12,
-        color: '#79320680',
-        textAlign: 'center',
-    },
-    seeMoreCard: {
-        justifyContent: 'center',
-    },
-    seeMoreIconContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#EDE4D2',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#79320633',
-    },
-    seeMoreText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#793206',
-        textAlign: 'center',
-        marginTop: 8,
-    },
+  container: {
+    marginBottom: 16,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#793206',
+  },
+  scrollContent: {
+    paddingHorizontal: 12,
+  },
+  userCard: {
+    alignItems: 'center',
+    marginHorizontal: 4,
+    width: 100,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#793206',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  username: {
+    fontSize: 12,
+    color: '#79320680',
+    textAlign: 'center',
+  },
+  seeMoreCard: {
+    justifyContent: 'center',
+  },
+  seeMoreIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#EDE4D2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#79320633',
+  },
+  seeMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#793206',
+    textAlign: 'center',
+    marginTop: 8,
+  },
 });
