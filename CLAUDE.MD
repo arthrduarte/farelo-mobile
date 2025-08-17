@@ -8,10 +8,6 @@ This document tailors your actions to this Expo React Native app.
 - `npm run android` – Run Android dev build (requires configured dev client)
 - `npm run ios` – Run iOS dev build (requires configured dev client)
 - `npm run web` – Run on web via Expo
-- `npm run typecheck` – TypeScript check
-- `npm run lint` – ESLint
-- `npm run lint:fix` – ESLint with fixes
-- `npm run format` / `npm run format:check` – Prettier
 
 ### Tech stack
 
@@ -106,10 +102,6 @@ If AI calls are needed, they should be proxied through secure backend endpoints 
 - Use meaningful error messages in services/actions; surface errors in hooks for UI to handle.
 - Prefer React Query’s error states over `try/catch` in components.
 - Console logging is acceptable during development; remove noisy logs before release.
-
-### Testing
-
-- Jest is configured with `jest-expo`. Write focused tests for utilities, hooks, and pure services.
 
 ### Import aliases
 

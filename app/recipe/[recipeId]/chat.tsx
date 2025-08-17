@@ -1,17 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, Platform, Image, ActivityIndicator, Alert, SafeAreaView, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Platform,
+  Image,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+} from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRevenueCat } from '@/contexts/RevenueCatContext';
-import { useRecipe, RECIPE_KEYS } from '@/hooks/useRecipes';
+import { useRecipe, RECIPE_KEYS } from '@/hooks/recipes';
 import { useLocalSearchParams } from 'expo-router';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { EmptyChat } from '@/components/chat/EmptyChat';
 import { useQueryClient } from '@tanstack/react-query';
 import Purchases from 'react-native-purchases';
-import { usePaywall } from "@/contexts/PaywallContext";
+import { usePaywall } from '@/contexts/PaywallContext';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 // Define the message type based on the database schema
@@ -28,7 +38,7 @@ export default function ChatScreen() {
   const { data: recipe, isError } = useRecipe(recipeId as string, profile?.id);
   const queryClient = useQueryClient();
   const { showPaywall } = usePaywall();
-  
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingMessage, setIsLoadingMessage] = useState(false);
   const flatListRef = useRef<FlatList>(null);
@@ -53,7 +63,7 @@ export default function ChatScreen() {
       await refreshCustomerInfo();
 
       if (!isProMember) {
-        showPaywall(); 
+        showPaywall();
         return false;
       }
 
@@ -63,11 +73,11 @@ export default function ChatScreen() {
         message: message,
         timestamp: new Date().toISOString(),
       };
-      
+
       const updatedMessages = [userMessage, ...messages];
       setMessages(updatedMessages);
       setIsLoadingMessage(true);
-      
+
       return true;
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
@@ -77,21 +87,20 @@ export default function ChatScreen() {
   };
 
   const handleAIResponse = (aiMessage: string) => {
-    
     const aiResponse: ChatMessage = {
       role: 'ai',
       message: aiMessage,
       timestamp: new Date().toISOString(),
     };
-    
-    setMessages(prev => {
+
+    setMessages((prev) => {
       const newMessages = [aiResponse, ...prev];
       return newMessages;
     });
     setIsLoadingMessage(false);
 
     queryClient.invalidateQueries({
-      queryKey: RECIPE_KEYS.detail(recipeId as string)
+      queryKey: RECIPE_KEYS.detail(recipeId as string),
     });
   };
 
@@ -111,7 +120,7 @@ export default function ChatScreen() {
       <ScreenHeader title="Jacquin" showBackButton={true} />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {messages.length > 0 ? (
           <FlatList
@@ -131,8 +140,8 @@ export default function ChatScreen() {
           <EmptyChat recipeName={recipe?.title || 'this recipe'} />
         )}
 
-        <ChatInput 
-          onSendMessage={handleSendMessage} 
+        <ChatInput
+          onSendMessage={handleSendMessage}
           onAIResponse={handleAIResponse}
           isLoading={isLoadingMessage}
           recipeContext={{
@@ -243,5 +252,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 15,
     paddingHorizontal: 20,
-  }
+  },
 });

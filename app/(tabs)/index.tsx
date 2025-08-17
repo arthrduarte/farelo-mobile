@@ -4,7 +4,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLogs } from '@/hooks/useLogs';
-import { useRecipes } from '@/hooks/useRecipes';
+import { useRecipes } from '@/hooks/recipes';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
@@ -12,10 +12,17 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { WhoToFollow } from '@/components/home/WhoToFollow';
 import { Introduction } from '@/components/home/Introduction';
+import { EnhancedLog } from '@/types/types';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, profileLogs, profileLogsLoading, refreshProfileLogs, refresh: refreshFeed } = useLogs(profile?.id ?? '');
+  const {
+    feed,
+    profileLogs,
+    profileLogsLoading,
+    refreshProfileLogs,
+    refresh: refreshFeed,
+  } = useLogs(profile?.id ?? '');
   const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
 
   useFocusEffect(
@@ -23,9 +30,8 @@ export default function HomeScreen() {
       if (profile?.id) {
         refreshFeed();
       }
-      return () => {
-      };
-    }, [profile?.id, refreshFeed])
+      return () => {};
+    }, [profile?.id, refreshFeed]),
   );
 
   const EmptyFeedComponent = () => (
@@ -38,10 +44,7 @@ export default function HomeScreen() {
           Follow people or start a recipe to see logs in your feed.
         </Text>
         <View style={styles.emptyActions}>
-          <TouchableOpacity 
-            style={styles.actionButton} 
-            onPress={() => router.push('/new-recipe')}
-          >
+          <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/new-recipe')}>
             <Text style={styles.actionButtonText}>Add Recipe</Text>
           </TouchableOpacity>
         </View>
@@ -52,20 +55,19 @@ export default function HomeScreen() {
   const LoadingComponent = () => (
     <>
       <LogLoader />
-      <Text style={styles.errorText}>If your app is stuck on loading, please restart it. We're working on fixing this issue!</Text>
+      <Text style={styles.errorText}>
+        If your app is stuck on loading, please restart it. We're working on fixing this issue!
+      </Text>
       <LogLoader />
       <LogLoader />
     </>
   );
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
+  const renderItem = ({ item, index }: { item: EnhancedLog; index: number }) => {
     const isFirstItem = index === 0;
     return (
       <>
-        <LogCard 
-          key={item.id}
-          log={item}
-        />
+        <LogCard key={item.id} log={item} />
         {isFirstItem && <WhoToFollow />}
       </>
     );
@@ -73,7 +75,8 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Home" 
+      <ScreenHeader
+        title="Home"
         rightItem={
           <TouchableOpacity onPress={() => router.push('/search')}>
             <Feather name="search" size={24} color="#793206" />
@@ -81,7 +84,7 @@ export default function HomeScreen() {
         }
       />
 
-      <FlatList 
+      <FlatList
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         data={feed}

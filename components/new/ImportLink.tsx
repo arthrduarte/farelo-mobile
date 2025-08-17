@@ -1,27 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Alert, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRevenueCat } from '@/contexts/RevenueCatContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { RECIPE_KEYS } from '@/hooks/useRecipes';
+import { RECIPE_KEYS } from '@/hooks/recipes';
 import { router } from 'expo-router';
 import { Recipe } from '@/types/db';
 import { supabase } from '@/lib/supabase';
 import Purchases from 'react-native-purchases';
-import { usePaywall } from "@/contexts/PaywallContext";
+import { usePaywall } from '@/contexts/PaywallContext';
 
 interface ImportLinkProps {
   recipeUrl: string;
   setRecipeUrl: (url: string) => void;
 }
 
-const UNSUPPORTED_DOMAINS = [
-  'tiktok.com',
-  'instagram.com',
-  'youtube.com',
-  'x.com',
-  'facebook.com'
-];
+const UNSUPPORTED_DOMAINS = ['tiktok.com', 'instagram.com', 'youtube.com', 'x.com', 'facebook.com'];
 
 // Assuming this is defined in your AuthContext or elsewhere, using the one found
 export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps) {
@@ -30,11 +32,7 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
-  const loadingSteps = [
-    "Reading recipe...",
-    "Formatting recipe...",
-    "Creating image..."
-  ];
+  const loadingSteps = ['Reading recipe...', 'Formatting recipe...', 'Creating image...'];
   const { showPaywall } = usePaywall();
 
   // Effect to handle loading step changes
@@ -46,11 +44,11 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
 
     const timers = [
       setTimeout(() => setLoadingStep(1), 3000),
-      setTimeout(() => setLoadingStep(2), 6000)
+      setTimeout(() => setLoadingStep(2), 6000),
     ];
 
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
+      timers.forEach((timer) => clearTimeout(timer));
     };
   }, [isImporting]);
 
@@ -61,8 +59,10 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
       // Check for unsupported domains
       const urlObj = new URL(url);
       const domain = urlObj.hostname.replace('www.', '');
-      if (UNSUPPORTED_DOMAINS.some(d => domain.includes(d))) {
-        throw new Error(`We currently don't support importing recipes from ${domain}. Try taking a screenshot of the caption and uploading it here instead!`);
+      if (UNSUPPORTED_DOMAINS.some((d) => domain.includes(d))) {
+        throw new Error(
+          `We currently don't support importing recipes from ${domain}. Try taking a screenshot of the caption and uploading it here instead!`,
+        );
       }
 
       const response = await fetch('https://usefarelo.com/api/recipes/import', {
@@ -73,8 +73,8 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
         },
         body: JSON.stringify({
           url,
-          profile_id: profile.id
-        })
+          profile_id: profile.id,
+        }),
       });
 
       if (!response.ok) {
@@ -105,28 +105,25 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
     },
     onSuccess: (newRecipe) => {
       // Update the recipes list cache
-      queryClient.setQueryData<Recipe[]>(
-        RECIPE_KEYS.list(newRecipe.profile_id),
-        (oldRecipes) => {
-          if (!oldRecipes) return [newRecipe];
-          return [newRecipe, ...oldRecipes];
-        }
-      );
+      queryClient.setQueryData<Recipe[]>(RECIPE_KEYS.list(newRecipe.profile_id), (oldRecipes) => {
+        if (!oldRecipes) return [newRecipe];
+        return [newRecipe, ...oldRecipes];
+      });
 
       // Navigate to the recipe details
       router.replace({
         pathname: '/recipe/[recipeId]/details',
-        params: { recipeId: newRecipe.id }
+        params: { recipeId: newRecipe.id },
       });
     },
     onError: (error: Error) => {
       console.error('Import mutation error:', error);
       Alert.alert('Error', error.message);
-    }
+    },
   });
 
   const handleUrlSubmit = async () => {
-      if (!recipeUrl.trim()) {
+    if (!recipeUrl.trim()) {
       Alert.alert('Error', 'Please enter a recipe URL');
       return;
     }
@@ -143,7 +140,7 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
       await refreshCustomerInfo();
 
       if (!isProMember) {
-        showPaywall(); 
+        showPaywall();
       } else {
         // If user has active entitlement, proceed with import
         await importRecipeMutation.mutateAsync(recipeUrl);
@@ -170,17 +167,15 @@ export default function ImportLink({ recipeUrl, setRecipeUrl }: ImportLinkProps)
         keyboardType="url"
         editable={!isImporting}
       />
-      <TouchableOpacity 
-        style={[styles.submitButton, isImporting && styles.submitButtonDisabled]} 
+      <TouchableOpacity
+        style={[styles.submitButton, isImporting && styles.submitButtonDisabled]}
         onPress={handleUrlSubmit}
         disabled={isImporting}
       >
         {isImporting ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#EDE4D2" />
-            <Text style={styles.submitButtonText}>
-              {loadingSteps[loadingStep]}
-            </Text>
+            <Text style={styles.submitButtonText}>{loadingSteps[loadingStep]}</Text>
           </View>
         ) : (
           <Text style={styles.submitButtonText}>Submit</Text>
@@ -215,7 +210,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: '#EDE4D2',
-    fontSize: 16, 
+    fontSize: 16,
     fontWeight: '600',
   },
   loadingContainer: {
@@ -228,4 +223,3 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 });
-

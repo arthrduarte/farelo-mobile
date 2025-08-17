@@ -6,11 +6,11 @@ import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLikes } from '@/hooks/useLikes';
-import { useCopyRecipe } from '@/hooks/useRecipes';
+import { useCopyRecipe } from '@/hooks/recipes';
 import { Divider } from '@/components/Divider';
 import { EnhancedLog } from '@/types/types';
 import { LogImage } from './LogImage';
-import { Log } from '@/types/db';
+import { Log, Profile } from '@/types/db';
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
 import Avatar from '@/components/ui/Avatar';
 
@@ -20,19 +20,19 @@ type LogCardProps = {
 
 export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   const { profile } = useAuth();
-  
+
   const { isLiked, likeCount, toggleLike } = useLikes({
     initialIsLiked: log.likes.some((like) => like.profile_id === profile?.id),
     initialLikeCount: log.likes?.length || 0,
     logId: log.id,
   });
   const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
-  
+
   const [profileData, setProfileData] = useState(log.profile);
 
   // Listen for profile updates
   useEffect(() => {
-    const handleProfileUpdate = async (updatedProfile: any) => {
+    const handleProfileUpdate = async (updatedProfile: Profile) => {
       if (updatedProfile.id === log.profile_id) {
         setProfileData(updatedProfile);
       }
@@ -50,7 +50,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   }
 
   const fullName = `${log.profile.first_name} ${log.profile.last_name}`;
-  
+
   const handleCopyRecipe = () => {
     if (log.recipe.profile_id === profile.id) {
       return;
@@ -58,16 +58,16 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
     copyRecipe({ recipeIdToCopy: log.recipe_id });
   };
 
-  const handleProfilePress = (e: any) => {
+  const handleProfilePress = () => {
     if (log.profile.id === profile.id) {
       router.push({
         pathname: '/profile',
-        params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
+        params: { id: log.profile.id, profile: JSON.stringify(log.profile) },
       });
     } else {
       router.push({
         pathname: '/profile/[id]',
-        params: { id: log.profile.id, profile: JSON.stringify(log.profile) }
+        params: { id: log.profile.id, profile: JSON.stringify(log.profile) },
       });
     }
   };
@@ -76,22 +76,18 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
     <View style={styles.container}>
       <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.8}>
         <View style={styles.header}>
-          <Avatar 
-            imageUrl={profileData?.image}
-            firstName={profileData?.first_name}
-            size={40}
-          />
+          <Avatar imageUrl={profileData?.image} firstName={profileData?.first_name} size={40} />
           <View style={styles.headerText}>
             <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
             <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
           </View>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>  
-        <ThemedText type="title" style={styles.title}>{log.recipe.title}</ThemedText>
-        {log.description && (
-          <ThemedText style={styles.description}>{log.description}</ThemedText>
-        )}
+      <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
+        <ThemedText type="title" style={styles.title}>
+          {log.recipe.title}
+        </ThemedText>
+        {log.description && <ThemedText style={styles.description}>{log.description}</ThemedText>}
 
         <View style={styles.metaInfo}>
           <View style={styles.metaItem}>
@@ -119,12 +115,20 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
 
       <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
         <View style={styles.interactionsContainer}>
-          <Text style={styles.interactionsAmount}>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</Text>
-          <TouchableOpacity onPress={() => router.push({
-            pathname: '/log/[logId]/comments',
-            params: { logId: log.id }
-          })}>
-            <Text style={styles.interactionsAmount}>{log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}</Text>
+          <Text style={styles.interactionsAmount}>
+            {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+          </Text>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: '/log/[logId]/comments',
+                params: { logId: log.id },
+              })
+            }
+          >
+            <Text style={styles.interactionsAmount}>
+              {log.comments?.length || 0} {log.comments?.length === 1 ? 'comment' : 'comments'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -133,28 +137,32 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
         <View style={styles.actions}>
           <TouchableOpacity onPress={toggleLike}>
             <View style={styles.actionContainer}>
-              {isLiked ? 
+              {isLiked ? (
                 <AntDesign name="heart" size={24} color="#793206" />
-              :
+              ) : (
                 <AntDesign name="hearto" size={24} color="#793206" />
-              }
+              )}
               <ThemedText style={styles.actionCount}>{likeCount}</ThemedText>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push({
-            pathname: '/log/[logId]/comments',
-            params: { logId: log.id }
-          })}>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: '/log/[logId]/comments',
+                params: { logId: log.id },
+              })
+            }
+          >
             <Feather name="message-circle" size={24} color="#793206" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            onPress={handleCopyRecipe} 
+          <TouchableOpacity
+            onPress={handleCopyRecipe}
             disabled={isCopying || log.recipe.profile_id === profile.id}
           >
-            <AntDesign 
-              name="plus" 
-              size={24} 
-              color={isCopying || log.recipe.profile_id === profile.id ? "#79320633" : "#793206"}
+            <AntDesign
+              name="plus"
+              size={24}
+              color={isCopying || log.recipe.profile_id === profile.id ? '#79320633' : '#793206'}
             />
           </TouchableOpacity>
         </View>
@@ -259,4 +267,4 @@ const styles = StyleSheet.create({
     color: '#793206',
     fontSize: 14,
   },
-}); 
+});

@@ -1,7 +1,15 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
-import { useRecipe } from '@/hooks/useRecipes';
+import { useRecipe } from '@/hooks/recipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -22,7 +30,7 @@ export default function StartRecipeScreen() {
   // Timer functionality - starts automatically
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
+      setElapsedTime((prev) => prev + 1);
     }, 1000);
 
     // Cleanup on component unmount
@@ -47,7 +55,7 @@ export default function StartRecipeScreen() {
   }
 
   const toggleIngredient = (index: number) => {
-    setCheckedIngredients(prev => {
+    setCheckedIngredients((prev) => {
       const newChecked = [...prev];
       newChecked[index] = !newChecked[index];
       return newChecked;
@@ -55,7 +63,7 @@ export default function StartRecipeScreen() {
   };
 
   const toggleInstruction = (index: number) => {
-    setCheckedInstructions(prev => {
+    setCheckedInstructions((prev) => {
       const newChecked = [...prev];
       newChecked[index] = !newChecked[index];
       return newChecked;
@@ -83,7 +91,8 @@ export default function StartRecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Start Recipe" 
+      <ScreenHeader
+        title="Start Recipe"
         leftItem={
           <View style={styles.timerContainer}>
             <MaterialIcons name="timer" size={24} color="#793206" />
@@ -91,16 +100,18 @@ export default function StartRecipeScreen() {
           </View>
         }
         rightItem={
-        // FINISH
-        <TouchableOpacity 
-          style={styles.finishButton}
-          onPress={() => router.push({
-            pathname: '/recipe/[recipeId]/finish',
-            params: { recipeId: recipe.id }
-          })}
-        >
-          <Text style={styles.finishButtonText}>Finish</Text>
-        </TouchableOpacity>
+          // FINISH
+          <TouchableOpacity
+            style={styles.finishButton}
+            onPress={() =>
+              router.push({
+                pathname: '/recipe/[recipeId]/finish',
+                params: { recipeId: recipe.id },
+              })
+            }
+          >
+            <Text style={styles.finishButtonText}>Finish</Text>
+          </TouchableOpacity>
         }
       />
       <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>
@@ -138,32 +149,35 @@ export default function StartRecipeScreen() {
             <Text style={styles.sectionTitle}>Ingredients</Text>
           </View>
           {recipe.ingredients?.map((ingredient, index) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               activeOpacity={1}
-              key={index} 
+              key={index}
               style={[
                 styles.ingredient,
                 index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-                checkedIngredients[index] && styles.ingredientChecked
+                checkedIngredients[index] && styles.ingredientChecked,
               ]}
             >
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.checkboxContainer}
                 activeOpacity={0.5}
                 onPress={() => toggleIngredient(index)}
               >
-                <IconSymbol 
-                  {...checkedIngredients[index] 
-                    ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} 
-                    : {name: "checkbox-inactive", color: "#793206"}
-                  }
-                  size={24} 
+                <IconSymbol
+                  {...(checkedIngredients[index]
+                    ? { name: 'checkbox-active', color: '#1D5D36', style: styles.activeCheckbox }
+                    : { name: 'checkbox-inactive', color: '#793206' })}
+                  size={24}
                 />
               </TouchableOpacity>
-              <Text style={[
-                styles.ingredientText,
-                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-              ]}>{ingredient}</Text>
+              <Text
+                style={[
+                  styles.ingredientText,
+                  index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige,
+                ]}
+              >
+                {ingredient}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -177,32 +191,35 @@ export default function StartRecipeScreen() {
             <Text style={styles.sectionTitle}>Instructions</Text>
           </View>
           {recipe.instructions?.map((instruction, index) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               key={index}
               activeOpacity={1}
               style={[
                 styles.instruction,
                 index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
-                checkedInstructions[index] && styles.ingredientChecked
+                checkedInstructions[index] && styles.ingredientChecked,
               ]}
             >
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.checkboxContainer}
                 activeOpacity={0.5}
                 onPress={() => toggleInstruction(index)}
               >
-                <IconSymbol 
-                  {...checkedInstructions[index] 
-                    ? {name: "checkbox-active", color: "#1D5D36", style: styles.activeCheckbox} 
-                    : {name: "checkbox-inactive", color: "#793206"}
-                  }
-                  size={24} 
+                <IconSymbol
+                  {...(checkedInstructions[index]
+                    ? { name: 'checkbox-active', color: '#1D5D36', style: styles.activeCheckbox }
+                    : { name: 'checkbox-inactive', color: '#793206' })}
+                  size={24}
                 />
               </TouchableOpacity>
-              <Text style={[
-                styles.instructionText,
-                index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-              ]}>{index + 1}. {instruction}</Text>
+              <Text
+                style={[
+                  styles.instructionText,
+                  index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige,
+                ]}
+              >
+                {index + 1}. {instruction}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -314,7 +331,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EDE4D2',
   },
   ingredientChecked: {
-    backgroundColor: '#329F5B',  // A nice material design green
+    backgroundColor: '#329F5B', // A nice material design green
   },
   activeCheckbox: {
     shadowColor: '#1D5D36',
