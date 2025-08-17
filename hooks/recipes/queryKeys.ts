@@ -5,4 +5,5 @@ export const RECIPE_KEYS = {
   details: () => [...RECIPE_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...RECIPE_KEYS.details(), id] as const,
   search: (searchTerm?: string) => [...RECIPE_KEYS.lists(), { searchTerm }] as const,
+  infinite: (searchTerm?: string) => [...RECIPE_KEYS.all, 'infinite', { searchTerm }] as const,
 };
