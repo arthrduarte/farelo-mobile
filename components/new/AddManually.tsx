@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+  Platform,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Recipe } from '@/types/db';
-import { useCreateRecipe } from '@/hooks/useRecipes';
+import { useCreateRecipe } from '@/hooks/recipes';
 import { router } from 'expo-router';
 import { Divider } from '@/components/Divider';
 import { supabase } from '@/lib/supabase';
@@ -13,12 +22,24 @@ import 'react-native-url-polyfill/auto';
 
 // Define a type for the manual form data, omitting fields not manually entered
 type ManualRecipeFormData = Pick<
-  Recipe, 
-  'title' | 'description' | 'time' | 'servings' | 'ingredients' | 'instructions' | 'tags' | 'notes' | 'source_url' | 'user_image_url'
+  Recipe,
+  | 'title'
+  | 'description'
+  | 'time'
+  | 'servings'
+  | 'ingredients'
+  | 'instructions'
+  | 'tags'
+  | 'notes'
+  | 'source_url'
+  | 'user_image_url'
 >;
 
 // Final data structure for submission (includes filtered lists)
-export type FinalManualRecipeData = Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags'> & {
+export type FinalManualRecipeData = Omit<
+  ManualRecipeFormData,
+  'ingredients' | 'instructions' | 'tags'
+> & {
   ingredients: string[];
   instructions: string[];
   tags: string[];
@@ -50,14 +71,23 @@ export default function AddManually() {
       if (Platform.OS !== 'web') {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+          Alert.alert(
+            'Permission Denied',
+            'Sorry, we need camera roll permissions to make this work!',
+          );
         }
       }
     })();
   }, []);
 
-  const handleManualFormChange = (field: keyof Omit<ManualRecipeFormData, 'ingredients' | 'instructions' | 'tags' | 'user_image_url'>, value: string | number | string[] | null) => {
-    setManualFormData(prev => ({ ...prev, [field]: value }));
+  const handleManualFormChange = (
+    field: keyof Omit<
+      ManualRecipeFormData,
+      'ingredients' | 'instructions' | 'tags' | 'user_image_url'
+    >,
+    value: string | number | string[] | null,
+  ) => {
+    setManualFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmission = async () => {
@@ -79,9 +109,9 @@ export default function AddManually() {
       }
 
       // Filter out empty items
-      const finalIngredients = manualFormData.ingredients.filter(item => item.trim() !== '');
-      const finalInstructions = manualFormData.instructions.filter(item => item.trim() !== '');
-      const finalTags = manualFormData.tags.filter(item => item.trim() !== '');
+      const finalIngredients = manualFormData.ingredients.filter((item) => item.trim() !== '');
+      const finalInstructions = manualFormData.instructions.filter((item) => item.trim() !== '');
+      const finalTags = manualFormData.tags.filter((item) => item.trim() !== '');
 
       if (finalIngredients.length === 0) {
         Alert.alert('Error', 'Please add at least one ingredient');
@@ -117,7 +147,7 @@ export default function AddManually() {
       // Navigate to the recipe details
       router.replace({
         pathname: '/recipe/[recipeId]/details',
-        params: { recipeId: newRecipe.id }
+        params: { recipeId: newRecipe.id },
       });
     } catch (error) {
       console.error('Error creating recipe:', error);
@@ -128,11 +158,11 @@ export default function AddManually() {
   };
 
   const handleListItemChange = (
-    listType: 'ingredients' | 'instructions' | 'tags', 
-    index: number, 
-    value: string
+    listType: 'ingredients' | 'instructions' | 'tags',
+    index: number,
+    value: string,
   ) => {
-    setManualFormData(prev => {
+    setManualFormData((prev) => {
       const newList = [...prev[listType]];
       newList[index] = value;
       return { ...prev, [listType]: newList };
@@ -140,15 +170,15 @@ export default function AddManually() {
   };
 
   const addListItem = (listType: 'ingredients' | 'instructions' | 'tags') => {
-    setManualFormData(prev => ({
+    setManualFormData((prev) => ({
       ...prev,
-      [listType]: [...prev[listType], '']
+      [listType]: [...prev[listType], ''],
     }));
   };
 
   const removeListItem = (listType: 'ingredients' | 'instructions' | 'tags', index: number) => {
-    setManualFormData(prev => {
-      if (prev[listType].length <= 1) return prev; 
+    setManualFormData((prev) => {
+      if (prev[listType].length <= 1) return prev;
       const newList = [...prev[listType]];
       newList.splice(index, 1);
       return { ...prev, [listType]: newList };
@@ -156,7 +186,7 @@ export default function AddManually() {
   };
 
   const pickImageAsync = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
@@ -175,7 +205,7 @@ export default function AddManually() {
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
-      
+
       const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg';
       const contentType = `image/${fileExt}`;
       // Consider adding profile_id to the path if images should be user-specific in the bucket path
@@ -183,9 +213,9 @@ export default function AddManually() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = fileName; // Path within the bucket
 
-      let { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('recipe_images') // Ensure this is your correct bucket name
-        .upload(filePath, decode(base64), { 
+        .upload(filePath, decode(base64), {
           contentType,
           // upsert: false, // Default is false, set to true if you want to overwrite
         });
@@ -195,30 +225,31 @@ export default function AddManually() {
         Alert.alert('Upload Error', `Failed to upload image: ${uploadError.message}`);
         return null;
       }
-       
-      const { data: publicUrlData } = supabase.storage
-        .from('recipe_images')
-        .getPublicUrl(filePath);
 
+      const { data: publicUrlData } = supabase.storage.from('recipe_images').getPublicUrl(filePath);
 
       if (!publicUrlData || !publicUrlData.publicUrl) {
-          console.error('Error getting public URL: No public URL found or data is null');
-          Alert.alert('Upload Error', 'Failed to get image URL after upload.');
-          return null;
+        console.error('Error getting public URL: No public URL found or data is null');
+        Alert.alert('Upload Error', 'Failed to get image URL after upload.');
+        return null;
       }
 
       return publicUrlData.publicUrl;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Upload process error:', e);
-      Alert.alert('Upload Error', `An unexpected error occurred during image upload: ${e.message}`);
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      Alert.alert(
+        'Upload Error',
+        `An unexpected error occurred during image upload: ${errorMessage}`,
+      );
       return null;
     }
   };
-  
+
   const clearImage = () => {
     setSelectedImage(null);
     // Also clear it from form data if it was set
-    setManualFormData(prev => ({ ...prev, user_image_url: null }));
+    setManualFormData((prev) => ({ ...prev, user_image_url: null }));
   };
 
   return (
@@ -299,17 +330,20 @@ export default function AddManually() {
             onChangeText={(text) => handleListItemChange('ingredients', index, text)}
             placeholderTextColor="#79320680"
           />
-           {/* Show remove button only if there's more than one item */}
+          {/* Show remove button only if there's more than one item */}
           {manualFormData.ingredients.length > 1 && (
-            <TouchableOpacity onPress={() => removeListItem('ingredients', index)} style={styles.removeButton}>
+            <TouchableOpacity
+              onPress={() => removeListItem('ingredients', index)}
+              style={styles.removeButton}
+            >
               <MaterialIcons name="close" size={20} color="#793206" />
             </TouchableOpacity>
           )}
         </View>
       ))}
       <TouchableOpacity style={styles.addButton} onPress={() => addListItem('ingredients')}>
-         <MaterialIcons name="add" size={20} color="#793206" />
-         <Text style={styles.addButtonText}>Add Ingredient</Text>
+        <MaterialIcons name="add" size={20} color="#793206" />
+        <Text style={styles.addButtonText}>Add Ingredient</Text>
       </TouchableOpacity>
 
       {/* Instructions */}
@@ -326,17 +360,20 @@ export default function AddManually() {
           />
           {/* Show remove button only if there's more than one item */}
           {manualFormData.instructions.length > 1 && (
-           <TouchableOpacity onPress={() => removeListItem('instructions', index)} style={styles.removeButton}>
-             <MaterialIcons name="close" size={20} color="#793206" />
-           </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => removeListItem('instructions', index)}
+              style={styles.removeButton}
+            >
+              <MaterialIcons name="close" size={20} color="#793206" />
+            </TouchableOpacity>
           )}
         </View>
       ))}
       <TouchableOpacity style={styles.addButton} onPress={() => addListItem('instructions')}>
-         <MaterialIcons name="add" size={20} color="#793206" />
-         <Text style={styles.addButtonText}>Add Instruction</Text>
+        <MaterialIcons name="add" size={20} color="#793206" />
+        <Text style={styles.addButtonText}>Add Instruction</Text>
       </TouchableOpacity>
-       
+
       {/* Tags */}
       <Text style={styles.formLabel}>Tags</Text>
       {manualFormData.tags.map((tag, index) => (
@@ -350,15 +387,18 @@ export default function AddManually() {
           />
           {/* Show remove button only if there's more than one item */}
           {manualFormData.tags.length > 1 && (
-            <TouchableOpacity onPress={() => removeListItem('tags', index)} style={styles.removeButton}>
+            <TouchableOpacity
+              onPress={() => removeListItem('tags', index)}
+              style={styles.removeButton}
+            >
               <MaterialIcons name="close" size={20} color="#793206" />
             </TouchableOpacity>
           )}
         </View>
       ))}
       <TouchableOpacity style={styles.addButton} onPress={() => addListItem('tags')}>
-         <MaterialIcons name="add" size={20} color="#793206" />
-         <Text style={styles.addButtonText}>Add Tag</Text>
+        <MaterialIcons name="add" size={20} color="#793206" />
+        <Text style={styles.addButtonText}>Add Tag</Text>
       </TouchableOpacity>
 
       {/* Notes */}
@@ -372,11 +412,8 @@ export default function AddManually() {
         multiline
       />
 
-      <TouchableOpacity 
-        style={[
-          styles.submitButton,
-          isSubmitting && styles.submitButtonDisabled
-        ]} 
+      <TouchableOpacity
+        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
         onPress={handleSubmission}
         disabled={isSubmitting}
       >
@@ -384,8 +421,8 @@ export default function AddManually() {
           {isSubmitting ? 'Creating Recipe...' : 'Submit'}
         </Text>
       </TouchableOpacity>
-      
-      <Divider/>
+
+      <Divider />
     </View>
   );
 }
@@ -409,8 +446,8 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top', // Align text to the top for multiline
   },
   textAreaShort: {
-      minHeight: 50, // Adjust as needed
-      textAlignVertical: 'top',
+    minHeight: 50, // Adjust as needed
+    textAlignVertical: 'top',
   },
   formLabel: {
     fontSize: 16,
@@ -452,12 +489,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%', // Make button full width within its container
     backgroundColor: '#79320633', // Use low opacity brown
-    alignSelf: 'flex-start', 
+    alignSelf: 'flex-start',
   },
   addButtonText: {
-      color: '#793206',
-      fontWeight: '600',
-      fontSize: 16,
+    color: '#793206',
+    fontWeight: '600',
+    fontSize: 16,
   },
   submitButton: {
     backgroundColor: '#793206',

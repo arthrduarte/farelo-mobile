@@ -1,4 +1,14 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe as BaseRecipe } from '@/types/db';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -7,7 +17,7 @@ import TagManager from '@/components/recipe/edit/TagManager';
 import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useRecipe, useUpdateRecipe } from '@/hooks/recipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Divider } from '@/components/Divider';
@@ -30,11 +40,15 @@ interface ValidationErrors {
 export default function EditRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
-  const { data: recipe, isLoading: isLoadingRecipe, isError } = useRecipe(recipeId as string, profile?.id);
+  const {
+    data: recipe,
+    isLoading: isLoadingRecipe,
+    isError,
+  } = useRecipe(recipeId as string, profile?.id);
   const updateRecipeMutation = useUpdateRecipe();
   const [editedRecipe, setEditedRecipe] = useState<Recipe | null>(recipe || null);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [isEditing, setIsEditing] = useState<{[key: string]: boolean}>({});
+  const [isEditing, setIsEditing] = useState<{ [key: string]: boolean }>({});
   const [isTagManagerVisible, setIsTagManagerVisible] = useState(false);
 
   // Update editedRecipe when recipe data is loaded
@@ -42,14 +56,18 @@ export default function EditRecipeScreen() {
     setEditedRecipe(recipe);
   }
 
-  const validateField = (field: keyof Recipe, value: any): string | undefined => {
+  const validateField = (field: keyof Recipe, value: unknown): string | undefined => {
     switch (field) {
       case 'title':
         return !value ? 'Title is required' : undefined;
       case 'time':
-        return !value || value < 1 ? 'Time must be at least 1 minute' : undefined;
+        return !value || (typeof value === 'number' && value < 1)
+          ? 'Time must be at least 1 minute'
+          : undefined;
       case 'servings':
-        return !value || value < 1 ? 'Servings must be at least 1' : undefined;
+        return !value || (typeof value === 'number' && value < 1)
+          ? 'Servings must be at least 1'
+          : undefined;
       case 'tags':
         if (typeof value === 'string' && value.length > 12) {
           return 'Tag must be 12 characters or less';
@@ -84,11 +102,11 @@ export default function EditRecipeScreen() {
   };
 
   const startEditing = (field: string) => {
-    setIsEditing(prev => ({ ...prev, [field]: true }));
+    setIsEditing((prev) => ({ ...prev, [field]: true }));
   };
 
   const stopEditing = (field: string) => {
-    setIsEditing(prev => ({ ...prev, [field]: false }));
+    setIsEditing((prev) => ({ ...prev, [field]: false }));
   };
 
   if (isLoadingRecipe) {
@@ -112,14 +130,11 @@ export default function EditRecipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader 
-        title="Edit Recipe" 
+      <ScreenHeader
+        title="Edit Recipe"
         showBackButton={true}
         rightItem={
-          <TouchableOpacity 
-            onPress={handleUpdate}
-            style={[styles.saveButton]}
-          >
+          <TouchableOpacity onPress={handleUpdate} style={[styles.saveButton]}>
             <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         }
@@ -135,7 +150,9 @@ export default function EditRecipeScreen() {
             <TextInput
               style={[styles.title, styles.input]}
               value={editedRecipe.title}
-              onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, title: text } : null)}
+              onChangeText={(text) =>
+                setEditedRecipe((prev) => (prev ? { ...prev, title: text } : null))
+              }
               onBlur={() => stopEditing('title')}
               autoFocus
             />
@@ -157,7 +174,7 @@ export default function EditRecipeScreen() {
                   value={String(editedRecipe.time)}
                   onChangeText={(text) => {
                     const numValue = parseInt(text) || 0;
-                    setEditedRecipe(prev => prev ? { ...prev, time: numValue } : null);
+                    setEditedRecipe((prev) => (prev ? { ...prev, time: numValue } : null));
                   }}
                   onBlur={() => stopEditing('time')}
                   keyboardType="numeric"
@@ -180,7 +197,7 @@ export default function EditRecipeScreen() {
                   value={String(editedRecipe.servings)}
                   onChangeText={(text) => {
                     const numValue = parseInt(text) || 0;
-                    setEditedRecipe(prev => prev ? { ...prev, servings: numValue } : null);
+                    setEditedRecipe((prev) => (prev ? { ...prev, servings: numValue } : null));
                   }}
                   onBlur={() => stopEditing('servings')}
                   keyboardType="numeric"
@@ -202,10 +219,7 @@ export default function EditRecipeScreen() {
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
             ))}
-            <TouchableOpacity
-              style={styles.manageTag}
-              onPress={() => setIsTagManagerVisible(true)}
-            >
+            <TouchableOpacity style={styles.manageTag} onPress={() => setIsTagManagerVisible(true)}>
               <MaterialIcons name="settings" size={16} color="white" />
               <Text style={styles.tagText}>Manage</Text>
             </TouchableOpacity>
@@ -216,7 +230,7 @@ export default function EditRecipeScreen() {
             onClose={() => setIsTagManagerVisible(false)}
             tags={editedRecipe.tags || []}
             onUpdateTags={(newTags) => {
-              setEditedRecipe(prev => prev ? { ...prev, tags: newTags } : null);
+              setEditedRecipe((prev) => (prev ? { ...prev, tags: newTags } : null));
             }}
           />
 
@@ -236,8 +250,8 @@ export default function EditRecipeScreen() {
               <Text style={styles.sectionTitle}>Ingredients</Text>
             </View>
             {editedRecipe.ingredients?.map((ingredient, index) => (
-              <View 
-                key={index} 
+              <View
+                key={index}
                 style={[
                   styles.ingredient,
                   index % 2 === 0 ? styles.ingredientBrown : styles.ingredientBeige,
@@ -248,31 +262,39 @@ export default function EditRecipeScreen() {
                     style={[
                       styles.ingredientText,
                       styles.input,
-                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige,
                     ]}
                     value={ingredient}
                     onChangeText={(text) => {
                       const newIngredients = [...(editedRecipe.ingredients || [])];
                       newIngredients[index] = text;
-                      setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
+                      setEditedRecipe((prev) =>
+                        prev ? { ...prev, ingredients: newIngredients } : null,
+                      );
                     }}
                     onBlur={() => stopEditing(`ingredient_${index}`)}
                     autoFocus
                   />
                 ) : (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.editableRow}
                     onPress={() => startEditing(`ingredient_${index}`)}
                   >
-                    <Text style={[
-                      styles.ingredientText,
-                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                    ]}>• {ingredient}</Text>
+                    <Text
+                      style={[
+                        styles.ingredientText,
+                        index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige,
+                      ]}
+                    >
+                      • {ingredient}
+                    </Text>
                     <TouchableOpacity
                       onPress={() => {
                         const newIngredients = [...(editedRecipe.ingredients || [])];
                         newIngredients.splice(index, 1);
-                        setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
+                        setEditedRecipe((prev) =>
+                          prev ? { ...prev, ingredients: newIngredients } : null,
+                        );
                       }}
                       style={styles.removeButton}
                     >
@@ -286,7 +308,7 @@ export default function EditRecipeScreen() {
               style={[styles.addButton, styles.ingredientBrown]}
               onPress={() => {
                 const newIngredients = [...(editedRecipe.ingredients || []), ''];
-                setEditedRecipe(prev => prev ? { ...prev, ingredients: newIngredients } : null);
+                setEditedRecipe((prev) => (prev ? { ...prev, ingredients: newIngredients } : null));
                 startEditing(`ingredient_${newIngredients.length - 1}`);
               }}
             >
@@ -304,7 +326,7 @@ export default function EditRecipeScreen() {
               <Text style={styles.sectionTitle}>Instructions</Text>
             </View>
             {editedRecipe.instructions?.map((instruction, index) => (
-              <View 
+              <View
                 key={index}
                 style={[
                   styles.instruction,
@@ -316,32 +338,40 @@ export default function EditRecipeScreen() {
                     style={[
                       styles.instructionText,
                       styles.input,
-                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
+                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige,
                     ]}
                     value={instruction}
                     onChangeText={(text) => {
                       const newInstructions = [...(editedRecipe.instructions || [])];
                       newInstructions[index] = text;
-                      setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
+                      setEditedRecipe((prev) =>
+                        prev ? { ...prev, instructions: newInstructions } : null,
+                      );
                     }}
                     onBlur={() => stopEditing(`instruction_${index}`)}
                     autoFocus
                     multiline
                   />
                 ) : (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.editableRow}
                     onPress={() => startEditing(`instruction_${index}`)}
                   >
-                    <Text style={[
-                      styles.instructionText,
-                      index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige
-                    ]}>{index + 1}. {instruction}</Text>
+                    <Text
+                      style={[
+                        styles.instructionText,
+                        index % 2 === 0 ? styles.textOnBrown : styles.textOnBeige,
+                      ]}
+                    >
+                      {index + 1}. {instruction}
+                    </Text>
                     <TouchableOpacity
                       onPress={() => {
                         const newInstructions = [...(editedRecipe.instructions || [])];
                         newInstructions.splice(index, 1);
-                        setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
+                        setEditedRecipe((prev) =>
+                          prev ? { ...prev, instructions: newInstructions } : null,
+                        );
                       }}
                       style={styles.removeButton}
                     >
@@ -355,7 +385,9 @@ export default function EditRecipeScreen() {
               style={[styles.addButton, styles.ingredientBrown]}
               onPress={() => {
                 const newInstructions = [...(editedRecipe.instructions || []), ''];
-                setEditedRecipe(prev => prev ? { ...prev, instructions: newInstructions } : null);
+                setEditedRecipe((prev) =>
+                  prev ? { ...prev, instructions: newInstructions } : null,
+                );
                 startEditing(`instruction_${newInstructions.length - 1}`);
               }}
             >
@@ -377,7 +409,9 @@ export default function EditRecipeScreen() {
                 <TextInput
                   style={[styles.notesText, styles.input, styles.textOnBrown]}
                   value={editedRecipe.notes || ''}
-                  onChangeText={(text) => setEditedRecipe(prev => prev ? { ...prev, notes: text } : null)}
+                  onChangeText={(text) =>
+                    setEditedRecipe((prev) => (prev ? { ...prev, notes: text } : null))
+                  }
                   onBlur={() => stopEditing('notes')}
                   multiline
                   autoFocus

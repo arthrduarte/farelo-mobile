@@ -1,4 +1,14 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Recipe } from '@/types/db';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -7,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
-import { useRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useRecipe, useUpdateRecipe } from '@/hooks/recipes';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Divider } from '@/components/Divider';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,14 +31,14 @@ export default function FinishRecipeScreen() {
   const { profile } = useAuth();
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
   const updateRecipeMutation = useUpdateRecipe();
-  
+
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const imagePicker = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
@@ -38,38 +48,37 @@ export default function FinishRecipeScreen() {
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
     }
-  }
+  };
 
   const saveImage = async (image: string, profileId: string): Promise<string> => {
     try {
       const base64 = await FileSystem.readAsStringAsync(image, {
         encoding: FileSystem.EncodingType.Base64,
       });
-      
-      const fileExt = image.split('.').pop()?.toLowerCase() ?? 'jpeg'; 
-      const contentType = `image/${fileExt}`; 
-      const fileName = `${profileId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`; 
-      
+
+      const fileExt = image.split('.').pop()?.toLowerCase() ?? 'jpeg';
+      const contentType = `image/${fileExt}`;
+      const fileName = `${profileId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('log.images')
-        .upload(fileName, decode(base64), { contentType }); 
+        .upload(fileName, decode(base64), { contentType });
 
       if (uploadError) {
         console.error(`Supabase Upload Error for ${fileName}:`, uploadError);
-        throw uploadError; 
+        throw uploadError;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('log.images')
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('log.images').getPublicUrl(fileName);
 
       return publicUrl;
-      
     } catch (fileProcessingError) {
-        console.error(`Error processing or uploading file ${image}:`, fileProcessingError);
-        throw fileProcessingError; 
+      console.error(`Error processing or uploading file ${image}:`, fileProcessingError);
+      throw fileProcessingError;
     }
-  }
+  };
 
   const handleNewLog = async () => {
     if (!recipe || !profile) return;
@@ -86,33 +95,31 @@ export default function FinishRecipeScreen() {
         logImage = recipe.ai_image_url;
       }
 
-      const updatedNotes = recipe.notes ? recipe.notes + " | " + notes : notes; 
+      const updatedNotes = recipe.notes ? recipe.notes + ' | ' + notes : notes;
       await updateRecipeMutation.mutateAsync({
         ...recipe,
         notes: notes ? updatedNotes : recipe.notes,
       });
 
-      const { error: logError } = await supabase
-        .from('logs')
-        .insert({
-          profile_id: profile.id,
-          recipe_id: recipe.id,
-          description: description || null,
-          images: logImage ? [logImage] : [recipe.ai_image_url],
-        });
+      const { error: logError } = await supabase.from('logs').insert({
+        profile_id: profile.id,
+        recipe_id: recipe.id,
+        description: description || null,
+        images: logImage ? [logImage] : [recipe.ai_image_url],
+      });
 
       if (logError) {
-        console.error("Supabase Insert Log Error:", logError);
-        throw new Error(logError.message); 
+        console.error('Supabase Insert Log Error:', logError);
+        throw new Error(logError.message);
       }
 
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('Error in handleNewLog:', error); 
+      console.error('Error in handleNewLog:', error);
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -165,8 +172,8 @@ export default function FinishRecipeScreen() {
             {selectedImage ? (
               <View style={styles.imageWrapper}>
                 <Image source={{ uri: selectedImage }} style={styles.recipeImage} />
-                <TouchableOpacity 
-                  style={styles.removeButton} 
+                <TouchableOpacity
+                  style={styles.removeButton}
                   onPress={() => setSelectedImage(null)}
                 >
                   <MaterialIcons name="close" size={20} color="#793206" />
@@ -176,7 +183,9 @@ export default function FinishRecipeScreen() {
               <TouchableOpacity style={styles.uploadButton} onPress={imagePicker}>
                 <MaterialIcons name="add-a-photo" size={24} color="#793206" />
                 <Text style={styles.uploadButtonText}>Upload Photo</Text>
-                <Text style={{ fontSize: 14, color: '#79320680' }}>If you don't upload a photo we'll use the recipe's image</Text>
+                <Text style={{ fontSize: 14, color: '#79320680' }}>
+                  If you don't upload a photo we'll use the recipe's image
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -200,17 +209,15 @@ export default function FinishRecipeScreen() {
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.logButton, isSubmitting && styles.disabledButton]} 
+            <TouchableOpacity
+              style={[styles.logButton, isSubmitting && styles.disabledButton]}
               onPress={handleNewLog}
               disabled={isSubmitting}
             >
-              <Text style={styles.logButtonText}>
-                {isSubmitting ? 'Saving...' : 'Log'}
-              </Text>
+              <Text style={styles.logButtonText}>{isSubmitting ? 'Saving...' : 'Log'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.discardButton} 
+            <TouchableOpacity
+              style={styles.discardButton}
               onPress={() => router.back()}
               disabled={isSubmitting}
             >

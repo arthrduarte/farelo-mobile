@@ -1,11 +1,20 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import RemixModal from '@/components/recipe/RemixModal';
-import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/recipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { IngredientsSection } from '@/components/recipe/IngredientsSection';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -20,7 +29,6 @@ export default function RecipeShareScreen() {
   const { recipeId } = useLocalSearchParams();
   const { profile } = useAuth();
   const { data: recipe, isLoading, isError } = useRecipe(recipeId as string, profile?.id);
-
 
   if (isLoading) {
     return (
@@ -43,7 +51,6 @@ export default function RecipeShareScreen() {
 
   return (
     <ThemedView style={styles.container}>
-
       <ScreenHeader title="Shared Recipe" showBackButton={true} />
 
       <ScrollView style={{ padding: 16 }} showsVerticalScrollIndicator={false}>

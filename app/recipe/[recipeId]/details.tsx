@@ -1,11 +1,22 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Share, Alert, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Share,
+  Alert,
+  Animated,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useRef } from 'react';
 import { Recipe } from '@/types/db';
 import { ThemedView } from '@/components/ThemedView';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import RemixModal from '@/components/recipe/RemixModal';
-import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/useRecipes';
+import { useRecipe, useDeleteRecipe, useUpdateRecipe } from '@/hooks/recipes';
 import { useAuth } from '@/contexts/AuthContext';
 import { IngredientsSection } from '@/components/recipe/IngredientsSection';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -33,7 +44,7 @@ export default function RecipeDetailsScreen() {
       toValue,
       useNativeDriver: true,
       tension: 65,
-      friction: 11
+      friction: 11,
     }).start();
     setIsDrawerOpen(!isDrawerOpen);
   };
@@ -55,14 +66,14 @@ export default function RecipeDetailsScreen() {
       [
         {
           text: 'Cancel',
-          style: 'cancel'
+          style: 'cancel',
         },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => handleDelete(recipe!)
-        }
-      ]
+          onPress: () => handleDelete(recipe!),
+        },
+      ],
     );
   };
 
@@ -73,7 +84,7 @@ export default function RecipeDetailsScreen() {
 
   const handleEdit = () => {
     toggleDrawer();
-    router.push(`/recipe/${recipeId}/edit` as any);
+    router.push(`/recipe/${recipeId}/edit`);
   };
 
   const handleShare = () => {
@@ -135,22 +146,27 @@ export default function RecipeDetailsScreen() {
         recipe={recipe}
       />
 
-      <ScreenHeader 
-        title="Recipe Details" 
-        showBackButton={true} 
+      <ScreenHeader
+        title="Recipe Details"
+        showBackButton={true}
         rightItem={
           <>
-          <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-            <TouchableOpacity style={styles.logButton} onPress={() => router.push({
-              pathname: '/recipe/[recipeId]/finish',
-              params: { recipeId: recipe.id }
-            })}>
-              <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Log</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleDrawer}>
-              <MaterialIcons name="more-vert" size={24} color="#793206" />
-            </TouchableOpacity>
-          </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                style={styles.logButton}
+                onPress={() =>
+                  router.push({
+                    pathname: '/recipe/[recipeId]/finish',
+                    params: { recipeId: recipe.id },
+                  })
+                }
+              >
+                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Log</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={toggleDrawer}>
+                <MaterialIcons name="more-vert" size={24} color="#793206" />
+              </TouchableOpacity>
+            </View>
           </>
         }
       />
