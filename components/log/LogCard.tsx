@@ -115,9 +115,18 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
 
       <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
         <View style={styles.interactionsContainer}>
-          <Text style={styles.interactionsAmount}>
-            {likeCount} {likeCount === 1 ? 'like' : 'likes'}
-          </Text>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: '/log/[logId]/likes',
+                params: { logId: log.id },
+              })
+            }
+          >
+            <Text style={styles.interactionsAmount}>
+              {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
               router.push({
