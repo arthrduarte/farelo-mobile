@@ -5,7 +5,7 @@ import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLikes } from '@/hooks/useLikes';
+import { useLogLikes } from '@/hooks/likes';
 import { useCopyRecipe } from '@/hooks/recipes';
 import { Divider } from '@/components/Divider';
 import { EnhancedLog } from '@/types/types';
@@ -21,7 +21,7 @@ type LogCardProps = {
 export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   const { profile } = useAuth();
 
-  const { isLiked, likeCount, toggleLike } = useLikes({
+  const { isLiked, likeCount, toggleLike } = useLogLikes({
     initialIsLiked: log.likes.some((like) => like.profile_id === profile?.id),
     initialLikeCount: log.likes?.length || 0,
     logId: log.id,
