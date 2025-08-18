@@ -20,6 +20,7 @@ import { useState } from 'react';
 import 'react-native-url-polyfill/auto';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useUpdateProfile } from '@/hooks/profile/useUpdateProfile';
+import { compressImage } from '@/utils/imageCompressor';
 
 export default function EditProfile() {
   const { profile, refreshProfile } = useAuth();
@@ -40,7 +41,17 @@ export default function EditProfile() {
     });
 
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
+      try {
+        const compressedUri = await compressImage(result.assets[0].uri, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.8,
+        });
+        setSelectedImage(compressedUri);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        setSelectedImage(result.assets[0].uri);
+      }
     }
   };
 

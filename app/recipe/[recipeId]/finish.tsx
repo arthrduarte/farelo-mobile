@@ -25,6 +25,7 @@ import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 import 'react-native-url-polyfill/auto';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { compressImage } from '@/utils/imageCompressor';
 
 export default function FinishRecipeScreen() {
   const { recipeId } = useLocalSearchParams();
@@ -46,7 +47,17 @@ export default function FinishRecipeScreen() {
     });
 
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
+      try {
+        const compressedUri = await compressImage(result.assets[0].uri, {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.7,
+        });
+        setSelectedImage(compressedUri);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        setSelectedImage(result.assets[0].uri);
+      }
     }
   };
 
