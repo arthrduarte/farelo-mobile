@@ -20,6 +20,7 @@ import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 import Purchases from 'react-native-purchases';
 import { usePaywall } from '@/contexts/PaywallContext';
+import { compressImage } from '@/utils/imageCompressor';
 
 export default function SelectGallery() {
   const { profile } = useAuth();
@@ -174,9 +175,23 @@ export default function SelectGallery() {
       });
 
       if (!result.canceled) {
-        const newImages = result.assets.map((asset) => asset.uri);
+        const compressedImages = await Promise.all(
+          result.assets.map(async (asset) => {
+            try {
+              return await compressImage(asset.uri, {
+                maxWidth: 1024,
+                maxHeight: 1024,
+                quality: 0.8,
+              });
+            } catch (error) {
+              console.error('Error compressing image:', error);
+              return asset.uri;
+            }
+          }),
+        );
+
         setSelectedImages((prev) => {
-          const combined = [...prev, ...newImages];
+          const combined = [...prev, ...compressedImages];
           return combined.slice(0, 3); // Ensure we never exceed 3 images
         });
       }
