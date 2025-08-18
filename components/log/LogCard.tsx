@@ -5,14 +5,15 @@ import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLogLikes } from '@/hooks/likes';
+import { useLogLikes, useLikesForLog } from '@/hooks/likes';
 import { useCopyRecipe } from '@/hooks/recipes';
 import { Divider } from '@/components/Divider';
 import { EnhancedLog } from '@/types/types';
 import { LogImage } from './LogImage';
-import { Log, Profile } from '@/types/db';
+import { Profile } from '@/types/db';
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
 import Avatar from '@/components/ui/Avatar';
+import { LikeAvatars } from './LikeAvatars';
 
 type LogCardProps = {
   log: EnhancedLog;
@@ -26,6 +27,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
     initialLikeCount: log.likes?.length || 0,
     logId: log.id,
   });
+  const { data: likesProfiles } = useLikesForLog(log.id);
   const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
 
   const [profileData, setProfileData] = useState(log.profile);
@@ -122,7 +124,9 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
                 params: { logId: log.id },
               })
             }
+            style={styles.likesDisplay}
           >
+            <LikeAvatars profiles={likesProfiles || []} />
             <Text style={styles.interactionsAmount}>
               {likeCount} {likeCount === 1 ? 'like' : 'likes'}
             </Text>
@@ -262,6 +266,10 @@ const styles = StyleSheet.create({
   interactionsAmount: {
     fontSize: 12,
     color: '#793206',
+  },
+  likesDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   actions: {
     flexDirection: 'row',
