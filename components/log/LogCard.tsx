@@ -5,14 +5,15 @@ import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLikes } from '@/hooks/useLikes';
+import { useLogLikes, useLikesForLog } from '@/hooks/likes';
 import { useCopyRecipe } from '@/hooks/recipes';
 import { Divider } from '@/components/Divider';
 import { EnhancedLog } from '@/types/types';
 import { LogImage } from './LogImage';
-import { Log, Profile } from '@/types/db';
+import { Profile } from '@/types/db';
 import { profileUpdateEmitter, PROFILE_UPDATED } from '@/contexts/AuthContext';
 import Avatar from '@/components/ui/Avatar';
+import { LikeAvatars } from './LikeAvatars';
 
 type LogCardProps = {
   log: EnhancedLog;
@@ -21,11 +22,12 @@ type LogCardProps = {
 export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   const { profile } = useAuth();
 
-  const { isLiked, likeCount, toggleLike } = useLikes({
+  const { isLiked, likeCount, toggleLike } = useLogLikes({
     initialIsLiked: log.likes.some((like) => like.profile_id === profile?.id),
     initialLikeCount: log.likes?.length || 0,
     logId: log.id,
   });
+  const { data: likesProfiles } = useLikesForLog(log.id);
   const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
 
   const [profileData, setProfileData] = useState(log.profile);
@@ -115,9 +117,20 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
 
       <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
         <View style={styles.interactionsContainer}>
-          <Text style={styles.interactionsAmount}>
-            {likeCount} {likeCount === 1 ? 'like' : 'likes'}
-          </Text>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: '/log/[logId]/likes',
+                params: { logId: log.id },
+              })
+            }
+            style={styles.likesDisplay}
+          >
+            <LikeAvatars profiles={likesProfiles || []} />
+            <Text style={styles.interactionsAmount}>
+              {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
               router.push({
@@ -253,6 +266,10 @@ const styles = StyleSheet.create({
   interactionsAmount: {
     fontSize: 12,
     color: '#793206',
+  },
+  likesDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   actions: {
     flexDirection: 'row',
