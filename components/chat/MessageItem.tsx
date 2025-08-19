@@ -8,7 +8,7 @@ type MessageItemProps = {
     message: string;
     timestamp: string;
   };
-  userAvatar?: string;
+  userAvatar?: string | undefined;
 };
 
 export const MessageItem: React.FC<MessageItemProps> = ({ message, userAvatar }) => {

@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  View,
+  Image,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRevenueCat } from '@/contexts/RevenueCatContext';
 import { router } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { RECIPE_KEYS } from '@/hooks/useRecipes';
+import { RECIPE_KEYS } from '@/hooks/recipes';
 import { supabase } from '@/lib/supabase';
 import { Recipe } from '@/types/db';
 import Purchases from 'react-native-purchases';
-import { usePaywall } from "@/contexts/PaywallContext";
+import { usePaywall } from '@/contexts/PaywallContext';
+import { compressImage } from '@/utils/imageCompressor';
 
 export default function SelectGallery() {
   const { profile } = useAuth();
@@ -20,11 +30,7 @@ export default function SelectGallery() {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
-  const uploadSteps = [
-    "Reading recipe...",
-    "Formatting recipe...",
-    "Creating image..."
-  ];
+  const uploadSteps = ['Reading recipe...', 'Formatting recipe...', 'Creating image...'];
 
   // Effect to handle loading step changes
   useEffect(() => {
@@ -35,11 +41,11 @@ export default function SelectGallery() {
 
     const timers = [
       setTimeout(() => setUploadStep(1), 5000),
-      setTimeout(() => setUploadStep(2), 10000)
+      setTimeout(() => setUploadStep(2), 10000),
     ];
 
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
+      timers.forEach((timer) => clearTimeout(timer));
     };
   }, [isUploading]);
 
@@ -50,25 +56,25 @@ export default function SelectGallery() {
       // Create form data
       const formData = new FormData();
       formData.append('profile_id', profile.id);
-      
+
       // Append each image
       images.forEach((uri, index) => {
         const filename = uri.split('/').pop() || `image${index}.jpg`;
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image/jpeg';
-        
+
         formData.append('images', {
           uri,
           name: filename,
           type,
-        } as any);
+        } as unknown as Blob);
       });
 
       const response = await fetch('https://usefarelo.com/api/recipes/import/images', {
         method: 'POST',
         body: formData,
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           // Note: Don't set Content-Type header, it's automatically set with boundary
         },
       });
@@ -101,13 +107,10 @@ export default function SelectGallery() {
     },
     onSuccess: (newRecipe) => {
       // Update the recipes list cache
-      queryClient.setQueryData<Recipe[]>(
-        RECIPE_KEYS.list(newRecipe.profile_id),
-        (oldRecipes) => {
-          if (!oldRecipes) return [newRecipe];
-          return [newRecipe, ...oldRecipes];
-        }
-      );
+      queryClient.setQueryData<Recipe[]>(RECIPE_KEYS.list(newRecipe.profile_id), (oldRecipes) => {
+        if (!oldRecipes) return [newRecipe];
+        return [newRecipe, ...oldRecipes];
+      });
 
       // Navigate to the recipe details
       router.replace(`/recipe/${newRecipe.id}/details`);
@@ -115,7 +118,7 @@ export default function SelectGallery() {
     onError: (error: Error) => {
       console.error('Import mutation error:', error);
       Alert.alert('Error', error.message);
-    }
+    },
   });
 
   const handleSubmission = async () => {
@@ -172,9 +175,23 @@ export default function SelectGallery() {
       });
 
       if (!result.canceled) {
-        const newImages = result.assets.map(asset => asset.uri);
-        setSelectedImages(prev => {
-          const combined = [...prev, ...newImages];
+        const compressedImages = await Promise.all(
+          result.assets.map(async (asset) => {
+            try {
+              return await compressImage(asset.uri, {
+                maxWidth: 1024,
+                maxHeight: 1024,
+                quality: 0.8,
+              });
+            } catch (error) {
+              console.error('Error compressing image:', error);
+              return asset.uri;
+            }
+          }),
+        );
+
+        setSelectedImages((prev) => {
+          const combined = [...prev, ...compressedImages];
           return combined.slice(0, 3); // Ensure we never exceed 3 images
         });
       }
@@ -185,61 +202,55 @@ export default function SelectGallery() {
   };
 
   const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
     <>
-      <ScrollView 
+      <ScrollView
         horizontal={selectedImages.length > 0}
-        showsHorizontalScrollIndicator={false} 
+        showsHorizontalScrollIndicator={false}
         style={styles.scrollView}
         contentContainerStyle={selectedImages.length === 0 && styles.scrollViewEmpty}
       >
         {selectedImages.map((uri, index) => (
           <View key={index} style={styles.imageContainer}>
             <Image source={{ uri }} style={styles.selectedImage} />
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => removeImage(index)}
-            >
+            <TouchableOpacity style={styles.removeButton} onPress={() => removeImage(index)}>
               <MaterialIcons name="close" size={20} color="#793206" />
             </TouchableOpacity>
           </View>
         ))}
         {selectedImages.length < 3 && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.placeholderContainer,
-              selectedImages.length === 0 && styles.placeholderContainerFullWidth
-            ]} 
+              selectedImages.length === 0 && styles.placeholderContainerFullWidth,
+            ]}
             onPress={pickImages}
             activeOpacity={0.7}
           >
             <MaterialIcons name="photo-library" size={48} color="#79320680" />
             <Text style={styles.placeholderText}>
-              {selectedImages.length === 0 
+              {selectedImages.length === 0
                 ? 'Tap to select images'
-                : `Add ${3 - selectedImages.length} more image${3 - selectedImages.length > 1 ? 's' : ''}`
-              }
+                : `Add ${3 - selectedImages.length} more image${3 - selectedImages.length > 1 ? 's' : ''}`}
             </Text>
           </TouchableOpacity>
         )}
       </ScrollView>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
           styles.uploadButton,
-          (selectedImages.length === 0 || isUploading) && styles.uploadButtonDisabled
-        ]} 
+          (selectedImages.length === 0 || isUploading) && styles.uploadButtonDisabled,
+        ]}
         onPress={handleSubmission}
         disabled={selectedImages.length === 0 || isUploading}
       >
         {isUploading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#EDE4D2" />
-            <Text style={styles.uploadButtonText}>
-              {uploadSteps[uploadStep]}
-            </Text>
+            <Text style={styles.uploadButtonText}>{uploadSteps[uploadStep]}</Text>
           </View>
         ) : (
           <Text style={styles.uploadButtonText}>Continue</Text>

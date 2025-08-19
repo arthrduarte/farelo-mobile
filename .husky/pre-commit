@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+# Run lint-staged on staged files before committing
+npx --no -- lint-staged
+
+

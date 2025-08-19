@@ -1,10 +1,17 @@
-import { StyleSheet, TouchableOpacity, Platform, View, FlatList, Text } from 'react-native';
+import {
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  View,
+  FlatList,
+  Text,
+  ActivityIndicator,
+} from 'react-native';
 import { LogCard } from '@/components/log/LogCard';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLogs } from '@/hooks/useLogs';
-import { useRecipes } from '@/hooks/useRecipes';
+import { useInfiniteFeedLogs } from '@/hooks/logs';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
@@ -12,25 +19,27 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { WhoToFollow } from '@/components/home/WhoToFollow';
 import { Introduction } from '@/components/home/Introduction';
+import { EnhancedLog } from '@/types/types';
 
 export default function HomeScreen() {
   const { profile } = useAuth();
-  const { feed, profileLogs, profileLogsLoading, refreshProfileLogs, refresh: refreshFeed } = useLogs(profile?.id ?? '');
-  const { data: recipes, isLoading: isLoadingRecipes } = useRecipes(profile?.id ?? '');
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+    useInfiniteFeedLogs(profile?.id ?? '');
+
+  const feed = data?.pages.flat() ?? [];
 
   useFocusEffect(
     useCallback(() => {
       if (profile?.id) {
-        refreshFeed();
+        refetch();
       }
-      return () => {
-      };
-    }, [profile?.id, refreshFeed])
+      return () => {};
+    }, [profile?.id, refetch]),
   );
 
   const EmptyFeedComponent = () => (
     <>
-      <Introduction refreshFeed={refreshFeed} />
+      <Introduction refreshFeed={refetch} />
       <WhoToFollow />
       <LogLoader />
       <View style={styles.emptyContainer}>
@@ -38,10 +47,7 @@ export default function HomeScreen() {
           Follow people or start a recipe to see logs in your feed.
         </Text>
         <View style={styles.emptyActions}>
-          <TouchableOpacity 
-            style={styles.actionButton} 
-            onPress={() => router.push('/new-recipe')}
-          >
+          <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/new-recipe')}>
             <Text style={styles.actionButtonText}>Add Recipe</Text>
           </TouchableOpacity>
         </View>
@@ -52,20 +58,34 @@ export default function HomeScreen() {
   const LoadingComponent = () => (
     <>
       <LogLoader />
-      <Text style={styles.errorText}>If your app is stuck on loading, please restart it. We're working on fixing this issue!</Text>
+      <Text style={styles.errorText}>
+        If your app is stuck on loading, please restart it. We're working on fixing this issue!
+      </Text>
       <LogLoader />
       <LogLoader />
     </>
   );
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
+  const LoadMoreComponent = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.loadMoreContainer}>
+        <ActivityIndicator size="large" color="#793206" />
+      </View>
+    );
+  };
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  const renderItem = ({ item, index }: { item: EnhancedLog; index: number }) => {
     const isFirstItem = index === 0;
     return (
       <>
-        <LogCard 
-          key={item.id}
-          log={item}
-        />
+        <LogCard key={item.id} log={item} />
         {isFirstItem && <WhoToFollow />}
       </>
     );
@@ -73,7 +93,8 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Home" 
+      <ScreenHeader
+        title="Home"
         rightItem={
           <TouchableOpacity onPress={() => router.push('/search')}>
             <Feather name="search" size={24} color="#793206" />
@@ -81,14 +102,17 @@ export default function HomeScreen() {
         }
       />
 
-      <FlatList 
+      <FlatList
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         data={feed}
         renderItem={renderItem}
-        onRefresh={refreshFeed}
-        refreshing={profileLogsLoading}
-        ListEmptyComponent={profileLogsLoading ? LoadingComponent : EmptyFeedComponent}
+        onRefresh={refetch}
+        refreshing={isLoading}
+        ListEmptyComponent={isLoading ? LoadingComponent : EmptyFeedComponent}
+        ListFooterComponent={LoadMoreComponent}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.1}
       />
     </ThemedView>
   );
@@ -150,5 +174,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });

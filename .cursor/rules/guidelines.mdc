@@ -1,0 +1,146 @@
+---
+alwaysApply: true
+---
+## Farelo code guidance for Claude Code
+
+This document tailors your actions to this Expo React Native app.
+
+### Essential commands
+
+- `npm run start` – Expo dev server
+- `npm run android` – Run Android dev build (requires configured dev client)
+- `npm run ios` – Run iOS dev build (requires configured dev client)
+- `npm run web` – Run on web via Expo
+- `npm run typecheck` – TypeScript check
+- `npm run lint` – ESLint
+- `npm run lint:fix` – ESLint with fixes
+- `npm run format` / `npm run format:check` – Prettier
+
+### Tech stack
+
+- Mobile framework: Expo React Native (React 18, RN 0.76)
+- Routing: Expo Router (file-based routing in `app/`)
+- Auth & DB: Supabase (Auth + Postgres)
+- Server state: TanStack Query v5
+- Payments: RevenueCat (via `react-native-purchases`)
+- Media: Expo Image Picker, File System
+- Tooling: ESLint 9, Prettier, Husky, Jest (jest-expo)
+
+### Core domain and UX
+
+- Users save and share recipes via: manual input, link import (AI), or photo import (AI).
+- Each recipe has ingredients, instructions, time, tags, images, notes, and chat history.
+- Social feed shows friends’ logs; users can like, comment, follow, and block.
+- Cooking mode provides step-by-step checklists and creates logs on finish.
+
+Before starting major work, review `types/db.ts` for the schema of `Recipe`, `Profile`, `Log`, `Follow`, `Block`, etc.
+
+### Navigation and routes
+
+Expo Router defines screens in `app/`. Key entries set in `app/_layout.tsx`:
+
+- Tabs: `app/(tabs)/{index.tsx, recipes.tsx, profile.tsx}`
+- Onboarding: `app/onboarding/{index.tsx, login.tsx, register.tsx}`
+- Recipe flow: `app/recipe/[recipeId]/{details.tsx, edit.tsx, start.tsx, finish.tsx, chat.tsx, share.tsx}`
+- Log flow: `app/log/[logId]/{details.tsx, comments.tsx}`
+- Settings: `app/settings/{main.tsx, account/{email.tsx,password.tsx}, blocked.tsx}`
+- Profile: `app/profile/{[id].tsx, edit.tsx, followers.tsx, following.tsx}`
+- Misc: `app/new-recipe.tsx`, `app/search.tsx`, `app/report.tsx`
+
+The root layout wires providers and navigation, and redirects based on auth state.
+
+### Data and services pattern
+
+- Prefer data access via Supabase from hooks/services, not inside UI components.
+- Use TanStack Query hooks for server state. Example keys pattern: see `hooks/useRecipes.ts` (`RECIPE_KEYS`).
+- Stale time and retry defaults are set in `app/_layout.tsx` (staleTime 5min, retry 2).
+- Organize remote logic in:
+  - `services/` – thin functions that call Supabase (e.g., `services/blocks.ts`)
+  - `actions/` – orchestration functions invoked by hooks (e.g., `actions/blocks/*`)
+  - `hooks/` – React Query hooks that wrap actions/services (e.g., `hooks/blocks/*`)
+
+### Auth and contexts
+
+- `contexts/AuthContext.tsx` owns Supabase session, user, and `Profile`. It subscribes to auth state changes and logs users into RevenueCat when profile is loaded.
+- Other providers: `RevenueCatContext`, `PaywallContext`, and React Query `QueryClientProvider` are set in `app/_layout.tsx`.
+
+### Environment configuration
+
+Client-visible variables must be prefixed with `EXPO_PUBLIC_`. `configs/env.ts` enforces presence at runtime:
+
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- `EXPO_PUBLIC_REVENUECAT_API_KEY_IOS`
+- `EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID`
+
+If AI calls are needed, they should be proxied through secure backend endpoints or edge functions; do not embed secret keys in the client.
+
+### UI and design conventions
+
+- Colors (from `constants/Colors.ts`):
+  - BROWN main: `#793206` (use `#79320633` for low opacity)
+  - BEIGE secondary/background: `#EDE4D2`
+- Titles use font size 20.
+- Every component must have a skeleton loader. Avoid placeholders/spinners.
+  - Existing examples: `components/RecipeSkeletonLoader.tsx`, `components/log/LogLoader.tsx`, `components/BlockedUsersSkeletonLoader.tsx`.
+  - Co-locate new skeletons next to their components or in the most relevant subfolder.
+
+### Code style
+
+- Use arrow functions for components, hooks, and utilities.
+- Component structure order:
+  1. refs
+  2. state
+  3. custom hooks (React Query, contexts)
+  4. derived/memoized values
+  5. event handlers
+  6. effects
+  7. return JSX
+- Export conventions:
+  - Components: default export
+  - Hooks/utilities: named exports
+- TypeScript:
+  - Let components’ return types be inferred
+  - Add explicit return types for exported hooks/utilities
+  - Avoid `any`; prefer `unknown` and narrow
+
+### Error handling and logging
+
+- Use meaningful error messages in services/actions; surface errors in hooks for UI to handle.
+- Prefer React Query’s error states over `try/catch` in components.
+- Console logging is acceptable during development; remove noisy logs before release.
+
+### Testing
+
+- Jest is configured with `jest-expo`. Write focused tests for utilities, hooks, and pure services.
+
+### Import aliases
+
+Configured in `tsconfig.json`:
+
+- `@/*` → project root
+- `@components/*`, `@utils/*`, `@constants/*`, `@types/*`
+
+### Performance notes
+
+- Cache with React Query and keep staleTime aligned with UX needs.
+- Always provide skeleton loaders to avoid layout shifts.
+- Avoid heavy synchronous work on the UI thread; offload where possible.
+
+### Contribution checklist
+
+- Add a skeleton loader for any new screen or major component.
+- Follow services → actions → hooks layering.
+- Use existing query keys patterns and invalidate or update cache on mutations.
+- Respect theme colors and title size 20 in new UI.
+- Add required `EXPO_PUBLIC_*` env vars and keep secrets off the client.
+
+### Quick references
+
+- Auth: `contexts/AuthContext.tsx`
+- Recipes hooks: `hooks/useRecipes.ts`
+- Blocks: `services/blocks.ts`, `actions/blocks/*`, `hooks/blocks/*`
+- Colors: `constants/Colors.ts`
+- Env: `configs/env.ts`
+
+

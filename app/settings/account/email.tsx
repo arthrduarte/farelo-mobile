@@ -1,63 +1,54 @@
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
-import { ThemedView } from "@/components/ThemedView";
-import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { ThemedView } from '@/components/ThemedView';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { router } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { useChangeEmail } from '@/hooks/auth/useChangeEmail';
 
 export default function ChangeEmail() {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { profile, refreshProfile } = useAuth();
+  const { profile } = useAuth();
+  const changeEmailMutation = useChangeEmail();
 
-  const handleChangeEmail = async () => {
-    if (!email) {
-      Alert.alert("Error", "Please enter a new email address");
-      return;
-    }
-
-    if (email === profile?.email) {
-      Alert.alert("Error", "New email must be different from current email");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const { error } = await supabase.auth.updateUser({ 
-        email: email 
-      });
-
-      if (error) {
-        Alert.alert("Error", error.message);
-        return;
-      }
-
-      Alert.alert(
-        "Success", 
-        "A confirmation email has been sent to your new email address. Please check your inbox and follow the instructions to complete the change.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back()
-          }
-        ]
-      );
-
-    } catch (error) {
-      console.error("Error changing email:", error);
-      Alert.alert("Error", "An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
+  const handleChangeEmail = () => {
+    changeEmailMutation.mutate(
+      {
+        newEmail: email,
+        currentEmail: profile?.email || '',
+      },
+      {
+        onSuccess: () => {
+          Alert.alert(
+            'Success',
+            'A confirmation email has been sent to your new email address. Please check your inbox and follow the instructions to complete the change.',
+            [
+              {
+                text: 'OK',
+                onPress: () => router.back(),
+              },
+            ],
+          );
+        },
+        onError: (error) => {
+          Alert.alert('Error', error.message);
+        },
+      },
+    );
   };
 
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader title="Change Email" showBackButton />
-      
+
       <View style={styles.section}>
         <Text style={styles.label}>Current Email</Text>
         <View style={styles.inputContainer}>
@@ -79,12 +70,12 @@ export default function ChangeEmail() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]}
+          <TouchableOpacity
+            style={[styles.button, changeEmailMutation.isPending && styles.buttonDisabled]}
             onPress={handleChangeEmail}
-            disabled={loading}
+            disabled={changeEmailMutation.isPending}
           >
-            {loading ? (
+            {changeEmailMutation.isPending ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.buttonText}>Change Email</Text>
@@ -125,7 +116,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: '#ccc',
-  }, 
+  },
   buttonContainer: {
     paddingVertical: 24,
   },
@@ -143,5 +134,5 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     color: '#fff',
-  }
+  },
 });

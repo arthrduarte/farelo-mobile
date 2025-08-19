@@ -1,10 +1,19 @@
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList, TextInput, Animated } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  FlatList,
+  TextInput,
+  Animated,
+} from 'react-native';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import RecipeCard from '@/components/recipe/RecipeCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
 import { Link, router } from 'expo-router';
-import { useRecipes } from '@/hooks/useRecipes';
+import { useInfiniteRecipes } from '@/hooks/recipes';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce } from 'lodash';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
@@ -20,16 +29,27 @@ export default function RecipesScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
 
-  const { data: recipes, isLoading, isError, error, refetch } = useRecipes(profile?.id, debouncedSearchTerm);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteRecipes(profile?.id, debouncedSearchTerm);
+
+  const recipes = data?.pages.flat() ?? [];
 
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
-    
+
     Animated.spring(drawerAnimation, {
       toValue,
       useNativeDriver: true,
       tension: 65,
-      friction: 11
+      friction: 11,
     }).start();
 
     setIsDrawerOpen(!isDrawerOpen);
@@ -65,7 +85,7 @@ export default function RecipesScreen() {
   const toggleSearch = () => {
     const toValue = isSearchVisible ? 0 : 1;
     setIsSearchVisible(!isSearchVisible);
-    
+
     Animated.parallel([
       Animated.timing(searchBarHeight, {
         toValue,
@@ -89,7 +109,7 @@ export default function RecipesScreen() {
     debounce((term) => {
       setDebouncedSearchTerm(term);
     }, 500),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -110,9 +130,7 @@ export default function RecipesScreen() {
 
   const NoSearchResultsComponent = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>
-        No recipes found matching your search.
-      </Text>
+      <Text style={styles.emptyText}>No recipes found matching your search.</Text>
     </View>
   );
 
@@ -122,9 +140,26 @@ export default function RecipesScreen() {
     </View>
   );
 
+  const LoadMoreComponent = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.loadMoreContainer}>
+        <ActivityIndicator size="small" color="#793206" />
+      </View>
+    );
+  };
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
   const ErrorComponent = () => (
     <View style={styles.centerContainer}>
-      <Text style={styles.errorText}>{error?.message || 'Failed to load recipes. Please try again later.'}</Text>
+      <Text style={styles.errorText}>
+        {error?.message || 'Failed to load recipes. Please try again later.'}
+      </Text>
       <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
         <Text style={styles.retryButtonText}>Try Again</Text>
       </TouchableOpacity>
@@ -133,10 +168,11 @@ export default function RecipesScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Recipes"
+      <ScreenHeader
+        title="Recipes"
         rightItem={
           <TouchableOpacity onPress={toggleSearch}>
-            <Feather name={isSearchVisible ? "x" : "search"} size={24} color="#793206" />
+            <Feather name={isSearchVisible ? 'x' : 'search'} size={24} color="#793206" />
           </TouchableOpacity>
         }
         leftItem={
@@ -146,18 +182,20 @@ export default function RecipesScreen() {
           </TouchableOpacity>
         }
       />
-      
-      <Animated.View style={[
-        styles.searchContainer,
-        {
-          maxHeight: searchBarHeight.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 80]
-          }),
-          opacity: searchBarOpacity,
-          overflow: 'hidden',
-        }
-      ]}>        
+
+      <Animated.View
+        style={[
+          styles.searchContainer,
+          {
+            maxHeight: searchBarHeight.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 80],
+            }),
+            opacity: searchBarOpacity,
+            overflow: 'hidden',
+          },
+        ]}
+      >
         <View style={styles.searchButton}>
           <TextInput
             style={styles.searchInput}
@@ -166,7 +204,7 @@ export default function RecipesScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoFocus={isSearchVisible}
-            />
+          />
         </View>
       </Animated.View>
 
@@ -175,22 +213,20 @@ export default function RecipesScreen() {
       ) : isError ? (
         <ErrorComponent />
       ) : (
-        <FlatList 
-          style={styles.recipeList} 
-          showsVerticalScrollIndicator={false} 
-          data={recipes} 
-          renderItem={({ item }) => (
-            <RecipeCard 
-              key={item.id} 
-              recipe={item} 
-            />
-          )}
+        <FlatList
+          style={styles.recipeList}
+          showsVerticalScrollIndicator={false}
+          data={recipes}
+          renderItem={({ item }) => <RecipeCard key={item.id} recipe={item} />}
           ListEmptyComponent={debouncedSearchTerm ? NoSearchResultsComponent : EmptyComponent}
+          ListFooterComponent={LoadMoreComponent}
           refreshing={isLoading}
           onRefresh={refetch}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.1}
         />
       )}
-      <Drawer 
+      <Drawer
         isDrawerOpen={isDrawerOpen}
         toggleDrawer={toggleDrawer}
         drawerAnimation={drawerAnimation}
@@ -276,5 +312,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });

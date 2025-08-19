@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/icon_android.png",
         "backgroundColor": "#EDE4D2"
       },
-      "minSdkVersion": 35,
+      "minSdkVersion": 26,
       "package": "com.arthrduarte.farelo",
       "softwareKeyboardLayoutMode": "pan",
       "intentFilters": [
@@ -68,7 +68,7 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 35,
+            "minSdkVersion": 26,
             "targetSdkVersion": 35
           }
         }
