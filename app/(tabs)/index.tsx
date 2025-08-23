@@ -19,6 +19,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { WhoToFollow } from '@/components/home/WhoToFollow';
 import { Introduction } from '@/components/home/Introduction';
+import { RecentActiveUserLogs } from '@/components/home/RecentActiveUserLogs';
 import { EnhancedLog } from '@/types/types';
 
 export default function HomeScreen() {
@@ -40,8 +41,7 @@ export default function HomeScreen() {
   const EmptyFeedComponent = () => (
     <>
       <Introduction refreshFeed={refetch} />
-      <WhoToFollow />
-      <LogLoader />
+      <RecentActiveUserLogs />
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
           Follow people or start a recipe to see logs in your feed.
