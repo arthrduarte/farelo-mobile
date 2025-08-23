@@ -8,4 +8,7 @@ export const LOG_KEYS = {
     [...LOG_KEYS.all, 'infinite', type, profileId] as const,
   infiniteFeed: (profileId?: string) => [...LOG_KEYS.infinite('feed', profileId)] as const,
   infiniteProfile: (profileId?: string) => [...LOG_KEYS.infinite('profile', profileId)] as const,
+  discovery: () => [...LOG_KEYS.all, 'discovery'] as const,
+  recentFromActiveUsers: (currentUserId?: string) =>
+    [...LOG_KEYS.discovery(), 'active-users', currentUserId] as const,
 };

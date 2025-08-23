@@ -19,6 +19,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { WhoToFollow } from '@/components/home/WhoToFollow';
 import { Introduction } from '@/components/home/Introduction';
+import { RecentActiveUserLogs } from '@/components/home/RecentActiveUserLogs';
+import { RecipeMilestone } from '@/components/home/RecipeMilestone';
 import { EnhancedLog } from '@/types/types';
 
 export default function HomeScreen() {
@@ -40,18 +42,8 @@ export default function HomeScreen() {
   const EmptyFeedComponent = () => (
     <>
       <Introduction refreshFeed={refetch} />
-      <WhoToFollow />
-      <LogLoader />
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Follow people or start a recipe to see logs in your feed.
-        </Text>
-        <View style={styles.emptyActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/new-recipe')}>
-            <Text style={styles.actionButtonText}>Add Recipe</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <RecipeMilestone />
+      <RecentActiveUserLogs />
     </>
   );
 
@@ -91,6 +83,8 @@ export default function HomeScreen() {
     );
   };
 
+  const HeaderComponent = () => <RecipeMilestone />;
+
   return (
     <ThemedView style={styles.container}>
       <ScreenHeader
@@ -110,6 +104,7 @@ export default function HomeScreen() {
         onRefresh={refetch}
         refreshing={isLoading}
         ListEmptyComponent={isLoading ? LoadingComponent : EmptyFeedComponent}
+        ListHeaderComponent={feed.length > 0 ? HeaderComponent : null}
         ListFooterComponent={LoadMoreComponent}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.1}
