@@ -241,11 +241,7 @@ export default function EditRecipeScreen() {
 
           {/* Recipe Image */}
           <View style={styles.imageContainer}>
-            {editedRecipe.user_image_url ? (
-              <ImagesSection mainImage={editedRecipe.user_image_url} />
-            ) : (
-              <ImagesSection mainImage={editedRecipe.ai_image_url} />
-            )}
+            <ImagesSection image_url={editedRecipe.user_image_url || editedRecipe.ai_image_url} />
             <View style={styles.imageEditButton}>
               <ImageSelector onImageSelected={handleImageSelected} />
             </View>
