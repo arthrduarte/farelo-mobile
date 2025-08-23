@@ -155,12 +155,7 @@ export default function LogDetailsScreen() {
         <Text style={styles.recipeName}>{log.recipe.title}</Text>
         {log.description && <Text style={styles.description}>{log.description}</Text>}
 
-        {/* Image Carousel */}
-        {log.images.length === 1 ? (
-          <ImagesSection mainImage={log.images[0]} height={250} />
-        ) : (
-          <ImagesSection images={log.images} height={250} />
-        )}
+        <ImagesSection image_url={log.images[0]} />
 
         {/* Add to Cookbook Button */}
         {!isOwnRecipe ? (

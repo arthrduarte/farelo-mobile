@@ -14,6 +14,7 @@ import { Recipe as BaseRecipe } from '@/types/db';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useState } from 'react';
 import TagManager from '@/components/recipe/edit/TagManager';
+import ImageSelector from '@/components/recipe/edit/ImageSelector';
 import { PulsingPlaceholder } from '@/components/recipe/ImagePlaceholder';
 import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -107,6 +108,10 @@ export default function EditRecipeScreen() {
 
   const stopEditing = (field: string) => {
     setIsEditing((prev) => ({ ...prev, [field]: false }));
+  };
+
+  const handleImageSelected = (imageUri: string) => {
+    setEditedRecipe((prev) => (prev ? { ...prev, user_image_url: imageUri } : null));
   };
 
   if (isLoadingRecipe) {
@@ -235,11 +240,12 @@ export default function EditRecipeScreen() {
           />
 
           {/* Recipe Image */}
-          {editedRecipe.user_image_url ? (
-            <ImagesSection mainImage={editedRecipe.user_image_url} />
-          ) : (
-            <ImagesSection mainImage={editedRecipe.ai_image_url} />
-          )}
+          <View style={styles.imageContainer}>
+            <ImagesSection image_url={editedRecipe.user_image_url || editedRecipe.ai_image_url} />
+            <View style={styles.imageEditButton}>
+              <ImageSelector onImageSelected={handleImageSelected} />
+            </View>
+          </View>
 
           <Divider />
 
@@ -623,5 +629,14 @@ const styles = StyleSheet.create({
     color: '#793206',
     fontSize: 16,
     fontWeight: '600',
+  },
+  imageContainer: {
+    position: 'relative',
+  },
+  imageEditButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 12,
+    zIndex: 1,
   },
 });
