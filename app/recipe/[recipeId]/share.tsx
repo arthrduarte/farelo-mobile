@@ -73,11 +73,7 @@ export default function RecipeShareScreen() {
         </View>
 
         {/* Recipe Image */}
-        {recipe.user_image_url ? (
-          <ImagesSection mainImage={recipe.user_image_url} />
-        ) : (
-          <ImagesSection mainImage={recipe.ai_image_url} />
-        )}
+        <ImagesSection image_url={recipe.user_image_url || recipe.ai_image_url} />
 
         {/* Tags */}
         <TagsSection tags={recipe.tags} />
