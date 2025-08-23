@@ -42,16 +42,6 @@ export default function HomeScreen() {
     <>
       <Introduction refreshFeed={refetch} />
       <RecentActiveUserLogs />
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Follow people or start a recipe to see logs in your feed.
-        </Text>
-        <View style={styles.emptyActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/new-recipe')}>
-            <Text style={styles.actionButtonText}>Add Recipe</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </>
   );
 
