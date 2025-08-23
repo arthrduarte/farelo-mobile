@@ -36,7 +36,7 @@ export const RecentActiveUserLogs = () => {
       {logs.map((log: EnhancedLog, index: number) => (
         <React.Fragment key={log.id}>
           <LogCard log={log} showFollow={true} />
-          {index === 1 && <WhoToFollow />}
+          {index === 0 && <WhoToFollow />}
         </React.Fragment>
       ))}
     </View>
