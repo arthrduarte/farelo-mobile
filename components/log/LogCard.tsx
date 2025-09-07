@@ -7,6 +7,7 @@ import { formatTimeAgo } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLogLikes, useLikesForLog } from '@/hooks/likes';
 import { useCopyRecipe } from '@/hooks/recipes';
+import { useFollow } from '@/hooks/useFollow';
 import { Divider } from '@/components/Divider';
 import { EnhancedLog } from '@/types/types';
 import { LogImage } from './LogImage';
@@ -17,9 +18,10 @@ import { LikeAvatars } from './LikeAvatars';
 
 type LogCardProps = {
   log: EnhancedLog;
+  showFollow?: boolean;
 };
 
-export const LogCard: React.FC<LogCardProps> = ({ log }) => {
+export const LogCard: React.FC<LogCardProps> = ({ log, showFollow = false }) => {
   const { profile } = useAuth();
 
   const { isLiked, likeCount, toggleLike } = useLogLikes({
@@ -29,6 +31,7 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
   });
   const { data: likesProfiles } = useLikesForLog(log.id);
   const { mutate: copyRecipe, isPending: isCopying } = useCopyRecipe();
+  const { isFollowing, toggleFollow, loading: followLoading } = useFollow(log.profile_id);
 
   const [profileData, setProfileData] = useState(log.profile);
 
@@ -83,6 +86,17 @@ export const LogCard: React.FC<LogCardProps> = ({ log }) => {
             <ThemedText type="defaultSemiBold">{fullName}</ThemedText>
             <ThemedText style={styles.time}>{formatTimeAgo(log.created_at)}</ThemedText>
           </View>
+          {showFollow && log.profile_id !== profile?.id && (
+            <TouchableOpacity
+              onPress={toggleFollow}
+              style={[styles.followButton, isFollowing && styles.followingButton]}
+              disabled={followLoading}
+            >
+              <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
+                {followLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push(`/log/${log.id}/details`)} activeOpacity={1}>
@@ -199,6 +213,25 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
     marginLeft: 12,
+  },
+  followButton: {
+    backgroundColor: '#793206',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  followingButton: {
+    backgroundColor: '#EDE4D2',
+    borderWidth: 1,
+    borderColor: '#793206',
+  },
+  followButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  followingButtonText: {
+    color: '#793206',
   },
   time: {
     fontSize: 12,

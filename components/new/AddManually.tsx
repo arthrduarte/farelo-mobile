@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Recipe } from '@/types/db';
 import { useCreateRecipe } from '@/hooks/recipes';
+import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { Divider } from '@/components/Divider';
 import { supabase } from '@/lib/supabase';
@@ -63,6 +64,7 @@ const initialManualFormData: ManualRecipeFormData = {
 export default function AddManually() {
   const [manualFormData, setManualFormData] = useState<ManualRecipeFormData>(initialManualFormData);
   const createRecipeMutation = useCreateRecipe();
+  const { profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -201,6 +203,11 @@ export default function AddManually() {
   };
 
   const uploadImage = async (uri: string): Promise<string | null> => {
+    if (!profile) {
+      Alert.alert('Error', 'You must be logged in to upload images');
+      return null;
+    }
+
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
@@ -208,16 +215,12 @@ export default function AddManually() {
 
       const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpeg';
       const contentType = `image/${fileExt}`;
-      // Consider adding profile_id to the path if images should be user-specific in the bucket path
-      // For now, using a simpler path similar to before, but ensuring uniqueness.
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = fileName; // Path within the bucket
+      const fileName = `${profile.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
       const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('recipe_images') // Ensure this is your correct bucket name
-        .upload(filePath, decode(base64), {
+        .from('recipe_images')
+        .upload(fileName, decode(base64), {
           contentType,
-          // upsert: false, // Default is false, set to true if you want to overwrite
         });
 
       if (uploadError) {
@@ -226,7 +229,7 @@ export default function AddManually() {
         return null;
       }
 
-      const { data: publicUrlData } = supabase.storage.from('recipe_images').getPublicUrl(filePath);
+      const { data: publicUrlData } = supabase.storage.from('recipe_images').getPublicUrl(fileName);
 
       if (!publicUrlData || !publicUrlData.publicUrl) {
         console.error('Error getting public URL: No public URL found or data is null');
