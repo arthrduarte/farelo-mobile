@@ -42,10 +42,10 @@ export default function NotificationsScreen() {
         }
         break;
       case 'follow':
-        if (payload.liker_profile_id) {
+        if (payload.profile_id) {
           router.push({
             pathname: '/profile/[id]',
-            params: { id: payload.liker_profile_id },
+            params: { id: payload.profile_id },
           });
         }
         break;
@@ -67,13 +67,13 @@ export default function NotificationsScreen() {
 
     switch (notification.type) {
       case 'like':
-        return `${payload.liker_name || 'Someone'} liked your ${payload.recipe_title} recipe!`;
+        return `${payload.name || 'Someone'} liked your ${payload.recipe_title} recipe!`;
       case 'comment':
-        return `${payload.liker_name || 'Someone'} commented on your ${payload.recipe_title} recipe!`;
+        return `${payload.name || 'Someone'} commented on your ${payload.recipe_title} recipe!`;
       case 'follow':
-        return `${payload.liker_name || 'Someone'} started following you!`;
+        return `${payload.name || 'Someone'} started following you!`;
       case 'copy':
-        return `${payload.liker_name || 'Someone'} copied your ${payload.recipe_title} recipe!`;
+        return `${payload.name || 'Someone'} copied your ${payload.recipe_title} recipe!`;
       default:
         return 'New notification';
     }
@@ -81,12 +81,12 @@ export default function NotificationsScreen() {
 
   const getNotificationAvatar = (notification: Notification) => {
     const payload = notification.payload as any;
-    return payload.liker_image || ''; // Avatar would need to be fetched separately or included in payload
+    return payload.image || ''; // Avatar would need to be fetched separately or included in payload
   };
 
   const getNotificationUserName = (notification: Notification) => {
     const payload = notification.payload as any;
-    return payload.liker_name || 'User';
+    return payload.name || 'User';
   };
 
   const formatRelativeTime = (dateString: string) => {
