@@ -89,9 +89,14 @@ export default function HomeScreen() {
       <ScreenHeader
         title="Home"
         rightItem={
-          <TouchableOpacity onPress={() => router.push('/search')}>
-            <Feather name="search" size={24} color="#793206" />
-          </TouchableOpacity>
+          <View style={styles.headerRightContainer}>
+            <TouchableOpacity onPress={() => router.push('/notifications')}>
+              <Feather name="bell" size={24} color="#793206" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/search')}>
+              <Feather name="search" size={24} color="#793206" />
+            </TouchableOpacity>
+          </View>
         }
       />
 
@@ -172,5 +177,9 @@ const styles = StyleSheet.create({
   loadMoreContainer: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    gap: 12,
   },
 });

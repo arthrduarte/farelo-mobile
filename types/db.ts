@@ -73,3 +73,12 @@ export type Reports = {
     message: string;
     created_at: string;
 }
+
+export type Notification = {
+    id: string;
+    profile_id: string;
+    type: string;
+    payload: JSON;
+    is_read: boolean;
+    created_at: string;
+}

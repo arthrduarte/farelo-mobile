@@ -38,8 +38,10 @@
     "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.3",
     "expo-haptics": "~14.0.1",
+    "expo-image-manipulator": "~13.0.6",
     "expo-image-picker": "~16.0.6",
     "expo-linking": "~7.0.5",
+    "expo-notifications": "~0.29.14",
     "expo-router": "~4.0.21",
     "expo-splash-screen": "~0.29.24",
     "expo-status-bar": "~2.0.1",
@@ -59,9 +61,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5",
-    "expo-image-manipulator": "~13.0.6",
-    "expo-notifications": "~0.29.14"
+    "react-native-webview": "13.12.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -76,7 +76,6 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.3.0",
-    "husky": "^9.1.6",
     "jest": "^29.2.1",
     "jest-expo": "~52.0.6",
     "jiti": "^2.5.1",
