@@ -3,7 +3,7 @@
 Farelo is a mobile app that uses AI to digitize, organize, and share personal recipes, combining social cooking logs with a smart, searchable cookbook.
 
 ## ✅ Publishing Status
-- **iOS**: Trying to pass Apple's reviews
+- **iOS**: Published. [Access Here](https://apps.apple.com/gb/app/farelo-save-share-recipes/id6745767053?uo=2)
 - **Android**: Published. [Access Here](https://play.google.com/store/apps/details?id=com.arthrduarte.farelo)
 
 ## ✨ Features
