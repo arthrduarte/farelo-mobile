@@ -57,6 +57,8 @@ export default function HomeScreen() {
     </>
   );
 
+  const shouldShowLoading = isLoading || !profile?.id || feed.length === 0;
+
   const LoadMoreComponent = () => {
     if (!isFetchingNextPage) return null;
     return (
@@ -107,8 +109,8 @@ export default function HomeScreen() {
         renderItem={renderItem}
         onRefresh={refetch}
         refreshing={isLoading}
-        ListEmptyComponent={isLoading ? LoadingComponent : EmptyFeedComponent}
-        ListHeaderComponent={!recipesLoading && (recipes?.length ?? 0) < 3 ? HeaderComponent : null}
+        ListEmptyComponent={shouldShowLoading ? LoadingComponent : EmptyFeedComponent}
+        ListHeaderComponent={!shouldShowLoading && !recipesLoading && (recipes?.length ?? 0) < 3 ? HeaderComponent : null}
         ListFooterComponent={LoadMoreComponent}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.1}
