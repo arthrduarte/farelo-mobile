@@ -7,6 +7,7 @@ export const getNotifications = async (profile_id: string): Promise<Notification
     .from('notifications')
     .select('*')
     .eq('profile_id', profile_id)
+    .eq('is_read', false)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -14,16 +15,13 @@ export const getNotifications = async (profile_id: string): Promise<Notification
 };
 
 // Mark notification as read
-export const markNotificationAsRead = async (notification_id: string): Promise<Notification> => {
-  const { data, error } = await supabase
+export const markNotificationAsRead = async (notification_id: string): Promise<void> => {
+  const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
-    .eq('id', notification_id)
-    .select()
-    .single();
+    .eq('id', notification_id);
 
   if (error) throw error;
-  return data;
 };
 
 // Mark all notifications as read for a user
