@@ -8,13 +8,14 @@ import Avatar from '@/components/ui/Avatar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGetAllBlockedIds } from '@/hooks/blocks/useGetAllBlockedIds';
 import { useFollowing } from '@/hooks/useFollowing';
+import { WhoToFollowSkeletonLoader } from './WhoToFollowSkeletonLoader';
 
 export const WhoToFollow = () => {
   const [suggestedUsers, setSuggestedUsers] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { profile: currentUser } = useAuth();
   const { data: blockedIds = [] } = useGetAllBlockedIds();
-  const { following } = useFollowing(currentUser?.id || '');
+  const { following, loading: followingLoading } = useFollowing(currentUser?.id || '');
 
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
@@ -50,8 +51,11 @@ export const WhoToFollow = () => {
       }
     };
 
-    fetchSuggestedUsers();
-  }, [currentUser, following]);
+    // Only fetch suggested users when following data has loaded
+    if (!followingLoading) {
+      fetchSuggestedUsers();
+    }
+  }, [currentUser, following, followingLoading, blockedIds]);
 
   const handleSelectUser = (selectedProfile: Profile) => {
     router.push({
@@ -63,8 +67,8 @@ export const WhoToFollow = () => {
     });
   };
 
-  if (isLoading || suggestedUsers.length === 0) {
-    return null;
+  if (isLoading || followingLoading || suggestedUsers.length === 0) {
+    return <WhoToFollowSkeletonLoader />;
   }
 
   return (
