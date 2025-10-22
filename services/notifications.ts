@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import { Notification } from '@/types/db';
+import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Get all notifications for a user
 export const getNotifications = async (profile_id: string): Promise<Notification[]> => {
@@ -74,3 +77,50 @@ export const deleteNotification = async (notification_id: string): Promise<void>
 
   if (error) throw error;
 };
+
+export const savePushToken = async (profile_id: string): Promise<void> => {
+  console.log("Starting savePushToken");
+
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "Default",
+      importance: Notifications.AndroidImportance.MAX,
+    });
+  }
+
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  console.log("Existing status:", existingStatus);
+  let finalStatus = existingStatus;
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync();
+    console.log("New status:", status);
+    finalStatus = status;
+  }
+
+  if (finalStatus !== "granted") return;
+  console.log("Final status:", finalStatus);
+
+  const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+
+  if (!projectId) {
+    console.warn("No EAS projectId found. Make sure your app is registered with EAS.");
+    return;
+  }
+
+  try {
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    console.log("Token:", token);
+
+    if (!profile_id) return;
+
+    await supabase
+      .from("profiles")
+      .update({ push_token: token })
+      .eq("id", profile_id);
+
+    console.log("Update complete");
+  } catch (err) {
+    console.error("Failed to get Expo push token:", err);
+  }
+
+}

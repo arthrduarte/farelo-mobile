@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Text, FlatList, TouchableOpacity } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -10,11 +10,18 @@ import NotificationsSkeletonLoader from '@/components/NotificationsSkeletonLoade
 import { useGetNotifications } from '@/hooks/notifications/useGetNotifications';
 import { useMarkNotificationAsRead } from '@/hooks/notifications/useMarkNotificationAsRead';
 import { Colors } from '@/constants/Colors';
+import { savePushToken } from '@/services/notifications';
 
 export default function NotificationsScreen() {
   const { profile } = useAuth();
   const { data: notifications, isLoading: isLoadingNotifications } = useGetNotifications();
   const markAsReadMutation = useMarkNotificationAsRead();
+
+  useEffect(() => {
+    if (profile?.id) {
+      savePushToken(profile.id);
+    }
+  }, [profile?.id]);
 
   const handleNotificationPress = (notification: Notification) => {
     if (!notification.is_read) {
