@@ -25,6 +25,7 @@ export type Profile = {
     username: string;
     created_at: string; // timestamptz
     image: string;
+    push_token: string | null; // Expo push token for notifications
 };
 
 export type Log = {

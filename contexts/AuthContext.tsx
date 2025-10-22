@@ -18,6 +18,9 @@ import { Profile } from '../types/db'
 import EventEmitter from 'eventemitter3'; // Using eventemitter3
 import { useRevenueCat } from './RevenueCatContext';
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+import { savePushToken } from '@/services/notifications';
 
 export const profileUpdateEmitter = new EventEmitter();
 export const PROFILE_UPDATED = 'PROFILE_UPDATED';
@@ -153,9 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Log user into RevenueCat once profile is fetched
         if (data && data.id) {
           await revenueCat.loginUser(data.id)
+          // Initialize push notifications token (only once when profile is loaded)
+          await savePushToken(data)
         }
       }
-      setLoading(false) 
+      setLoading(false)
     } catch (err) {
       console.error('[AuthContext] Unexpected error fetching profile:', err)
       setLoading(false)
