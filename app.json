@@ -30,7 +30,8 @@
         "backgroundColor": "#EDE4D2"
       },
       "minSdkVersion": 26,
-      "package": "com.arthrduarte.farelo"
+      "package": "com.arthrduarte.farelo",
+      "googleServicesFile": "./google-services.json"
     },
     "android_development": {
       "package": "com.arthrduarte.farelo.dev",
