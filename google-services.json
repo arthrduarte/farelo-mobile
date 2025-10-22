@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "881665279887",
+    "project_id": "farelo-49c4b",
+    "storage_bucket": "farelo-49c4b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881665279887:android:8a8d1a57db75a296cbedfa",
+        "android_client_info": {
+          "package_name": "com.arthrduarte.farelo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiV0MIXQAs0bnUOt6_hc99DAR23EguiAI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
