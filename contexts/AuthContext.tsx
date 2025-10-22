@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase'
 import { Profile } from '../types/db'
 import EventEmitter from 'eventemitter3'; // Using eventemitter3
 import { useRevenueCat } from './RevenueCatContext';
+import * as Notifications from 'expo-notifications';
 
 export const profileUpdateEmitter = new EventEmitter();
 export const PROFILE_UPDATED = 'PROFILE_UPDATED';
@@ -54,23 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeSession = async () => {
       try {
-        console.log('[1] Starting getSession - Timestamp:', new Date().toISOString());
-        console.log('[1.1] Network state check - navigator.onLine:', typeof navigator !== 'undefined' ? navigator.onLine : 'N/A');
-        console.log('[1.2] Checking local storage state...');
-        
-        // Check AsyncStorage/SecureStore state (React Native specific)
-        try {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            console.log('[1.2.1] Web localStorage available');
-          } else {
-            console.log('[1.2.1] Using React Native AsyncStorage/SecureStore');
-          }
-        } catch (storageErr) {
-          console.log('[1.2.1] Storage check error:', storageErr instanceof Error ? storageErr.message : String(storageErr));
-        }
-        
-        console.log('[1.3] Starting getSession call...');
-        
         // Add timeout wrapper to detect hanging
         const getSessionWithTimeout = Promise.race([
           supabase.auth.getSession(),
@@ -80,49 +64,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
         
         const { data, error } = await getSessionWithTimeout as any;
-        
-        console.log('[2] getSession completed - Timestamp:', new Date().toISOString());
-        console.log('[2.1] getSession data:', data ? 'Present' : 'Null');
-        console.log('[2.2] getSession error:', error ? error.message : 'None');
-        console.log('[2.3] Session object:', data?.session ? 'Present' : 'Null');
-        console.log('[2.4] User object:', data?.session?.user ? 'Present' : 'Null');
-        console.log('[2.5] Access token present:', data?.session?.access_token ? 'Yes' : 'No');
-        console.log('[2.6] Refresh token present:', data?.session?.refresh_token ? 'Yes' : 'No');
-        
+                
         if (error) {
           console.error('[AuthContext] Error getting session:', error);
-          console.log('[2.7] Error details - name:', error.name);
-          console.log('[2.8] Error details - message:', error.message);
-          console.log('[2.9] Error details - stack:', error.stack);
           setLoading(false);
           return;
         }
 
-        console.log('[2.10] Setting session state...');
         const { session } = data;
         setSession(session);
         setUser(session?.user ?? null);
-        console.log('[2.11] Session state set complete');
 
         if (session?.user) {
-          console.log('[3] User exists, calling fetchProfile - User ID:', session.user.id);
           await fetchProfile(session.user.id);
-          console.log('[4] fetchProfile completed');
-        } else {
-          console.log('[3] No user session found');
         }
       } catch (err) {
         console.error('[AuthContext] Unexpected error during session initialization:', err);
-        console.log('[ERROR] Error type:', typeof err);
-        console.log('[ERROR] Error name:', err instanceof Error ? err.name : 'Unknown');
-        console.log('[ERROR] Error message:', err instanceof Error ? err.message : String(err));
-        console.log('[ERROR] Error stack:', err instanceof Error ? err.stack : 'No stack');
         
-        if (err instanceof Error && err.message.includes('timeout')) {
-          console.error('[CRITICAL] getSession timed out - this is the hanging bug!');
-        }
       } finally {
-        console.log('[5] Setting loading to false - Timestamp:', new Date().toISOString());
         setLoading(false);
       }
     };
@@ -134,24 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, session) => {
-        console.log('[6] onAuthStateChange fired - Event:', event, '- Timestamp:', new Date().toISOString());
-        console.log('[6.1] Auth event type:', event);
-        console.log('[6.2] Session present:', session ? 'Yes' : 'No');
-        console.log('[6.3] User present:', session?.user ? 'Yes' : 'No');
-        console.log('[6.4] Access token present:', session?.access_token ? 'Yes' : 'No');
         
         setSession(session)
         setUser(session?.user ?? null)
 
         if (session?.user) {
-            console.log('[6.5] User found, dispatching fetchProfile from auth state change (no await)');
             // Do not await fetchProfile here to avoid deadlocks, as per Supabase docs
             fetchProfile(session.user.id);
         } else {
-          console.log('[6.5] No user, clearing profile');
           setProfile(null)
         }
-        console.log('[6.9] onAuthStateChange processing complete');
     })
 
     return () => listener.subscription.unsubscribe()
@@ -188,15 +139,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const fetchProfile = async (userId: string) => {
-    console.log('[7] fetchProfile started - User ID:', userId, '- Timestamp:', new Date().toISOString());
     try {
-      console.log('[8] Querying supabase for profile...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single()
-      console.log('[9] Supabase profile query done - Success:', !error, '- Profile ID:', data?.id || 'None');
 
       if (error) {
         console.error('[AuthContext] Error fetching profile:', error)
@@ -204,11 +152,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(data)
         // Log user into RevenueCat once profile is fetched
         if (data && data.id) {
-          console.log('[10] Logging user into RevenueCat');
           await revenueCat.loginUser(data.id)
         }
       }
-      console.log('[12] About to set loading false');
       setLoading(false) 
     } catch (err) {
       console.error('[AuthContext] Unexpected error fetching profile:', err)
