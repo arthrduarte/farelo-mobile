@@ -12,7 +12,10 @@
     "ios": {
       "usesAppleSignIn": true,
       "supportsTablet": false,
-      "bundleIdentifier": "com.arthrduarte.farelo",
+      "bundleIdentifier": "com.arthrduarte.farelo"
+    },
+    "ios_development": {
+      "bundleIdentifier": "com.arthrduarte.farelo.dev",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Farelo needs access to your photo library to let you import recipes by taking photos or selecting existing images of recipes, which our AI will analyze to extract ingredients and cooking instructions. You can also save photos of your finished dishes to document your cooking experiences and share them with friends.",
@@ -27,7 +30,14 @@
         "backgroundColor": "#EDE4D2"
       },
       "minSdkVersion": 26,
-      "package": "com.arthrduarte.farelo",
+      "package": "com.arthrduarte.farelo"
+    },
+    "android_development": {
+      "package": "com.arthrduarte.farelo.dev",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon_android_dev.png",
+        "backgroundColor": "#EDE4D2"
+      },
       "softwareKeyboardLayoutMode": "pan",
       "intentFilters": [
         {
@@ -44,6 +54,7 @@
         }
       ]
     },
+    "icon_development": "./assets/images/icon.png",
     "androidNavigationBar": {
       "backgroundColor": "#EDE4D2",
       "barStyle": "dark-content"
