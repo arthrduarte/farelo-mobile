@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Notification } from '@/types/db';
+import { Notification, Profile } from '@/types/db';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
@@ -78,7 +78,7 @@ export const deleteNotification = async (notification_id: string): Promise<void>
   if (error) throw error;
 };
 
-export const savePushToken = async (profile_id: string): Promise<void> => {
+export const savePushToken = async (profile: Profile): Promise<void> => {
   console.log("Starting savePushToken");
 
   if (Platform.OS === "android") {
@@ -111,14 +111,19 @@ export const savePushToken = async (profile_id: string): Promise<void> => {
     const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
     console.log("Token:", token);
 
-    if (!profile_id) return;
+    if (!profile?.id || !token) return;
 
-    await supabase
-      .from("profiles")
-      .update({ push_token: token })
-      .eq("id", profile_id);
+    // Only update if token is different from what's already stored
+    if (profile.push_token !== token) {
+      await supabase
+        .from("profiles")
+        .update({ push_token: token })
+        .eq("id", profile.id);
 
-    console.log("Update complete");
+      console.log("Push token updated in database");
+    } else {
+      console.log("Push token unchanged, no update needed");
+    }
   } catch (err) {
     console.error("Failed to get Expo push token:", err);
   }
