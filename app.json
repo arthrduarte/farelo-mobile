@@ -12,7 +12,10 @@
     "ios": {
       "usesAppleSignIn": true,
       "supportsTablet": false,
-      "bundleIdentifier": "com.arthrduarte.farelo"
+      "bundleIdentifier": "com.arthrduarte.farelo",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "ios_development": {
       "bundleIdentifier": "com.arthrduarte.farelo.dev",
@@ -22,7 +25,9 @@
         "NSCameraUsageDescription": "Farelo uses your camera to take photos of recipes for AI-powered recipe extraction, and to capture images of your finished dishes when logging your cooking experiences.",
         "NSPhotoLibraryAddUsageDescription": "Farelo can optionally save recipe photos and images of your finished dishes to your photo library for your personal collection."
       },
-      "associatedDomains": ["applinks:usefarelo.com"]
+      "associatedDomains": [
+        "applinks:usefarelo.com"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -51,7 +56,10 @@
               "pathPrefix": "/"
             }
           ],
-          "categories": ["BROWSABLE", "DEFAULT"]
+          "categories": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -91,7 +99,9 @@
           "iosUrlScheme": "com.googleusercontent.apps.791951088468-jql23hqupnu5eudogm3rrc8h634f6c8h"
         }
       ],
-      ["expo-apple-authentication"]
+      [
+        "expo-apple-authentication"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
