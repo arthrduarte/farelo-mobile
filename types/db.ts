@@ -13,6 +13,7 @@ export type Recipe = {
     notes: string;
     profile_id: string; // UUID of the user who created the recipe
     chat: JSON | null; // JSONB array of messages [{role: 'user' | 'ai', message: string, timestamp: timestamptz}]
+    copied_from: string | null; // UUID of the original owner of this recipe
 };
 
 export type Profile = {
