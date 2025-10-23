@@ -12,6 +12,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInfiniteFeedLogs } from '@/hooks/logs';
+import { useRecipes } from '@/hooks/recipes';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LogLoader } from '@/components/log/LogLoader';
@@ -27,6 +28,7 @@ export default function HomeScreen() {
   const { profile } = useAuth();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
     useInfiniteFeedLogs(profile?.id ?? '');
+  const { data: recipes, isLoading: recipesLoading } = useRecipes(profile?.id);
 
   const feed = data?.pages.flat() ?? [];
 
@@ -41,7 +43,7 @@ export default function HomeScreen() {
 
   const EmptyFeedComponent = () => (
     <>
-      <Introduction refreshFeed={refetch} />
+      {!recipesLoading && (recipes?.length ?? 0) < 3 && <Introduction refreshFeed={refetch} />}
       <RecipeMilestone />
       <RecentActiveUserLogs />
     </>
@@ -50,13 +52,12 @@ export default function HomeScreen() {
   const LoadingComponent = () => (
     <>
       <LogLoader />
-      <Text style={styles.errorText}>
-        If your app is stuck on loading, please restart it. We're working on fixing this issue!
-      </Text>
       <LogLoader />
       <LogLoader />
     </>
   );
+
+  const shouldShowLoading = isLoading || !profile?.id || feed.length === 0;
 
   const LoadMoreComponent = () => {
     if (!isFetchingNextPage) return null;
@@ -90,9 +91,14 @@ export default function HomeScreen() {
       <ScreenHeader
         title="Home"
         rightItem={
-          <TouchableOpacity onPress={() => router.push('/search')}>
-            <Feather name="search" size={24} color="#793206" />
-          </TouchableOpacity>
+          <View style={styles.headerRightContainer}>
+            <TouchableOpacity onPress={() => router.push('/notifications')}>
+              <Feather name="bell" size={24} color="#793206" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/search')}>
+              <Feather name="search" size={24} color="#793206" />
+            </TouchableOpacity>
+          </View>
         }
       />
 
@@ -103,8 +109,8 @@ export default function HomeScreen() {
         renderItem={renderItem}
         onRefresh={refetch}
         refreshing={isLoading}
-        ListEmptyComponent={isLoading ? LoadingComponent : EmptyFeedComponent}
-        ListHeaderComponent={feed.length > 0 ? HeaderComponent : null}
+        ListEmptyComponent={shouldShowLoading ? LoadingComponent : EmptyFeedComponent}
+        ListHeaderComponent={!shouldShowLoading && !recipesLoading && (recipes?.length ?? 0) < 3 ? HeaderComponent : null}
         ListFooterComponent={LoadMoreComponent}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.1}
@@ -173,5 +179,9 @@ const styles = StyleSheet.create({
   loadMoreContainer: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    gap: 12,
   },
 });

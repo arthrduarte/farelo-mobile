@@ -13,6 +13,7 @@ export type Recipe = {
     notes: string;
     profile_id: string; // UUID of the user who created the recipe
     chat: JSON | null; // JSONB array of messages [{role: 'user' | 'ai', message: string, timestamp: timestamptz}]
+    copied_from: string | null; // UUID of the original owner of this recipe
 };
 
 export type Profile = {
@@ -25,6 +26,7 @@ export type Profile = {
     username: string;
     created_at: string; // timestamptz
     image: string;
+    push_token: string | null; // Expo push token for notifications
 };
 
 export type Log = {
@@ -71,5 +73,14 @@ export type Reports = {
     what_was_reported: string;
     item_id: string;
     message: string;
+    created_at: string;
+}
+
+export type Notification = {
+    id: string;
+    profile_id: string;
+    type: string;
+    payload: JSON;
+    is_read: boolean;
     created_at: string;
 }

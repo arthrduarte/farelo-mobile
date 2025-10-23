@@ -96,6 +96,7 @@ export const copyRecipe = async (
     user_image_url: originalRecipe.user_image_url,
     notes: '',
     chat: null,
+    copied_from: originalRecipe.profile_id,
   };
 
   // 3. Insert the new recipe
