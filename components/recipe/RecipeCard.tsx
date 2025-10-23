@@ -1,13 +1,17 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Recipe } from '@/types/db';
+import { Recipe, Profile } from '@/types/db';
 import { router } from 'expo-router';
+import { useOriginalOwner } from '@/hooks/recipes/useOriginalOwner';
 
 interface RecipeCardProps {
   recipe: Partial<Recipe>;
+  originalOwner?: Profile | null;
 }
 
-export default function RecipeCard({ recipe }: RecipeCardProps) {
+export default function RecipeCard({ recipe, originalOwner: providedOriginalOwner }: RecipeCardProps) {
+  const { data: fetchedOriginalOwner } = useOriginalOwner(recipe.copied_from);
+  const originalOwner = providedOriginalOwner ?? fetchedOriginalOwner;
 
   return (
     <TouchableOpacity onPress={() => router.push(`/recipe/${recipe.id}/details`)}>
@@ -46,6 +50,17 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
               <Text style={styles.metaText}>{recipe.servings} servings</Text>
             </View>
           </View>
+          {originalOwner && (
+            <View style={styles.originalOwnerInfo}>
+              <Image
+                source={{ uri: originalOwner.image }}
+                style={styles.originalOwnerImage}
+              />
+              <Text style={styles.originalOwnerName}>
+                {originalOwner.first_name} {originalOwner.last_name}'s recipe
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -115,5 +130,20 @@ const styles = StyleSheet.create({
   metaText: {
     color: '#793206',
     fontSize: 14,
+  },
+  originalOwnerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  originalOwnerImage: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+  originalOwnerName: {
+    fontSize: 14,
+    color: '#793206',
+    fontWeight: '400',
   },
 });

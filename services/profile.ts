@@ -60,3 +60,17 @@ export const updateProfile = async (
     throw new Error(`Profile update failed: ${error.message}`);
   }
 };
+
+export const getProfileById = async (profileId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', profileId)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to fetch profile: ${error.message}`);
+  }
+
+  return data;
+};
